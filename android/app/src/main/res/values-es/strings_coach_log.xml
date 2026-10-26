@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cl_prompt_language">Spanish</string>
+
+    <string name="cl_card_title">Registrar en tu diario</string>
+    <string name="cl_card_preparing">Calculando la nutrición…</string>
+    <string name="cl_action_log">Registrar</string>
+    <string name="cl_action_edit">Editar</string>
+    <string name="cl_action_done">Listo</string>
+    <string name="cl_action_cancel">Cancelar</string>
+    <string name="cl_action_log_description">Registrar estos elementos en tu diario</string>
+    <string name="cl_open_editor">Abrir en el editor</string>
+    <string name="cl_edit_hint">Desmarca lo que no quieras registrar o abre un alimento en el editor para cambiar la porción o la nutrición.</string>
+    <string name="cl_reply_review_card">Esto es lo que registraría. Revisa la tarjeta y toca Registrar.</string>
+
+    <string name="cl_total">Total: %1$s · P %2$s g · C %3$s g · G %4$s g</string>
+    <string name="cl_food_macros">%1$s · P %2$s g · C %3$s g · G %4$s g</string>
+    <string name="cl_meal_and_date">%1$s · %2$s</string>
+    <string name="cl_today">hoy</string>
+    <string name="cl_estimate_note">Estimación del Coach</string>
+    <string name="cl_water">Agua</string>
+    <string name="cl_water_amount">%1$d ml</string>
+    <string name="cl_weight">Peso</string>
+    <string name="cl_weight_kg">%1$s kg</string>
+    <string name="cl_weight_lb">%1$s lb</string>
+    <string name="cl_body_fat">Grasa corporal</string>
+    <string name="cl_body_fat_percent">%1$s %%</string>
+    <string name="cl_workout">Entrenamiento</string>
+    <string name="cl_cardio_minutes">%1$d min</string>
+    <string name="cl_cardio_minutes_burn">%1$d min · %2$s quemadas</string>
+
+    <string name="cl_item_left_out">Excluido</string>
+    <string name="cl_item_in_editor">Abierto en el editor de comidas</string>
+    <string name="cl_item_logged">Registrado</string>
+    <string name="cl_item_error_analysis">No se pudo estimar este alimento. Regístralo desde Inicio.</string>
+    <string name="cl_item_error_workout">No se pudo interpretar este entrenamiento. Regístralo desde Entrenamientos.</string>
+    <string name="cl_item_error_save">No se pudo guardar este elemento.</string>
+    <string name="cl_item_include_description">Incluir %1$s</string>
+    <string name="cl_item_edit_description">Abrir %1$s en el editor de comidas</string>
+    <string name="cl_item_view_description">Editar %1$s en tu diario</string>
+
+    <string name="cl_logged_today">Registrado en tu diario de hoy</string>
+    <string name="cl_logged_on">Registrado en tu diario del %1$s</string>
+    <string name="cl_logged_tap_hint">Toca un alimento para editarlo.</string>
+    <string name="cl_dismissed">Cancelado: no se registró nada</string>
+
+    <string name="cl_error_fasting">No se puede registrar comida mientras hay un ayuno activo. Termina el ayuno y vuelve a tocar Registrar.</string>
+    <string name="cl_error_some_failed">Algunos elementos no se pudieron registrar. Toca Registrar para intentarlo de nuevo.</string>
+
+    <string name="cl_msg_copy">Copiar</string>
+    <string name="cl_msg_copied">Copiado al portapapeles</string>
+    <string name="cl_msg_send_to_log">Enviar a registro de comida</string>
+    <string name="cl_msg_copy_description">Copiar mensaje</string>
+    <string name="cl_msg_send_to_log_description">Enviar mensaje al registro de comida</string>
+</resources>

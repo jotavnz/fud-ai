@@ -247,6 +247,8 @@ DisposableEffect(lifecycleOwner, vm) {
     val allEntries by container.foodRepository.entries.collectAsState(initial = emptyList())
 
     var showText by rememberSaveable { mutableStateOf(false) }
+    // Text Coach's "Send to food log" typed for the Describe food dialog.
+    var textPrefill by rememberSaveable { mutableStateOf("") }
     var showVoice by rememberSaveable { mutableStateOf(false) }
     var showManual by rememberSaveable { mutableStateOf(false) }
     var savedMealsTab by remember { mutableStateOf<SavedTab?>(null) }
@@ -432,6 +434,23 @@ DisposableEffect(lifecycleOwner, vm) {
         selectedFoodIds = emptySet()
         editingEntry = entry
         container.navigator.pendingFoodEntry.value = null
+    }
+
+    // Coach: "Send to food log" opens Describe food with the message typed in; a log card's
+    // Edit opens the review sheet for the food Coach estimated.
+    val pendingCoachText by container.navigator.pendingFoodText.collectAsState()
+    LaunchedEffect(pendingCoachText) {
+        val text = pendingCoachText ?: return@LaunchedEffect
+        selectedFoodIds = emptySet()
+        textPrefill = text
+        showText = true
+        container.navigator.pendingFoodText.value = null
+    }
+    val pendingCoachReview by container.navigator.pendingFoodReview.collectAsState()
+    LaunchedEffect(pendingCoachReview, ui.analyzing, ui.pendingAnalysis) {
+        val analysis = pendingCoachReview ?: return@LaunchedEffect
+        selectedFoodIds = emptySet()
+        if (vm.reviewCoachAnalysis(analysis)) container.navigator.pendingFoodReview.value = null
     }
 
     val today = LocalDate.now()
@@ -867,8 +886,9 @@ CalorieHero(
 
     if (showText) {
         TextInputDialog(
-            onDismiss = { showText = false },
-            onSubmit = { showText = false; vm.analyzeText(it) }
+            onDismiss = { showText = false; textPrefill = "" },
+            onSubmit = { showText = false; textPrefill = ""; vm.analyzeText(it) },
+            initialText = textPrefill
         )
     }
 
@@ -3051,7 +3071,12 @@ private fun AnalysisResultDialog(
 }
 
 @Composable
-internal fun TextInputDialog(onDismiss: () -> Unit, onSubmit: (String) -> Unit, examples: List<String>? = null) {
+internal fun TextInputDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (String) -> Unit,
+    examples: List<String>? = null,
+    initialText: String = ""
+) {
     // Keep the input composable stable so rotating placeholder examples do not drop IME focus.
     val placeholders = examples?.takeIf { it.isNotEmpty() } ?: listOf(
         stringResource(R.string.text_input_placeholder_1),
@@ -3059,7 +3084,7 @@ internal fun TextInputDialog(onDismiss: () -> Unit, onSubmit: (String) -> Unit, 
         stringResource(R.string.text_input_placeholder_3),
         stringResource(R.string.text_input_placeholder_4)
     )
-    var input by rememberSaveable { mutableStateOf("") }
+    var input by rememberSaveable { mutableStateOf(initialText) }
     var placeholderIdx by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {

@@ -81,6 +81,8 @@ data class SettingsUiState(
     val fastingTrackingEnabled: Boolean = false,
     val walkRunQuickLogEnabled: Boolean = false,
     val smartSuggestionsEnabled: Boolean = true,
+    val yearReviewEnabled: Boolean = true,
+    val yearReviewEarlyUnlock: Boolean = false,
     val fastingDefaultGoalMinutes: Int = 16 * 60,
     val fastingGoalNotificationEnabled: Boolean = true,
     val healthConnectEnabled: Boolean = false,
@@ -273,6 +275,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val fastingTracking = container.prefs.fastingTrackingEnabled.first()
             val walkRunQuickLog = container.prefs.walkRunQuickLogEnabled.first()
             val smartSuggestions = container.prefs.smartSuggestionsEnabled.first()
+            val yearReview = container.prefs.yearReviewEnabled.first()
+            val yearReviewEarly = container.prefs.yearReviewEarlyUnlock.first()
             val fastingGoal = container.prefs.fastingDefaultGoalMinutes.first()
             val fastingNotification = container.prefs.fastingGoalNotificationEnabled.first()
             val workoutPreferences = container.workoutRepository.preferences.first()
@@ -362,6 +366,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     fastingTrackingEnabled = fastingTracking,
                     walkRunQuickLogEnabled = walkRunQuickLog,
                     smartSuggestionsEnabled = smartSuggestions,
+                    yearReviewEnabled = yearReview,
+                    yearReviewEarlyUnlock = yearReviewEarly,
                     fastingDefaultGoalMinutes = fastingGoal,
                     fastingGoalNotificationEnabled = fastingNotification,
                     healthConnectEnabled = storedHealthConnect,
@@ -1171,6 +1177,20 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.prefs.setSmartSuggestionsEnabled(v)
             _ui.value = _ui.value.copy(smartSuggestionsEnabled = v)
+        }
+    }
+
+    fun setYearReviewEnabled(v: Boolean) {
+        viewModelScope.launch {
+            container.prefs.setYearReviewEnabled(v)
+            _ui.value = _ui.value.copy(yearReviewEnabled = v)
+        }
+    }
+
+    fun setYearReviewEarlyUnlock(v: Boolean) {
+        viewModelScope.launch {
+            container.prefs.setYearReviewEarlyUnlock(v)
+            _ui.value = _ui.value.copy(yearReviewEarlyUnlock = v)
         }
     }
 

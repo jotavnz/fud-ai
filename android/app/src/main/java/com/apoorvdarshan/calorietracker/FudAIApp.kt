@@ -514,7 +514,20 @@ class AppContainer(app: FudAIApp) {
             // Other apps' exercise sessions, read-only (#479). Gated on its own optional
             // permission: it imports when granted and removes the copies once revoked. After
             // weigh-ins, since a first import can spend a whole sync's calorie-lookup budget.
-            importedHealthWorkoutRepository.synchronize()
+            val workoutImport = importedHealthWorkoutRepository.synchronize()
+
+            // Bookkeeping for Settings > Health Connect status only; never affects syncing.
+            val bodyTokenHeld = prefs.healthChangesToken.first() != null
+            com.apoorvdarshan.calorietracker.services.health.HealthSyncStatusStore(appContext).run {
+                markAutoSync()
+                markSynced(buildList {
+                    if (caps.weightRead && bodyTokenHeld) add(com.apoorvdarshan.calorietracker.services.health.HealthSyncType.WEIGHT)
+                    if (caps.bodyFatRead && bodyTokenHeld) add(com.apoorvdarshan.calorietracker.services.health.HealthSyncType.BODY_FAT)
+                    if (workoutImport == com.apoorvdarshan.calorietracker.data.HealthWorkoutImportResult.SYNCED) {
+                        add(com.apoorvdarshan.calorietracker.services.health.HealthSyncType.WORKOUTS)
+                    }
+                })
+            }
         } finally {
             healthReadSyncInFlight = false
         }

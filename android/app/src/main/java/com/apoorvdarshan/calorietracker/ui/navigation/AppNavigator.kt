@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.navigation
 
+import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.services.voice.VoiceSettingsSection
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,12 @@ class AppNavigator {
     /** A food entry waiting for Home to open its edit sheet. */
     val pendingFoodEntry = MutableStateFlow<UUID?>(null)
 
+    /** Text waiting for Home's Describe food dialog (Coach's "Send to food log"). */
+    val pendingFoodText = MutableStateFlow<String?>(null)
+
+    /** An estimated food waiting for Home's review sheet (Coach's log card Edit). */
+    val pendingFoodReview = MutableStateFlow<FoodAnalysis?>(null)
+
     private val _requests = MutableSharedFlow<NavRequest>(extraBufferCapacity = 8)
     val requests: SharedFlow<NavRequest> = _requests.asSharedFlow()
 
@@ -58,6 +65,19 @@ class AppNavigator {
 
     fun showHomeDate(date: LocalDate) {
         homeDiaryDate.value = date
+        showTab(FudAIRoutes.HOME)
+    }
+
+    /** Opens Home's Describe food dialog with [text] already typed. */
+    fun showFoodText(text: String) {
+        pendingFoodText.value = text
+        showTab(FudAIRoutes.HOME)
+    }
+
+    /** Opens Home's food review sheet for [analysis] on [date], where the user edits and logs it. */
+    fun showFoodReview(analysis: FoodAnalysis, date: LocalDate) {
+        homeDiaryDate.value = date
+        pendingFoodReview.value = analysis
         showTab(FudAIRoutes.HOME)
     }
 

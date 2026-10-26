@@ -1522,7 +1522,7 @@
     <string name="machine_coach_how_to">How to do it</string>
     <string name="machine_coach_add_today">Add to today</string>
     <string name="machine_coach_added_today">In today\'s workout</string>
-    <string name="machine_coach_more_options">Show 3 other options</string>
+    <string name="machine_coach_more_options">3 other options</string>
     <string name="machine_coach_disclaimer">Sets and reps are general guidance. Use a weight you can control for every rep and stop if you feel pain.</string>
     <string name="machine_coach_empty">No machines found for this muscle yet.</string>
     <string name="youtube_exercise_search_suffix">exercise</string>

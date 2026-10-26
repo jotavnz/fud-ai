@@ -61,6 +61,7 @@ import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.LocalDining
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.SportsMartialArts
@@ -1244,6 +1245,29 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
+                HorizontalDivider()
+                ToggleRow(
+                    stringResource(R.string.settings_year_review),
+                    ui.yearReviewEnabled,
+                    icon = Icons.Outlined.AutoAwesome,
+                    onChange = vm::setYearReviewEnabled
+                )
+                if (ui.yearReviewEnabled) {
+                    HorizontalDivider()
+                    ToggleRow(
+                        stringResource(R.string.settings_year_review_early),
+                        ui.yearReviewEarlyUnlock,
+                        icon = Icons.Outlined.LockOpen,
+                        onChange = vm::setYearReviewEarlyUnlock
+                    )
+                }
+                Text(
+                    stringResource(R.string.settings_year_review_footer),
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
             }
             }
 
@@ -1621,6 +1645,7 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Link,
                     onClick = ::openHealthConnectAccess
                 )
+                HealthSyncStatusEntry(container)
             }
             }
 

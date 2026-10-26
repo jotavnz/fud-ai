@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ajustes > Salud y datos > Estado de Health Connect. -->
+<resources>
+    <string name="hs_entry_title">Estado de Health Connect</string>
+    <string name="hs_entry_value">Detalles</string>
+    <string name="hs_title">Estado de Health Connect</string>
+    <string name="hs_back">Atrás</string>
+    <string name="hs_refresh">Actualizar</string>
+    <string name="hs_loading">Leyendo Health Connect…</string>
+    <string name="hs_failed">No se pudo leer Health Connect. Inténtalo de nuevo.</string>
+    <string name="hs_never">Nunca</string>
+
+    <string name="hs_section_connection">Conexión</string>
+    <string name="hs_availability_label">Health Connect</string>
+    <string name="hs_available">Disponible</string>
+    <string name="hs_profile_unsupported">No compatible con este perfil</string>
+    <string name="hs_update_required">Hay que instalarlo o actualizarlo</string>
+    <string name="hs_unavailable">No disponible en este dispositivo</string>
+    <string name="hs_sync_toggle_label">Sincronización en esta app</string>
+    <string name="hs_on">Activada</string>
+    <string name="hs_off">Desactivada</string>
+    <string name="hs_sync_off_hint">Activa Health Connect en Ajustes › Salud y datos para que se importen los datos.</string>
+    <string name="hs_history_label">Datos antiguos (historial)</string>
+    <string name="hs_history_granted">Historial completo</string>
+    <string name="hs_history_missing">Solo ~30 días antes de la primera conexión</string>
+    <string name="hs_history_unsupported">No compatible</string>
+    <string name="hs_auto_sync_how">Los datos se importan cada vez que abres la app (y cuando tocas Sincronizar ahora). No hay sincronización en segundo plano.</string>
+    <string name="hs_last_auto_sync">Última sincronización automática: %1$s</string>
+
+    <string name="hs_section_permissions">Permisos</string>
+    <string name="hs_perm_weight">Peso</string>
+    <string name="hs_perm_body_fat">Grasa corporal</string>
+    <string name="hs_perm_exercise">Entrenamientos (ejercicio)</string>
+    <string name="hs_perm_nutrition">Nutrición</string>
+    <string name="hs_perm_active">Calorías activas</string>
+    <string name="hs_perm_total">Calorías totales</string>
+    <string name="hs_perm_steps">Pasos</string>
+    <string name="hs_perm_history">Historial (datos de hace más de 30 días)</string>
+    <string name="hs_perm_background">Lectura en segundo plano</string>
+    <string name="hs_perm_read">Lectura</string>
+    <string name="hs_perm_write">Escritura</string>
+    <string name="hs_perm_granted">concedido</string>
+    <string name="hs_perm_missing">no concedido</string>
+    <string name="hs_perm_unknown">no se pudo verificar</string>
+    <string name="hs_background_note">La lectura en segundo plano solo se pide si activas el Resumen diario.</string>
+    <string name="hs_grant_missing">Conceder permisos faltantes</string>
+    <string name="hs_open_hc">Abrir Health Connect</string>
+
+    <string name="hs_section_actions">Importar</string>
+    <string name="hs_not_connected">Health Connect todavía no está conectado.</string>
+    <string name="hs_sync_now">Sincronizar ahora</string>
+    <string name="hs_import_history">Importar historial completo</string>
+    <string name="hs_import_history_hint">Lee hasta 10 años de entrenamientos, peso y grasa corporal que otras apps guardaron en Health Connect. Lo que ya se importó no se duplica y no se escribe nada de vuelta.</string>
+    <string name="hs_step_syncing">Sincronizando con Health Connect…</string>
+    <string name="hs_step_weights">Leyendo historial de peso…</string>
+    <string name="hs_step_body_fat">Leyendo historial de grasa corporal…</string>
+    <string name="hs_step_workouts">Leyendo historial de entrenamientos (puede tardar un minuto)…</string>
+    <string name="hs_result_summary">Se importaron %1$d entrenamientos, %2$d pesos y %3$d registros de grasa corporal.</string>
+    <string name="hs_result_nothing_new">Todo al día: no hay nada nuevo que importar.</string>
+    <string name="hs_result_incomplete">Algunas lecturas fallaron; se reintentarán en la próxima sincronización.</string>
+    <string name="hs_last_run">Última ejecución manual: %1$s</string>
+    <string name="hs_last_history">Última importación del historial completo: %1$s</string>
+
+    <string name="hs_section_workouts">Entrenamientos</string>
+    <string name="hs_section_weight">Peso</string>
+    <string name="hs_section_body_fat">Grasa corporal</string>
+    <string name="hs_section_nutrition">Comidas de otras apps</string>
+    <string name="hs_in_app">En la app: %1$d importados (de %2$d en total)</string>
+    <string name="hs_in_app_simple">En la app: %1$d importados</string>
+    <string name="hs_range">Rango: %1$s → %2$s</string>
+    <string name="hs_sources">Fuentes: %1$s</string>
+    <string name="hs_sources_none">Ninguna app ha compartido este tipo de dato todavía.</string>
+    <string name="hs_last_sync">Última sincronización correcta: %1$s</string>
+    <string name="hs_in_hc">En Health Connect: %1$d registros de otras apps</string>
+    <string name="hs_in_hc_range">Rango en Health Connect: %1$s → %2$s</string>
+    <string name="hs_hc_no_permission">Sin permiso de lectura para este tipo</string>
+    <string name="hs_hc_read_failed">No se pudo leer este tipo en Health Connect</string>
+    <string name="hs_workouts_window">La sincronización normal cubre los últimos 90 días; usa Importar historial completo para entrenamientos más antiguos.</string>
+    <string name="hs_nutrition_manual">Las comidas de otras apps se importan a mano con “Importar historial de nutrición”.</string>
+
+    <string name="hs_section_activity">Actividad (solo visualización)</string>
+    <string name="hs_steps_today">Pasos hoy: %1$s</string>
+    <string name="hs_steps_week">Pasos, últimos 7 días: %1$s</string>
+    <string name="hs_active_today">Calorías activas hoy: %1$s kcal</string>
+    <string name="hs_active_week">Calorías activas, últimos 7 días: %1$s kcal</string>
+    <string name="hs_latest_data">Dato más reciente del reloj/teléfono: %1$s</string>
+    <string name="hs_no_recent_data">Sin pasos ni calorías activas de otras apps en los últimos 3 días</string>
+    <string name="hs_activity_note">No se leen frecuencia cardiaca ni sueño: la app no pide esos permisos.</string>
+
+    <string name="hs_section_recent">Importados recientemente</string>
+    <string name="hs_recent_empty">Todavía no se ha importado nada de otras apps.</string>
+    <string name="hs_item_weight">Peso %1$s</string>
+    <string name="hs_item_body_fat">Grasa corporal %1$s</string>
+    <string name="hs_item_workout">%1$s · %2$d min</string>
+    <string name="hs_source_health_connect">Health Connect</string>
+</resources>

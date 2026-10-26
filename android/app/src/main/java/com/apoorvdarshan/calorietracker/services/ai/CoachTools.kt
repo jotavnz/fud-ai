@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.services.ai
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.CoachLogCollector
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
@@ -50,15 +51,26 @@ class CoachTools(
      * Without it the proposal tools are not offered.
      */
     private val proposals: CoachProposalCollector? = null,
-    private val clock: Clock = Clock.systemDefaultZone()
+    private val clock: Clock = Clock.systemDefaultZone(),
+    /**
+     * Set only by Coach chat, which shows log cards (food, water, body, workouts) the user must
+     * confirm. Without it `propose_log_entries` is not offered.
+     */
+    private val logProposals: CoachLogCollector? = null
 ) {
 
     /** The tools this instance offers: the data tools, plus the proposal tools for Coach chat. */
     val availableToolNames: List<String>
-        get() = TOOL_NAMES + if (proposals != null) PROPOSAL_TOOL_NAMES else emptyList()
+        get() = TOOL_NAMES + (if (proposals != null) PROPOSAL_TOOL_NAMES else emptyList()) +
+            (if (logProposals != null) listOf(CoachLogTool.TOOL_NAME) else emptyList())
+
+    private fun proposeLog(args: Map<String, Any?>): String =
+        CoachLogTool.propose(args, LocalDate.now(clock), logProposals)
 
     /** Android provider loops already deal in [JSONObject], so keep this adapter at the edge. */
-    fun execute(name: String, args: JSONObject): String = execute(
+    fun execute(name: String, args: JSONObject): String = if (name == CoachLogTool.TOOL_NAME) {
+        proposeLog(CoachLogTool.plain(args))
+    } else execute(
         name,
         ToolArguments(
             from = args.optString("from").takeIf { it.isNotBlank() },
@@ -82,7 +94,9 @@ class CoachTools(
     )
 
     /** JVM-friendly entry point used by focused unit tests and non-Android callers. */
-    fun execute(name: String, args: Map<String, Any?> = emptyMap()): String = execute(
+    fun execute(name: String, args: Map<String, Any?> = emptyMap()): String = if (name == CoachLogTool.TOOL_NAME) {
+        proposeLog(args)
+    } else execute(
         name,
         ToolArguments(
             from = args["from"] as? String,
@@ -115,6 +129,7 @@ class CoachTools(
         "get_exercise_lift_history" -> getExerciseLiftHistory(args)
         "search_exercise_library" -> searchExerciseLibrary(args)
         "propose_custom_exercise", "propose_add_exercise_to_day" -> propose(name, args.proposal)
+        CoachLogTool.TOOL_NAME -> proposeLog(emptyMap())
         else -> jsonError("Unknown tool: $name. Available tools: ${availableToolNames.joinToString(", ")}")
     }
 
@@ -988,6 +1003,7 @@ class CoachTools(
             "get_exercise_lift_history" to "Fetch per-exercise lift history from the local workout diary: dated sessions with logged weight × reps sets, the most recent session, and best load in kg. Use for questions like \"what did I bench last?\" or trends for one lift. Optional catalog_id narrows matching; otherwise exercise name is used.",
             "search_exercise_library" to "Search the exercise library (built-in catalog plus the user's own custom exercises) by name or keywords. Returns matching exercises with catalog_id, name, category, equipment, primary and secondary muscles, and is_custom. Optional muscle and equipment filters narrow the results. When the user shares a photo of a gym machine or exercise, identify it first, then search with its likely names. Read-only: it cannot add, edit, or create exercises.",
             "propose_custom_exercise" to "Propose creating a custom exercise in the user's exercise library, for example from a photo of a gym machine that search_exercise_library did not find. This does NOT save anything: the user sees a card with the details and must tap Add to create it, or Dismiss. Search the library first and propose only exercises that are not already there, using the library's category, equipment and muscle names. Returns a proposal_id. Afterwards tell the user to review the card; never say the exercise was created.",
+            CoachLogTool.TOOL_NAME to CoachLogTool.DESCRIPTION,
             "propose_add_exercise_to_day" to "Propose adding one library exercise to the user's workout diary on a date (default today). Use a catalog_id from search_exercise_library, built-in or custom. Optional sets, reps and duration_minutes prefill the entry; reps and duration record performed work, so a future date takes sets only. This does NOT save anything: the user sees a card and must tap Add, or Dismiss. A custom exercise proposed with propose_custom_exercise can be added only after the user has added it and it shows up in search_exercise_library. Returns a proposal_id. Afterwards tell the user to review the card; never say it was added."
         )
 
@@ -1012,6 +1028,7 @@ class CoachTools(
 
         /** One schema source is wrapped for Gemini, Anthropic, and OpenAI by [ChatService]. */
         fun parameterSchemaFor(toolName: String): Map<String, Any> {
+            if (toolName == CoachLogTool.TOOL_NAME) return CoachLogTool.parameterSchema()
             if (toolName == "get_data_summary" || toolName == "get_workout_preferences") {
                 return linkedMapOf("type" to "object", "properties" to emptyMap<String, Any>())
             }

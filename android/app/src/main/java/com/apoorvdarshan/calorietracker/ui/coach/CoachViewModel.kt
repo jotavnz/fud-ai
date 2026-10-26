@@ -9,11 +9,23 @@ import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.CoachLogCollector
+import com.apoorvdarshan.calorietracker.models.CoachLogItem
+import com.apoorvdarshan.calorietracker.models.CoachLogProposal
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
+import com.apoorvdarshan.calorietracker.models.CurrentMealSchedule
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.services.ai.AiError
+import com.apoorvdarshan.calorietracker.services.ai.CoachLogService
 import com.apoorvdarshan.calorietracker.services.ai.CoachProposalApplier
+import com.apoorvdarshan.calorietracker.services.voice.AndroidVoiceAppPorts
+import com.apoorvdarshan.calorietracker.services.voice.BarcodeOutcome
+import com.apoorvdarshan.calorietracker.services.voice.CameraOutcome
+import com.apoorvdarshan.calorietracker.services.voice.PhotoOutcome
+import com.apoorvdarshan.calorietracker.services.voice.PickOutcome
+import com.apoorvdarshan.calorietracker.services.voice.VoiceCameraMode
+import com.apoorvdarshan.calorietracker.services.voice.VoiceUiBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +37,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import java.util.Base64
 import java.util.UUID
 
@@ -45,16 +58,34 @@ data class CoachUiState(
     val errorRes: Int? = null,
     val suggestions: List<Int> = emptyList(),
     /** Proposal cards whose Add or Dismiss is being saved; their buttons are disabled meanwhile. */
-    val resolvingProposalIds: Set<String> = emptySet()
+    val resolvingProposalIds: Set<String> = emptySet(),
+    /** Log cards being estimated or saved; their buttons are disabled meanwhile. */
+    val busyLogProposalIds: Set<String> = emptySet()
 )
 
 class CoachViewModel(private val container: AppContainer) : ViewModel() {
     private val _ui = MutableStateFlow(CoachUiState())
     val ui: StateFlow<CoachUiState> = _ui.asStateFlow()
 
+    /** The voice assistant's app ports, so a log from the chat takes exactly the same write paths. */
+    private val logService by lazy {
+        CoachLogService(AndroidVoiceAppPorts(container, NoVoiceUi)) { CurrentMealSchedule.value }
+    }
+
+    /** Log cards whose estimation runs in this ViewModel, so one card is never estimated twice. */
+    private val preparingLogIds = mutableSetOf<String>()
+
     init {
         container.chatRepository.messages
-            .onEach { _ui.value = _ui.value.copy(messages = it) }
+            .onEach { messages ->
+                _ui.value = _ui.value.copy(messages = messages)
+                // Cards left estimating (the app closed mid-way) resume here.
+                messages.forEach { message ->
+                    message.logProposals
+                        .filter { it.status == CoachLogProposal.Status.PREPARING && it.id !in preparingLogIds }
+                        .forEach { prepareLogProposal(message.id, it) }
+                }
+            }
             .launchIn(viewModelScope)
 
         // Keep chips current when either the user's goal or their workout history changes.
@@ -128,6 +159,8 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 val workoutState = container.workoutRepository.snapshot()
                 val exerciseLibrary = currentExerciseLibrary()
                 val proposals = CoachProposalCollector()
+                val logProposals = CoachLogCollector()
+                val appContext = container.appContext
 
                 val reply = container.chatService.sendMessage(
                     history = history,
@@ -146,10 +179,22 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     workoutPreferences = workoutState.preferences,
                     workoutPlanWeightUnit = if (weightMetric) WorkoutWeightUnit.KG else WorkoutWeightUnit.LBS,
                     exerciseLibrary = exerciseLibrary,
-                    proposals = proposals
+                    proposals = proposals,
+                    logProposals = logProposals,
+                    appLanguage = appContext.getString(R.string.cl_prompt_language),
+                    logButtonLabel = appContext.getString(R.string.cl_action_log)
                 )
+                val logCards = logProposals.proposals
+                val content = reply.trim().ifEmpty {
+                    if (logCards.isNotEmpty()) appContext.getString(R.string.cl_reply_review_card) else reply.trim()
+                }
                 container.chatRepository.append(
-                    ChatMessage(role = ChatMessage.Role.ASSISTANT, content = reply.trim(), proposals = proposals.proposals)
+                    ChatMessage(
+                        role = ChatMessage.Role.ASSISTANT,
+                        content = content,
+                        proposals = proposals.proposals,
+                        logProposals = logCards
+                    )
                 )
                 _ui.value = _ui.value.copy(sending = false)
             } catch (e: AiError) {
@@ -216,6 +261,126 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
+    // MARK: - Log cards
+
+    /**
+     * Estimates a new card's foods with Home's text analysis (and reads its workouts) outside the
+     * chat lock, then stores the result if the card is still waiting for it.
+     */
+    private fun prepareLogProposal(messageId: UUID, proposal: CoachLogProposal) {
+        if (!preparingLogIds.add(proposal.id)) return
+        markLogBusy(proposal.id, true)
+        viewModelScope.launch {
+            try {
+                val prepared = logService.prepare(proposal)
+                container.chatRepository.updateLogProposal(messageId, proposal.id) { current ->
+                    if (current.status == CoachLogProposal.Status.PREPARING) prepared else null
+                }
+            } catch (e: Throwable) {
+                ensureActive()
+                logFailure(e)
+                // Keep the model's own estimates so the user can still log or edit them.
+                container.chatRepository.updateLogProposal(messageId, proposal.id) { current ->
+                    if (current.status == CoachLogProposal.Status.PREPARING) current.copy(status = CoachLogProposal.Status.READY) else null
+                }
+            } finally {
+                preparingLogIds.remove(proposal.id)
+                markLogBusy(proposal.id, false)
+            }
+        }
+    }
+
+    /** The user tapped Log: writes every included row once, under the chat lock. */
+    fun logProposal(messageId: UUID, proposalId: String) = runLogAction(proposalId) {
+        var outcome: CoachLogService.LogOutcome? = null
+        container.chatRepository.updateLogProposal(messageId, proposalId) { current ->
+            if (current.status != CoachLogProposal.Status.READY || current.loggableItems.isEmpty()) return@updateLogProposal null
+            logService.log(current).also { outcome = it }.proposal
+        }
+        val result = outcome ?: return@runLogAction
+        if (result.failed > 0) {
+            _ui.value = _ui.value.copy(
+                error = null,
+                errorRes = if (result.foodBlockedByFast) R.string.cl_error_fasting else R.string.cl_error_some_failed
+            )
+        }
+    }
+
+    fun dismissLogProposal(messageId: UUID, proposalId: String) = runLogAction(proposalId) {
+        container.chatRepository.updateLogProposal(messageId, proposalId) { current ->
+            if (current.status == CoachLogProposal.Status.READY || current.status == CoachLogProposal.Status.PREPARING) {
+                current.copy(status = CoachLogProposal.Status.DISMISSED)
+            } else null
+        }
+    }
+
+    /** Includes or leaves out one row before logging. */
+    fun toggleLogItem(messageId: UUID, proposalId: String, itemId: String) = runLogAction(proposalId) {
+        container.chatRepository.updateLogProposal(messageId, proposalId) { current ->
+            if (current.status != CoachLogProposal.Status.READY) return@updateLogProposal null
+            current.copy(items = current.items.map { item ->
+                if (item.id == itemId && item.state == CoachLogItem.State.PENDING) item.copy(included = !item.included) else item
+            })
+        }
+    }
+
+    /**
+     * Edit on a food row: opens Home's review sheet with the estimate, where the user adjusts the
+     * portion, meal and nutrition and logs it. The row is then left out of this card.
+     */
+    fun editLogItem(messageId: UUID, proposalId: String, itemId: String) = runLogAction(proposalId) {
+        var handOff: Pair<CoachLogItem, com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis>? = null
+        container.chatRepository.updateLogProposal(messageId, proposalId) { current ->
+            if (current.status != CoachLogProposal.Status.READY) return@updateLogProposal null
+            val item = current.items.firstOrNull { it.id == itemId && it.state == CoachLogItem.State.PENDING }
+                ?: return@updateLogProposal null
+            val analysis = item.reviewAnalysis() ?: return@updateLogProposal null
+            handOff = item to analysis
+            current.copy(items = current.items.map {
+                if (it.id == itemId) it.copy(state = CoachLogItem.State.HANDED_OFF, included = false) else it
+            })
+        }
+        handOff?.let { (item, analysis) ->
+            container.navigator.showFoodReview(analysis, LocalDate.parse(item.date))
+        }
+    }
+
+    /** A logged food row opens its diary entry's edit sheet on Home. */
+    fun openLoggedFood(item: CoachLogItem) {
+        if (item.kind != CoachLogItem.Kind.FOOD || item.state != CoachLogItem.State.LOGGED) return
+        val id = runCatching { UUID.fromString(item.id) }.getOrNull() ?: return
+        container.navigator.showFoodEntry(id, LocalDate.parse(item.date))
+    }
+
+    /** "Send to food log": Home's Describe food dialog with the message's plain text typed in. */
+    fun sendToFoodLog(message: ChatMessage) {
+        val text = CoachMessageText.plain(message.content).take(MAX_FOOD_TEXT_CHARS)
+        if (text.isBlank()) return
+        container.navigator.showFoodText(text)
+    }
+
+    private fun runLogAction(proposalId: String, work: suspend () -> Unit) {
+        if (proposalId in _ui.value.busyLogProposalIds) return
+        markLogBusy(proposalId, true)
+        _ui.value = _ui.value.copy(error = null, errorRes = null)
+        viewModelScope.launch {
+            try {
+                work()
+            } catch (e: Throwable) {
+                ensureActive()
+                logFailure(e)
+                _ui.value = _ui.value.copy(error = null, errorRes = R.string.cl_error_some_failed)
+            } finally {
+                markLogBusy(proposalId, false)
+            }
+        }
+    }
+
+    private fun markLogBusy(proposalId: String, busy: Boolean) {
+        val ids = _ui.value.busyLogProposalIds
+        _ui.value = _ui.value.copy(busyLogProposalIds = if (busy) ids + proposalId else ids - proposalId)
+    }
+
     /** Built-in catalog plus the user's custom activities and exercises. */
     private suspend fun currentExerciseLibrary(): List<ExerciseItem> {
         val workoutState = container.workoutRepository.snapshot()
@@ -245,7 +410,19 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
 
     private companion object {
         const val TAG = "FudAICoach"
+        const val MAX_FOOD_TEXT_CHARS = 2_000
     }
+}
+
+/** Coach logs never open the camera or photo picker, so the voice ports get a UI that has none. */
+private object NoVoiceUi : VoiceUiBridge {
+    override fun collapseForNavigation() = Unit
+    override fun cameraMode(): VoiceCameraMode? = null
+    override suspend fun openCamera(mode: VoiceCameraMode): CameraOutcome = CameraOutcome.Unavailable
+    override fun closeCamera() = Unit
+    override suspend fun takePhoto(): PhotoOutcome = PhotoOutcome.NotOpen
+    override suspend fun scanBarcode(): BarcodeOutcome = BarcodeOutcome.Unavailable
+    override suspend fun pickPhotos(maxCount: Int): PickOutcome = PickOutcome.Cancelled
 }
 
 /**

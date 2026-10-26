@@ -99,7 +99,16 @@ class ImportedHealthWorkoutRepository(
         true
     }
 
-    suspend fun synchronize(): HealthWorkoutImportResult = mutex.withLock {
+    /**
+     * [lookbackDays] defaults to the rolling [LOOKBACK_DAYS] window; the Health Connect status
+     * screen's "Import full history" passes a longer one (sessions older than the default window
+     * are kept by later regular syncs, see [reconcileImportedWorkouts]). [maxCalorieLookups]
+     * caps aggregate reads for this call.
+     */
+    suspend fun synchronize(
+        lookbackDays: Long = LOOKBACK_DAYS,
+        maxCalorieLookups: Int = MAX_CALORIE_LOOKUPS_PER_SYNC
+    ): HealthWorkoutImportResult = mutex.withLock {
         val granted = source.exerciseReadGranted() ?: return@withLock HealthWorkoutImportResult.SKIPPED
         if (!granted) {
             // Access was declined or revoked: drop the copies made while it was granted.
@@ -108,7 +117,7 @@ class ImportedHealthWorkoutRepository(
         }
 
         val end = now()
-        val queryStart = end.minus(Duration.ofDays(LOOKBACK_DAYS))
+        val queryStart = end.minus(Duration.ofDays(lookbackDays.coerceAtLeast(1L)))
         val read = source.readSessions(queryStart, end) ?: return@withLock HealthWorkoutImportResult.SKIPPED
         val previous = store.importedHealthWorkouts.first().associateBy { it.id }
         // One row per workout, even when two apps recorded it (Garmin Connect and Strava).
@@ -132,7 +141,7 @@ class ImportedHealthWorkoutRepository(
                         previous[it.recordId]?.caloriesCheckedAtEpochMs ?: Long.MIN_VALUE
                     }.thenByDescending { it.startTime }.thenBy { it.recordId }
                 )
-                .take(MAX_CALORIE_LOOKUPS_PER_SYNC)
+                .take(maxCalorieLookups.coerceAtLeast(0))
                 .mapTo(HashSet()) { it.recordId }
         } else {
             emptySet()

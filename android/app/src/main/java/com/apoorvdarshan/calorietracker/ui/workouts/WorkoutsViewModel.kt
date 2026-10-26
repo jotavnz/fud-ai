@@ -18,6 +18,7 @@ import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftDay
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftHistory
 import com.apoorvdarshan.calorietracker.models.GroupFatigue
+import com.apoorvdarshan.calorietracker.models.MachineCoach
 import com.apoorvdarshan.calorietracker.models.MachineMuscleGroup
 import com.apoorvdarshan.calorietracker.models.PlannedExercise
 import com.apoorvdarshan.calorietracker.models.PlannedSet
@@ -236,8 +237,64 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
     /** Muscle group open in the machine coach, or null when it is closed. Not persisted. */
     var machineGroup by mutableStateOf<MachineMuscleGroup?>(null)
 
-    /** Which page of three suggestions the machine coach shows ("show 3 other options"). */
-    var machinePage by mutableStateOf(0)
+    /** Exercise ids of the machines the coach currently suggests (normally three). */
+    var machineSelection by mutableStateOf<List<String>>(emptyList())
+        private set
+
+    /** Earlier selections, newest last, so an accidental swap can be undone. */
+    private var machineHistory by mutableStateOf<List<List<String>>>(emptyList())
+    val canUndoMachines: Boolean get() = machineHistory.isNotEmpty()
+
+    /** Ids already offered for this group, so swaps keep bringing new machines before repeating. */
+    private val machineSeen = mutableSetOf<String>()
+
+    /** Starts (or repairs) the selection from [candidates]; call whenever the candidate list changes. */
+    fun syncMachineSelection(candidates: List<String>) {
+        if (machineSelection.isNotEmpty() && machineSelection.all { it in candidates }) return
+        machineSelection = candidates.take(MachineCoach.SUGGESTION_COUNT)
+        machineHistory = emptyList()
+        machineSeen.clear()
+        machineSeen += machineSelection
+    }
+
+    /** Replaces all suggestions with machines not shown yet ("show 3 other options"). */
+    fun showOtherMachines(candidates: List<String>) {
+        val next = nextMachines(candidates, MachineCoach.SUGGESTION_COUNT, exclude = machineSelection.toSet())
+        if (next.isEmpty()) return
+        pushMachineHistory()
+        machineSelection = next
+    }
+
+    /** Replaces only the suggestion at [index], keeping the others the user liked. */
+    fun swapMachine(index: Int, candidates: List<String>) {
+        if (index !in machineSelection.indices) return
+        val next = nextMachines(candidates, 1, exclude = machineSelection.toSet()).firstOrNull() ?: return
+        pushMachineHistory()
+        machineSelection = machineSelection.toMutableList().also { it[index] = next }
+    }
+
+    fun undoMachines() {
+        val previous = machineHistory.lastOrNull() ?: return
+        machineHistory = machineHistory.dropLast(1)
+        machineSelection = previous
+    }
+
+    private fun pushMachineHistory() {
+        machineHistory = (machineHistory + listOf(machineSelection)).takeLast(20)
+    }
+
+    /** Unseen candidates first (in ranking order); once all were seen, start over. */
+    private fun nextMachines(candidates: List<String>, count: Int, exclude: Set<String>): List<String> {
+        val available = candidates.filter { it !in exclude }
+        if (available.isEmpty()) return emptyList()
+        var unseen = available.filter { it !in machineSeen }
+        if (unseen.isEmpty()) {
+            machineSeen.clear()
+            machineSeen += exclude
+            unseen = available
+        }
+        return unseen.take(count).also { machineSeen += it }
+    }
 
     private val _trainingGoal = mutableStateOf(
         prefs.getString(K_TRAINING_GOAL, null)?.let { runCatching { TrainingGoal.valueOf(it) }.getOrNull() }
@@ -252,7 +309,9 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     fun openMachineCoach(group: MachineMuscleGroup) {
-        machinePage = 0
+        machineSelection = emptyList()
+        machineHistory = emptyList()
+        machineSeen.clear()
         machineGroup = group
     }
 

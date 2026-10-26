@@ -1,6 +1,10 @@
 package com.apoorvdarshan.calorietracker.ui.coach
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.Build
+import android.widget.Toast
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -17,6 +21,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +62,8 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Forum
@@ -67,6 +75,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -127,6 +137,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.CoachLogItem
+import com.apoorvdarshan.calorietracker.models.CoachLogProposal
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
 import com.apoorvdarshan.calorietracker.ui.components.InAppCameraCaptureDialog
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
@@ -238,6 +250,16 @@ fun CoachScreen(container: AppContainer) {
         voice.nativeLocale = voiceLanguage.nativeLocaleTag()
     }
 
+    val weightUnit by container.prefs.weightUnit.collectAsState(initial = "kg")
+    val copyMessage: (ChatMessage) -> Unit = { message ->
+        val text = CoachMessageText.plain(message.content)
+        ctx.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("Coach", text))
+        // Android 13+ confirms copies with its own clipboard preview.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            Toast.makeText(ctx, R.string.cl_msg_copied, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     LaunchedEffect(ui.messages.size, ui.sending) {
         if (ui.messages.isNotEmpty()) listState.animateScrollToItem(ui.messages.size - 1)
     }
@@ -330,6 +352,17 @@ fun CoachScreen(container: AppContainer) {
                         resolvingProposalIds = ui.resolvingProposalIds,
                         onAddProposal = { message, proposal -> vm.addProposal(message.id, proposal.id) },
                         onDismissProposal = { message, proposal -> vm.dismissProposal(message.id, proposal.id) },
+                        busyLogProposalIds = ui.busyLogProposalIds,
+                        weightMetric = weightUnit == "kg",
+                        logActions = LogCardActions(
+                            onLog = { message, proposal -> vm.logProposal(message.id, proposal.id) },
+                            onCancel = { message, proposal -> vm.dismissLogProposal(message.id, proposal.id) },
+                            onToggle = { message, proposal, item -> vm.toggleLogItem(message.id, proposal.id, item.id) },
+                            onEdit = { message, proposal, item -> vm.editLogItem(message.id, proposal.id, item.id) },
+                            onOpenLogged = { item -> vm.openLoggedFood(item) }
+                        ),
+                        onCopy = copyMessage,
+                        onSendToFoodLog = { message -> vm.sendToFoodLog(message) },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -528,6 +561,11 @@ private fun MessageList(
     resolvingProposalIds: Set<String>,
     onAddProposal: (ChatMessage, CoachExerciseProposal) -> Unit,
     onDismissProposal: (ChatMessage, CoachExerciseProposal) -> Unit,
+    busyLogProposalIds: Set<String>,
+    weightMetric: Boolean,
+    logActions: LogCardActions,
+    onCopy: (ChatMessage) -> Unit,
+    onSendToFoodLog: (ChatMessage) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -541,7 +579,12 @@ private fun MessageList(
                 msg = message,
                 resolvingProposalIds = resolvingProposalIds,
                 onAddProposal = { onAddProposal(message, it) },
-                onDismissProposal = { onDismissProposal(message, it) }
+                onDismissProposal = { onDismissProposal(message, it) },
+                busyLogProposalIds = busyLogProposalIds,
+                weightMetric = weightMetric,
+                logActions = logActions,
+                onCopy = { onCopy(message) },
+                onSendToFoodLog = { onSendToFoodLog(message) }
             )
         }
 
@@ -638,27 +681,77 @@ private fun TypingIndicator() {
     }
 }
 
+/** What a log card's buttons do, grouped so the message list passes one value down. */
+internal class LogCardActions(
+    val onLog: (ChatMessage, CoachLogProposal) -> Unit,
+    val onCancel: (ChatMessage, CoachLogProposal) -> Unit,
+    val onToggle: (ChatMessage, CoachLogProposal, CoachLogItem) -> Unit,
+    val onEdit: (ChatMessage, CoachLogProposal, CoachLogItem) -> Unit,
+    val onOpenLogged: (CoachLogItem) -> Unit
+)
+
 @Composable
 private fun MessageBubble(
     msg: ChatMessage,
     resolvingProposalIds: Set<String> = emptySet(),
     onAddProposal: (CoachExerciseProposal) -> Unit = {},
-    onDismissProposal: (CoachExerciseProposal) -> Unit = {}
+    onDismissProposal: (CoachExerciseProposal) -> Unit = {},
+    busyLogProposalIds: Set<String> = emptySet(),
+    weightMetric: Boolean = true,
+    logActions: LogCardActions? = null,
+    onCopy: () -> Unit = {},
+    onSendToFoodLog: () -> Unit = {}
 ) {
     val isUser = msg.role == ChatMessage.Role.USER
+    var menuOpen by remember { mutableStateOf(false) }
+    // Long-press any bubble for Copy / Send to food log.
+    val bubble: @Composable () -> Unit = {
+        Box {
+            Bubble(
+                content = msg.content,
+                isUser = isUser,
+                attachmentImageBase64 = if (isUser) msg.attachmentImageBase64 else null,
+                modifier = Modifier.combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                    onLongClick = { menuOpen = true }
+                )
+            )
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.cl_msg_copy)) },
+                    leadingIcon = { Icon(Icons.Filled.ContentCopy, contentDescription = null) },
+                    onClick = {
+                        menuOpen = false
+                        onCopy()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.cl_msg_send_to_log)) },
+                    leadingIcon = { Icon(Icons.Filled.Restaurant, contentDescription = null) },
+                    onClick = {
+                        menuOpen = false
+                        onSendToFoodLog()
+                    }
+                )
+            }
+        }
+    }
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         verticalAlignment = Alignment.Top,
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
-        if (!isUser && msg.proposals.isNotEmpty()) {
+        if (!isUser) {
             AssistantBadge()
             Spacer(Modifier.width(8.dp))
             Column(
                 modifier = Modifier.weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Bubble(content = msg.content, isUser = false)
+                bubble()
+                MessageActions(onCopy = onCopy, onSendToFoodLog = onSendToFoodLog)
                 msg.proposals.forEach { proposal ->
                     ProposalCard(
                         proposal = proposal,
@@ -667,16 +760,49 @@ private fun MessageBubble(
                         onDismiss = { onDismissProposal(proposal) }
                     )
                 }
+                if (logActions != null) {
+                    msg.logProposals.forEach { proposal ->
+                        CoachLogCard(
+                            proposal = proposal,
+                            busy = proposal.id in busyLogProposalIds,
+                            weightMetric = weightMetric,
+                            onLog = { logActions.onLog(msg, proposal) },
+                            onCancel = { logActions.onCancel(msg, proposal) },
+                            onToggle = { logActions.onToggle(msg, proposal, it) },
+                            onEdit = { logActions.onEdit(msg, proposal, it) },
+                            onOpenLogged = logActions.onOpenLogged
+                        )
+                    }
+                }
             }
-            Spacer(Modifier.width(48.dp))
-        } else if (!isUser) {
-            AssistantBadge()
-            Spacer(Modifier.width(8.dp))
-            Bubble(content = msg.content, isUser = false)
             Spacer(Modifier.width(48.dp))
         } else {
             Spacer(Modifier.width(48.dp))
-            Bubble(content = msg.content, isUser = true, attachmentImageBase64 = msg.attachmentImageBase64)
+            bubble()
+        }
+    }
+}
+
+/** Small Copy and Send-to-food-log buttons under a Coach reply. */
+@Composable
+private fun MessageActions(onCopy: () -> Unit, onSendToFoodLog: () -> Unit) {
+    val tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        IconButton(onClick = onCopy, modifier = Modifier.size(32.dp)) {
+            Icon(
+                Icons.Filled.ContentCopy,
+                contentDescription = stringResource(R.string.cl_msg_copy_description),
+                tint = tint,
+                modifier = Modifier.size(15.dp)
+            )
+        }
+        IconButton(onClick = onSendToFoodLog, modifier = Modifier.size(32.dp)) {
+            Icon(
+                Icons.Filled.Restaurant,
+                contentDescription = stringResource(R.string.cl_msg_send_to_log_description),
+                tint = tint,
+                modifier = Modifier.size(15.dp)
+            )
         }
     }
 }
@@ -845,7 +971,12 @@ private fun proposalDetails(proposal: CoachExerciseProposal): List<String> {
  *   shadow asst: Black 0.12, radius 6, y 3
  */
 @Composable
-private fun Bubble(content: String, isUser: Boolean, attachmentImageBase64: String? = null) {
+private fun Bubble(
+    content: String,
+    isUser: Boolean,
+    attachmentImageBase64: String? = null,
+    modifier: Modifier = Modifier
+) {
     val shape = RoundedCornerShape(
         topStart = if (isUser) 20.dp else 8.dp,
         topEnd = if (isUser) 8.dp else 20.dp,
@@ -862,7 +993,7 @@ private fun Bubble(content: String, isUser: Boolean, attachmentImageBase64: Stri
     val shadowColor = if (isUser) AppColors.Calorie.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.08f)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .widthIn(max = 320.dp)
             .shadow(
                 elevation = shadowElevation,

@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -985,9 +986,29 @@ private fun RankedRow(
 
 // ── Progress entry point ────────────────────────────────────────────
 
-/** The prominent "Your 2026 in review" card near the top of Progress. */
+/** Days of use before the Year in review unlocks on its own. */
+internal const val YEAR_REVIEW_UNLOCK_DAYS = 365L
+
+/**
+ * Days left until the Year in review unlocks, counted from the app's first install, or
+ * null when it is already unlocked.
+ */
+internal fun yearReviewDaysLeft(firstInstallMillis: Long, nowMillis: Long = System.currentTimeMillis()): Int? {
+    val usedDays = java.util.concurrent.TimeUnit.MILLISECONDS.toDays((nowMillis - firstInstallMillis).coerceAtLeast(0))
+    val left = YEAR_REVIEW_UNLOCK_DAYS - usedDays
+    return if (left > 0) left.toInt() else null
+}
+
+/**
+ * The prominent "Your 2026 in review" card near the top of Progress. With [lockedDaysLeft]
+ * it shows a locked "come back in…" state and does nothing on tap.
+ */
 @Composable
-internal fun YearInReviewEntryCard(year: Int, onClick: () -> Unit) {
+internal fun YearInReviewEntryCard(year: Int, lockedDaysLeft: Int? = null, onClick: () -> Unit) {
+    if (lockedDaysLeft != null) {
+        LockedYearInReviewCard(lockedDaysLeft)
+        return
+    }
     val shape = RoundedCornerShape(22.dp)
     Row(
         Modifier
@@ -1025,6 +1046,45 @@ internal fun YearInReviewEntryCard(year: Int, onClick: () -> Unit) {
             )
         }
         Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+    }
+}
+
+@Composable
+private fun LockedYearInReviewCard(daysLeft: Int) {
+    val shape = RoundedCornerShape(22.dp)
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(onSurface.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Filled.Lock, contentDescription = null, tint = onSurface.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(R.string.yr_locked_title), color = onSurface, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            // Over two months away reads better in months ("Vuelve en 9 meses").
+            val months = daysLeft / 30
+            Text(
+                if (months >= 2) {
+                    pluralStringResource(R.plurals.yr_locked_months, months, months)
+                } else {
+                    pluralStringResource(R.plurals.yr_locked_days, daysLeft, daysLeft)
+                },
+                color = onSurface.copy(alpha = 0.65f),
+                fontSize = 13.sp
+            )
+        }
     }
 }
 

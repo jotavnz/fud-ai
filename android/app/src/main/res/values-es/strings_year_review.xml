@@ -157,4 +157,17 @@
     <string name="yr_share_weight">Cambio de peso: %1$s</string>
     <string name="yr_share_footer">Registrado con mi entrenador IA</string>
     <string name="yr_share_chooser">Comparte tu resumen</string>
-</resources>
+    <string name="settings_year_review">Resumen anual</string>
+    <string name="settings_year_review_early">Verlo antes del año</string>
+    <string name="settings_year_review_footer">Un resumen estilo Wrapped de todo lo que registras, en Progreso. Se desbloquea al cumplir un año usando la app; activa la vista previa para ver cómo vas.</string>
+    <string name="yr_locked_title">Tu resumen anual</string>
+    <plurals name="yr_locked_days">
+        <item quantity="one">Se desbloquea en %d día. ¡Sigue registrando!</item>
+        <item quantity="many">Se desbloquea en %d días. ¡Sigue registrando!</item>
+        <item quantity="other">Se desbloquea en %d días. ¡Sigue registrando!</item>
+    </plurals>
+    <plurals name="yr_locked_months">
+        <item quantity="one">Vuelve en %d mes. ¡Sigue registrando!</item>
+        <item quantity="many">Vuelve en %d meses. ¡Sigue registrando!</item>
+        <item quantity="other">Vuelve en %d meses. ¡Sigue registrando!</item>
+    </plurals></resources>

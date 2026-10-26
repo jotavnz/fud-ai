@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Coach chat: log cards (food, water, body, workouts), copy and "Send to food log". -->
+<resources>
+    <!-- English name of the app language, sent to the AI so Coach replies in it (Spanish file: "Spanish"). -->
+    <string name="cl_prompt_language">English</string>
+
+    <string name="cl_card_title">Log to your diary</string>
+    <string name="cl_card_preparing">Estimating nutrition…</string>
+    <string name="cl_action_log">Log</string>
+    <string name="cl_action_edit">Edit</string>
+    <string name="cl_action_done">Done</string>
+    <string name="cl_action_cancel">Cancel</string>
+    <string name="cl_action_log_description">Log these items to your diary</string>
+    <string name="cl_open_editor">Open in editor</string>
+    <string name="cl_edit_hint">Uncheck anything you don\'t want to log, or open a food in the editor to change its portion or nutrition.</string>
+    <string name="cl_reply_review_card">Here\'s what I\'d log. Review the card and tap Log.</string>
+
+    <string name="cl_total">Total: %1$s · P %2$s g · C %3$s g · F %4$s g</string>
+    <string name="cl_food_macros">%1$s · P %2$s g · C %3$s g · F %4$s g</string>
+    <string name="cl_meal_and_date">%1$s · %2$s</string>
+    <string name="cl_today">today</string>
+    <string name="cl_estimate_note">Coach\'s estimate</string>
+    <string name="cl_water">Water</string>
+    <string name="cl_water_amount">%1$d ml</string>
+    <string name="cl_weight">Weight</string>
+    <string name="cl_weight_kg">%1$s kg</string>
+    <string name="cl_weight_lb">%1$s lb</string>
+    <string name="cl_body_fat">Body fat</string>
+    <string name="cl_body_fat_percent">%1$s%%</string>
+    <string name="cl_workout">Workout</string>
+    <string name="cl_cardio_minutes">%1$d min</string>
+    <string name="cl_cardio_minutes_burn">%1$d min · %2$s burned</string>
+
+    <string name="cl_item_left_out">Left out</string>
+    <string name="cl_item_in_editor">Opened in the food editor</string>
+    <string name="cl_item_logged">Logged</string>
+    <string name="cl_item_error_analysis">Couldn\'t estimate this food. Log it from Home.</string>
+    <string name="cl_item_error_workout">Couldn\'t read this workout. Log it from Workouts.</string>
+    <string name="cl_item_error_save">Couldn\'t save this item.</string>
+    <string name="cl_item_include_description">Include %1$s</string>
+    <string name="cl_item_edit_description">Open %1$s in the food editor</string>
+    <string name="cl_item_view_description">Edit %1$s in your diary</string>
+
+    <string name="cl_logged_today">Logged in today\'s diary</string>
+    <string name="cl_logged_on">Logged in your diary for %1$s</string>
+    <string name="cl_logged_tap_hint">Tap a food to edit it.</string>
+    <string name="cl_dismissed">Cancelled — nothing was logged</string>
+
+    <string name="cl_error_fasting">Food can\'t be logged while a fast is running. End the fast first, then tap Log again.</string>
+    <string name="cl_error_some_failed">Some items couldn\'t be logged. Tap Log to try again.</string>
+
+    <string name="cl_msg_copy">Copy</string>
+    <string name="cl_msg_copied">Copied to clipboard</string>
+    <string name="cl_msg_send_to_log">Send to food log</string>
+    <string name="cl_msg_copy_description">Copy message</string>
+    <string name="cl_msg_send_to_log_description">Send message to food log</string>
+</resources>

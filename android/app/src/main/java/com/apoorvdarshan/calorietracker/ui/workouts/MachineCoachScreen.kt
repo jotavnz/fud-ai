@@ -20,6 +20,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -165,7 +169,11 @@ internal fun MachineCoachScreen(
     val state = vm.diaryUiState
     val fatiguedMuscles = if (smart) state.fatiguedMuscles else emptySet()
     val candidates = remember(group, repo, fatiguedMuscles) { MachineCoach.candidates(group, repo.byId, fatiguedMuscles) }
-    val suggestions = remember(candidates, vm.machinePage) { MachineCoach.suggestions(candidates, vm.machinePage) }
+    val candidateIds = remember(candidates) { candidates.map { it.id } }
+    LaunchedEffect(candidateIds) { vm.syncMachineSelection(candidateIds) }
+    val suggestions = vm.machineSelection
+        .ifEmpty { candidateIds.take(MachineCoach.SUGGESTION_COUNT) }
+        .mapNotNull { repo.byId[it] }
     val todayIds = state.todayItemIds
     val unit = state.weightUnit
     // Group tips: recovering since yesterday (not today's own session), or overused this week.
@@ -183,7 +191,11 @@ internal fun MachineCoachScreen(
             },
             onOtherOptions = {
                 pendingAdd = null
-                if (warning is TrainingInsight.Plateau) vm.machinePage += 1 else vm.closeMachineCoach()
+                if (warning is TrainingInsight.Plateau) {
+                    vm.swapMachine(vm.machineSelection.indexOf(item.id), candidateIds)
+                } else {
+                    vm.closeMachineCoach()
+                }
             },
             onDismiss = { pendingAdd = null }
         )
@@ -248,7 +260,7 @@ internal fun MachineCoachScreen(
                     )
                 }
             }
-            items(suggestions, key = { it.id }) { item ->
+            itemsIndexed(suggestions, key = { _, item -> item.id }) { index, item ->
                 val prescription = MachineCoach.prescription(goal, item)
                 SuggestionCard(
                     item = item,
@@ -258,6 +270,11 @@ internal fun MachineCoachScreen(
                     hint = if (smart) vm.progressionHint(item.id, prescription) else null,
                     unit = unit,
                     isAdded = item.id in todayIds,
+                    onSwap = if (candidateIds.size > suggestions.size) {
+                        { vm.swapMachine(index, candidateIds) }
+                    } else {
+                        null
+                    },
                     onHowTo = { vm.openExerciseId = item.id },
                     onAdd = {
                         val warning = if (smart) recovery ?: overuse ?: vm.plateauFor(item.id) else null
@@ -266,26 +283,22 @@ internal fun MachineCoachScreen(
                     }
                 )
             }
-            if (candidates.size > MachineCoach.SUGGESTION_COUNT) {
+            if (candidates.size > MachineCoach.SUGGESTION_COUNT || vm.canUndoMachines) {
                 item(key = "more") {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .border(0.8.dp, colors.accent.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
-                            .clickable { vm.machinePage += 1 }
-                            .padding(vertical = 14.dp)
-                            .testTag("workouts.machineCoach.more"),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.Refresh, null, tint = colors.accent, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            stringResource(R.string.machine_coach_more_options),
-                            color = colors.accent,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlineAction(
+                            text = stringResource(R.string.machine_coach_previous),
+                            icon = Icons.AutoMirrored.Filled.Undo,
+                            enabled = vm.canUndoMachines,
+                            onClick = vm::undoMachines,
+                            modifier = Modifier.weight(1f).testTag("workouts.machineCoach.undo")
+                        )
+                        OutlineAction(
+                            text = stringResource(R.string.machine_coach_more_options),
+                            icon = Icons.Filled.Refresh,
+                            enabled = candidates.size > MachineCoach.SUGGESTION_COUNT,
+                            onClick = { vm.showOtherMachines(candidateIds) },
+                            modifier = Modifier.weight(1f).testTag("workouts.machineCoach.more")
                         )
                     }
                 }
@@ -359,6 +372,8 @@ private fun SuggestionCard(
     hint: ProgressionHint?,
     unit: WorkoutWeightUnit,
     isAdded: Boolean,
+    /** Replaces only this suggestion; null when there is nothing else to offer. */
+    onSwap: (() -> Unit)?,
     onHowTo: () -> Unit,
     onAdd: () -> Unit
 ) {
@@ -384,6 +399,29 @@ private fun SuggestionCard(
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                 fallbackLabel = item.name
             )
+            if (onSwap != null) {
+                Row(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(10.dp)
+                        .clip(CircleShape)
+                        .background(colors.background.copy(alpha = 0.85f))
+                        .border(0.5.dp, colors.hairline.copy(alpha = 0.5f), CircleShape)
+                        .clickable(onClick = onSwap)
+                        .padding(horizontal = 12.dp, vertical = 7.dp)
+                        .testTag("workouts.machineCoach.swap.${item.id}"),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(Icons.Filled.SwapHoriz, null, tint = colors.accent, modifier = Modifier.size(16.dp))
+                    Text(
+                        stringResource(R.string.machine_coach_swap_one),
+                        color = colors.charcoal,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
@@ -452,6 +490,31 @@ private fun SuggestionCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun OutlineAction(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = workoutsColors()
+    val tint = if (enabled) colors.accent else colors.mutedText
+    Row(
+        modifier
+            .clip(RoundedCornerShape(18.dp))
+            .border(0.8.dp, tint.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 10.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(text, color = tint, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

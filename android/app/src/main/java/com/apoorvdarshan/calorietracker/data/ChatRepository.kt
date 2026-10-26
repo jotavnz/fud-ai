@@ -2,6 +2,8 @@ package com.apoorvdarshan.calorietracker.data
 
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.CoachLogProposal
+import com.apoorvdarshan.calorietracker.models.updatingLogProposal
 import com.apoorvdarshan.calorietracker.models.resolvingProposal
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -50,6 +52,25 @@ class ChatRepository(private val prefs: PreferencesStore) {
     /** The user tapped Dismiss. Nothing is written, and a resolved card keeps its outcome. */
     suspend fun dismissProposal(messageId: UUID, proposalId: String): Boolean =
         resolve(messageId, proposalId, CoachExerciseProposal.Status.DISMISSED)
+
+    /**
+     * Rewrites one Coach log card. [transform] sees the saved card (under the lock, so a reply and
+     * a tap cannot overwrite each other); returning null or the same card changes nothing.
+     * Returns the stored card, or null when nothing changed.
+     */
+    suspend fun updateLogProposal(
+        messageId: UUID,
+        proposalId: String,
+        transform: suspend (CoachLogProposal) -> CoachLogProposal?
+    ): CoachLogProposal? = mutex.withLock {
+        val history = prefs.chatHistory.first()
+        val current = history.firstOrNull { it.id == messageId }?.logProposals?.firstOrNull { it.id == proposalId }
+            ?: return@withLock null
+        val next = transform(current) ?: return@withLock null
+        val updated = history.updatingLogProposal(messageId, proposalId) { next } ?: return@withLock null
+        prefs.setChatHistory(updated)
+        next
+    }
 
     private suspend fun resolve(
         messageId: UUID,

@@ -977,6 +977,20 @@ viewModelScope.launch {
         )
     }
 
+    /**
+     * Coach's log card Edit: opens the review sheet for a food Coach already estimated with the
+     * text analysis, exactly as if it had come from Describe food, so the user edits and logs it here.
+     */
+    fun reviewCoachAnalysis(analysis: FoodAnalysis): Boolean {
+        if (_ui.value.analyzing || _ui.value.pendingAnalysis != null) return false
+        labelScanBarcode.clear()
+        viewModelScope.launch {
+            discardPendingDraft(_ui.value.pendingDraftImageFilenames)
+            savePendingDraft(analysis, imageBytes = null, source = FoodSource.TEXT_INPUT)
+        }
+        return true
+    }
+
     fun deleteEntry(id: UUID) {
         viewModelScope.launch {
             container.foodRepository.deleteEntry(id)

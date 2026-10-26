@@ -277,6 +277,16 @@ private fun MyProgressContent(container: AppContainer) {
     // Full-screen Year in review; the year follows the recap's "today" (last year through January).
     var showYearInReview by rememberSaveable { mutableStateOf(false) }
     val reviewYear = defaultReviewYear(recapToday)
+    // Settings: the card can be hidden, and it stays locked for the first year unless previewed early.
+    val yearReviewEnabled by container.prefs.yearReviewEnabled.collectAsState(initial = true)
+    val yearReviewEarlyUnlock by container.prefs.yearReviewEarlyUnlock.collectAsState(initial = false)
+    val reviewContext = androidx.compose.ui.platform.LocalContext.current
+    val firstInstallMillis = remember(reviewContext) {
+        runCatching {
+            reviewContext.packageManager.getPackageInfo(reviewContext.packageName, 0).firstInstallTime
+        }.getOrDefault(System.currentTimeMillis())
+    }
+    val reviewDaysLeft = if (yearReviewEarlyUnlock) null else yearReviewDaysLeft(firstInstallMillis)
 
     // Filter weights + body fats to range
     val (rangeStartDate, rangeEndDate) = range.dateRange(offset = periodOffset)
@@ -395,8 +405,10 @@ private fun MyProgressContent(container: AppContainer) {
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             // Year in review: everything logged this year (or all time), story style.
-            item {
-                YearInReviewEntryCard(year = reviewYear) { showYearInReview = true }
+            if (yearReviewEnabled) {
+                item {
+                    YearInReviewEntryCard(year = reviewYear, lockedDaysLeft = reviewDaysLeft) { showYearInReview = true }
+                }
             }
 
             // 0. Recap of the last completed week (#431); waits for the profile's targets.
@@ -574,7 +586,7 @@ private fun MyProgressContent(container: AppContainer) {
         }
     }
 
-    if (showYearInReview) {
+    if (showYearInReview && yearReviewEnabled && reviewDaysLeft == null) {
         YearInReviewDialog(
             container = container,
             initialYear = reviewYear,

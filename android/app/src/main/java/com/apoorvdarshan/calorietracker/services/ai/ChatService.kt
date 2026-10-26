@@ -8,6 +8,7 @@ import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
 import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.CoachLogCollector
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
@@ -69,11 +70,17 @@ class ChatService(
         workoutPreferences: WorkoutPreferences = WorkoutPreferences(),
         workoutPlanWeightUnit: WorkoutWeightUnit = WorkoutWeightUnit.LBS,
         exerciseLibrary: List<ExerciseItem> = emptyList(),
-        proposals: CoachProposalCollector? = null
+        proposals: CoachProposalCollector? = null,
+        /** Coach chat's log cards; enables `propose_log_entries` (or the fallback block for tool-less models). */
+        logProposals: CoachLogCollector? = null,
+        /** The app language's English name ("Spanish"), so replies match the app. */
+        appLanguage: String? = null,
+        /** The card's Log button as the user sees it ("Registrar"), so the reply can point at it. */
+        logButtonLabel: String? = null
     ): String {
         val energyUnit = prefs.energyUnit.first()
         val userContext = prefs.userContext.first()
-        fun systemPromptFor(proposalCards: Boolean): String {
+        fun systemPromptFor(proposalCards: Boolean, logMode: LogMode): String {
             val baseSystemPrompt = buildSystemPrompt(
                 profile = profile,
                 weights = weights,
@@ -86,16 +93,29 @@ class ChatService(
                 workoutSessions = workoutSessions,
                 workoutPlans = workoutPlans,
                 canProposeWorkoutChanges = proposalCards,
-                energyUnit = energyUnit
+                energyUnit = energyUnit,
+                logMode = logMode,
+                appLanguage = appLanguage,
+                logButtonLabel = logButtonLabel
             )
             return if (userContext.isNotBlank())
                 "$baseSystemPrompt\n\n## User-provided context\n$userContext"
             else baseSystemPrompt
         }
-        val systemPrompt = systemPromptFor(proposalCards = proposals != null)
+        val systemPrompt = systemPromptFor(
+            proposalCards = proposals != null,
+            logMode = if (logProposals != null) LogMode.TOOL else LogMode.NONE
+        )
         // The on-device model answers without tools, so it is never told about proposal cards it
-        // cannot make (the reply would point the user at a card that never appears).
-        val toolFreeSystemPrompt = { if (proposals == null) systemPrompt else systemPromptFor(proposalCards = false) }
+        // cannot make (the reply would point the user at a card that never appears). Logging still
+        // works there: it is taught a <fudai-log> block the app turns into the same card.
+        val toolFreeSystemPrompt = {
+            if (proposals == null && logProposals == null) systemPrompt
+            else systemPromptFor(
+                proposalCards = false,
+                logMode = if (logProposals != null) LogMode.BLOCK else LogMode.NONE
+            )
+        }
         val tools = CoachTools(
             weights = weights,
             bodyFats = bodyFats,
@@ -106,7 +126,8 @@ class ChatService(
             workoutPreferences = workoutPreferences,
             workoutPlanWeightUnit = workoutPlanWeightUnit,
             exerciseLibrary = exerciseLibrary,
-            proposals = proposals
+            proposals = proposals,
+            logProposals = logProposals
         )
 
         if (hosted != null && prefs.aiAccessMode.first() == AiAccessMode.HOSTED) {
@@ -114,12 +135,14 @@ class ChatService(
             // allow-list. Every round is one metered action; no BYOK fallback.
             hosted.requireEntitlement()
             proposals?.reset()
-            return runGeminiToolLoop(
+            logProposals?.reset()
+            val hostedReply = runGeminiToolLoop(
                 systemPrompt, history, newUserMessage, tools, imageBytes,
                 maxToolResultChars = HostedAiConstants.MAX_TOOL_RESULT_CHARS
             ) { body ->
                 hosted.client.gemini(body.toString())
             }
+            return finishReply(hostedReply, tools, logProposals)
         }
 
         val useSeparateTextProvider = imageBytes == null && prefs.separateTextProviderEnabled.first()
@@ -138,8 +161,9 @@ class ChatService(
         val maxTokens = prefs.maxResponseTokens.first()
         val requestTimeoutSeconds = prefs.aiRequestTimeoutSeconds.first()
 
-        return try {
+        val reply = try {
             proposals?.reset()
+            logProposals?.reset()
             runProvider(
                 provider, model, baseUrl, apiKey, systemPrompt, history, newUserMessage,
                 tools, imageBytes, maxTokens, requestTimeoutSeconds, toolFreeSystemPrompt
@@ -154,12 +178,28 @@ class ChatService(
             ) ?: throw primaryError
             // The fallback answers from scratch, so cards from the failed attempt are dropped.
             proposals?.reset()
+            logProposals?.reset()
             runProvider(
                 fallback.provider, fallback.model, fallback.baseUrl, fallback.apiKey,
                 systemPrompt, history, newUserMessage, tools, imageBytes, maxTokens,
                 requestTimeoutSeconds, toolFreeSystemPrompt
             )
         }
+        return finishReply(reply, tools, logProposals)
+    }
+
+    /** How Coach can log in this request: a tool call, a reply block (tool-less models), or not at all. */
+    private enum class LogMode { NONE, TOOL, BLOCK }
+
+    /**
+     * Turns a `<fudai-log>` block (tool-less models, or a model that wrote the block instead of
+     * calling the tool) into the same log card, and strips it from the visible reply.
+     */
+    private fun finishReply(reply: String, tools: CoachTools, logProposals: CoachLogCollector?): String {
+        if (logProposals == null) return reply
+        val (cleaned, args) = CoachLogTool.extractFallbackBlock(reply)
+        if (args != null && logProposals.proposals.isEmpty()) tools.execute(CoachLogTool.TOOL_NAME, args)
+        return cleaned
     }
 
     private suspend fun runProvider(
@@ -266,14 +306,17 @@ class ChatService(
         workoutSessions: List<WorkoutSession> = emptyList(),
         workoutPlans: List<WorkoutDayPlan> = emptyList(),
         canProposeWorkoutChanges: Boolean = false,
-        energyUnit: EnergyUnit = EnergyUnit.Default
+        energyUnit: EnergyUnit = EnergyUnit.Default,
+        logMode: LogMode = LogMode.NONE,
+        appLanguage: String? = null,
+        logButtonLabel: String? = null
     ): String {
         val zone = ZoneId.systemDefault()
         val currentDate = LocalDate.now(zone).format(DateTimeFormatter.ISO_LOCAL_DATE)
         val currentTimeZone = zone.id
 
         val lines = mutableListOf<String>()
-        lines.add("You are Coach, an AI nutrition, weight-change, and strength-training assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        lines.add("You are Coach, an AI nutrition, weight-change, and strength-training assistant inside a calorie tracking app. ${languageInstruction(appLanguage)} Be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
         lines.add("")
         lines.add("## Current date")
         lines.add("- Today: $currentDate ($currentTimeZone)")
@@ -295,6 +338,21 @@ class ChatService(
         }
         lines.add("Do NOT call tools for questions you can answer from the profile/forecast below.")
         lines.add("")
+        when (logMode) {
+            LogMode.TOOL -> {
+                val button = logButtonLabel?.let { "\"$it\"" } ?: "Log"
+                lines.add("## Logging to the diary")
+                lines.add("You CAN log for the user. When they ask you to log, record, add or save what they ate or drank, their water, weight, body fat or a workout (\"regístralo\", \"anótalo\", \"registrarlos porfa\", \"log this\"), call ${CoachLogTool.TOOL_NAME} ONCE with every item: one food item per dish or drink with its quantity, meal (breakfast/lunch/dinner/snack) when they said it, and your calorie and macro estimate; plain water as a water item (glasses, liters); weight, body_fat, workout or cardio items as described. Never reply that you cannot log or that they must log it themselves.")
+                lines.add("The app re-estimates foods with its food analyzer and shows a confirmation card with $button, Edit and Cancel under your reply; nothing is saved until the user taps $button. In your reply, summarize what you put on the card in one or two sentences and ask them to review it. Never say it was already logged.")
+                lines.add("When the user only describes a meal without asking to log it, answer normally and you may offer to log it.")
+                lines.add("")
+            }
+            LogMode.BLOCK -> {
+                lines.addAll(CoachLogTool.fallbackInstructions())
+                lines.add("")
+            }
+            LogMode.NONE -> Unit
+        }
         lines.addAll(
             CoachContext.summaryLines(
                 profile = profile,
@@ -314,6 +372,13 @@ class ChatService(
         lines.add("When the user asks how to lose or gain, give a concrete calorie target and at least one actionable food or activity change. When they ask expected weight, reference the forecast numbers above.")
         return lines.joinToString("\n")
     }
+
+    private fun languageInstruction(appLanguage: String?): String =
+        if (appLanguage.isNullOrBlank() || appLanguage.equals("English", ignoreCase = true)) {
+            "Answer in plain English unless the user writes in another language, then answer in theirs."
+        } else {
+            "Answer in $appLanguage (the app's language) unless the user writes in another language, then answer in theirs."
+        }
 
     // MARK: - OpenAI-compatible tool loop (10 of 13 providers)
 

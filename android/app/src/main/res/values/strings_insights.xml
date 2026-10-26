@@ -25,4 +25,6 @@
     <string name="insight_other_options">Other options</string>
     <string name="insight_unit_kg">%1$s kg</string>
     <string name="insight_unit_lb">%1$s lb</string>
+    <string name="machine_coach_previous">Previous</string>
+    <string name="machine_coach_swap_one">Change this one</string>
 </resources>

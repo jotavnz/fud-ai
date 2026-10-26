@@ -143,4 +143,15 @@
     <string name="yr_share_weight">Weight change: %1$s</string>
     <string name="yr_share_footer">Tracked with my AI trainer</string>
     <string name="yr_share_chooser">Share your recap</string>
-</resources>
+    <string name="settings_year_review">Year in review</string>
+    <string name="settings_year_review_early">See it before a year</string>
+    <string name="settings_year_review_footer">A Wrapped-style summary of everything you logged, shown in Progress. It unlocks after a year of using the app; turn on the early preview to see how it is going.</string>
+    <string name="yr_locked_title">Your year in review</string>
+    <plurals name="yr_locked_days">
+        <item quantity="one">Unlocks in %d day. Keep logging!</item>
+        <item quantity="other">Unlocks in %d days. Keep logging!</item>
+    </plurals>
+    <plurals name="yr_locked_months">
+        <item quantity="one">Come back in %d month. Keep logging!</item>
+        <item quantity="other">Come back in %d months. Keep logging!</item>
+    </plurals></resources>
