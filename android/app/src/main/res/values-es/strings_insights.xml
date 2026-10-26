@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sugerencias inteligentes -->
+    <string name="settings_smart_suggestions">Sugerencias inteligentes</string>
+    <string name="settings_smart_suggestions_footer">Consejos de entrenador mientras entrenas: descanso para los músculos que acabas de trabajar, avisos si sobrecargas un músculo o te estancas en el mismo peso, equilibrio entre empuje y tirón, músculos que dejaste de lado y cuánto peso subir la próxima vez.</string>
+    <string name="insight_recovery_title">%1$s necesita descanso</string>
+    <string name="insight_recovery_body_yesterday">Lo entrenaste ayer (%1$d series). Los músculos necesitan 48–72 h para recuperarse. Hoy te conviene:</string>
+    <string name="insight_recovery_body_two_days">Hace 2 días hiciste una sesión fuerte (%1$d series). Dale un día más. Hoy te conviene:</string>
+    <string name="insight_overuse_title">%1$s: mucho volumen esta semana</string>
+    <string name="insight_overuse_body">%1$d series en %2$d días durante la última semana. Pasando de unas 20 series semanales, el trabajo extra suma más fatiga que músculo. Entrena otro grupo o cambia de máquina.</string>
+    <string name="insight_plateau_title">Estancado en %1$s</string>
+    <string name="insight_plateau_body">Mismo %1$s durante %2$d sesiones sin más repeticiones. Otra máquina u otro ángulo le dan al músculo un estímulo nuevo.</string>
+    <string name="insight_imbalance_title">Equilibra empuje y tirón</string>
+    <string name="insight_imbalance_body_push">%1$d series de empuje contra %2$d de tirón en 2 semanas. Suma espalda para cuidar tus hombros y tu postura.</string>
+    <string name="insight_imbalance_body_pull">%1$d series de tirón contra %2$d de empuje en 2 semanas. Suma pecho y hombros para mantener el equilibrio.</string>
+    <string name="insight_neglected_title">%1$s te está esperando</string>
+    <string name="insight_neglected_body">Llevas %2$d días sin entrenar %1$s. Inclúyelo en tu próxima sesión.</string>
+    <string name="insight_neglected_body_never">No has entrenado %1$s últimamente. Inclúyelo en tu próxima sesión.</string>
+    <string name="insight_action_machines">Ver máquinas</string>
+    <string name="insight_dismiss">Ocultar por hoy</string>
+    <string name="insight_recovering_badge">Recuperando</string>
+    <string name="insight_progression_up">La última vez: %1$s × %2$d · Prueba %3$s</string>
+    <string name="insight_progression_same">La última vez: %1$s × %2$d · Mantén el peso y suma repeticiones</string>
+    <string name="insight_add_anyway">Agregar igual</string>
+    <string name="insight_other_options">Ver otras opciones</string>
+    <string name="insight_unit_kg">%1$s kg</string>
+    <string name="insight_unit_lb">%1$s lb</string>
+</resources>

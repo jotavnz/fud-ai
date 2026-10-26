@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Smart suggestions (training insights) -->
+    <string name="settings_smart_suggestions">Smart suggestions</string>
+    <string name="settings_smart_suggestions_footer">Personal-trainer tips while you train: rest for muscles you just worked, warnings when you overload a muscle or stall on the same weight, push and pull balance, muscles you have skipped, and how much weight to add next time.</string>
+    <string name="insight_recovery_title">%1$s needs rest</string>
+    <string name="insight_recovery_body_yesterday">You trained it yesterday (%1$d sets). Muscles need 48–72 h to recover. Today, try:</string>
+    <string name="insight_recovery_body_two_days">You did a heavy session 2 days ago (%1$d sets). Give it one more day. Today, try:</string>
+    <string name="insight_overuse_title">A lot of %1$s this week</string>
+    <string name="insight_overuse_body">%1$d sets over %2$d days in the last week. Beyond about 20 weekly sets, extra work adds more fatigue than muscle. Train another group or switch machines.</string>
+    <string name="insight_plateau_title">Stalled on %1$s</string>
+    <string name="insight_plateau_body">Same %1$s for %2$d sessions without extra reps. A different machine or angle gives the muscle a fresh stimulus.</string>
+    <string name="insight_imbalance_title">Balance push and pull</string>
+    <string name="insight_imbalance_body_push">%1$d pushing sets vs %2$d pulling sets in 2 weeks. Add back work to protect your shoulders and posture.</string>
+    <string name="insight_imbalance_body_pull">%1$d pulling sets vs %2$d pushing sets in 2 weeks. Add chest and shoulders to stay balanced.</string>
+    <string name="insight_neglected_title">%1$s is waiting</string>
+    <string name="insight_neglected_body">No %1$s in %2$d days. Fit it into your next session.</string>
+    <string name="insight_neglected_body_never">You have not trained %1$s recently. Fit it into your next session.</string>
+    <string name="insight_action_machines">See machines</string>
+    <string name="insight_dismiss">Dismiss for today</string>
+    <string name="insight_recovering_badge">Recovering</string>
+    <string name="insight_progression_up">Last time: %1$s × %2$d · Try %3$s</string>
+    <string name="insight_progression_same">Last time: %1$s × %2$d · Keep the weight, add reps</string>
+    <string name="insight_add_anyway">Add anyway</string>
+    <string name="insight_other_options">Other options</string>
+    <string name="insight_unit_kg">%1$s kg</string>
+    <string name="insight_unit_lb">%1$s lb</string>
+</resources>

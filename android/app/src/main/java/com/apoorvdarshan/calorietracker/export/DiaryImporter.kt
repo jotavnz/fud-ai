@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.export
 
+import android.content.Context
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.WaterEntry
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
@@ -26,7 +29,21 @@ data class DiaryImportPreview(
     val includesWater: Boolean = false,
 )
 
-class DiaryImportException(message: String) : IllegalArgumentException(message)
+/**
+ * [message] stays English for logs and tests; [userMessage] resolves the translated text. A null
+ * argument stands for a blank food name and is shown as "Unnamed food".
+ */
+class DiaryImportException(
+    message: String,
+    @StringRes private val messageRes: Int? = null,
+    private vararg val messageArgs: Any?
+) : IllegalArgumentException(message) {
+    fun userMessage(context: Context): String {
+        val res = messageRes ?: return message.orEmpty()
+        val args = messageArgs.map { it ?: context.getString(R.string.st_import_unnamed_food) }
+        return context.getString(res, *args.toTypedArray())
+    }
+}
 
 object DiaryImporter {
     const val MAXIMUM_FILE_SIZE = 20 * 1_024 * 1_024
@@ -112,13 +129,13 @@ object DiaryImporter {
         val document = try {
             json.decodeFromString(Document.serializer(), content)
         } catch (_: SerializationException) {
-            throw DiaryImportException("This is not a valid Fud AI food diary JSON file.")
+            throw DiaryImportException("This is not a valid Fud AI food diary JSON file.", R.string.st_import_invalid_file)
         }
         if (!document.metadata.app.equals("Fud AI", ignoreCase = true)) {
-            throw DiaryImportException("This is not a valid Fud AI food diary JSON file.")
+            throw DiaryImportException("This is not a valid Fud AI food diary JSON file.", R.string.st_import_invalid_file)
         }
         if (document.metadata.format_version.substringBefore('.').toIntOrNull() != 1) {
-            throw DiaryImportException("This food diary format is not supported.")
+            throw DiaryImportException("This food diary format is not supported.", R.string.st_import_unsupported_format)
         }
 
         val start = parseDate(document.metadata.date_range.start)
@@ -130,31 +147,31 @@ object DiaryImporter {
             document.days.forEach { day ->
                 val date = parseDate(day.date)
                 if (date.isBefore(lower) || date.isAfter(upper)) {
-                    throw DiaryImportException("The diary contains a date outside its exported range: ${day.date}.")
+                    throw DiaryImportException("The diary contains a date outside its exported range: ${day.date}.", R.string.st_import_date_out_of_range, day.date)
                 }
                 day.water_entries.orEmpty().forEach { water ->
-                    if (water.milliliters <= 0) throw DiaryImportException("The diary contains an invalid water amount.")
+                    if (water.milliliters <= 0) throw DiaryImportException("The diary contains an invalid water amount.", R.string.st_import_invalid_water_amount)
                     val entry = runCatching {
                         require(water.time.matches(Regex("[0-9]{2}:[0-9]{2}")))
                         WaterEntry(id = UUID.fromString(water.entry_id),
                             date = LocalDateTime.of(date, LocalTime.parse(water.time)).atZone(zone).toInstant(),
                             milliliters = water.milliliters)
-                    }.getOrElse { throw DiaryImportException("The diary contains an invalid water entry.") }
+                    }.getOrElse { throw DiaryImportException("The diary contains an invalid water entry.", R.string.st_import_invalid_water_entry) }
                     waterEntries += entry
                 }
                 day.meals.forEach { meal ->
                     val mealType = MealType.values().firstOrNull { it.name.equals(meal.type, ignoreCase = true) }
-                        ?: throw DiaryImportException("The diary contains an unknown meal type: ${meal.type}.")
+                        ?: throw DiaryImportException("The diary contains an unknown meal type: ${meal.type}.", R.string.st_import_unknown_meal_type, meal.type)
                     meal.items.forEach { item ->
                         validate(item)
                         val timestamp = try {
                             LocalDateTime.of(date, LocalTime.parse(item.time)).atZone(zone).toInstant()
                         } catch (_: DateTimeParseException) {
-                            throw DiaryImportException("The diary contains an invalid time: ${item.time}.")
+                            throw DiaryImportException("The diary contains an invalid time: ${item.time}.", R.string.st_import_invalid_time, item.time)
                         }
                         val id = item.entry_id?.let { raw ->
                             runCatching { UUID.fromString(raw) }
-                                .getOrElse { throw DiaryImportException("The diary contains an invalid entry ID.") }
+                                .getOrElse { throw DiaryImportException("The diary contains an invalid entry ID.", R.string.st_import_invalid_entry_id) }
                         } ?: UUID.randomUUID()
                         add(FoodEntry(
                             id = id,
@@ -208,7 +225,7 @@ object DiaryImporter {
                 }
             }
         }
-        if (entries.isEmpty() && waterEntries.isEmpty()) throw DiaryImportException("The selected diary does not contain any food or water entries.")
+        if (entries.isEmpty() && waterEntries.isEmpty()) throw DiaryImportException("The selected diary does not contain any food or water entries.", R.string.st_import_no_entries)
         return DiaryImportPreview(entries, lower, upper, waterEntries, document.days.any { it.water_entries != null })
     }
 
@@ -312,21 +329,25 @@ object DiaryImporter {
             item.vitamin_k_mcg, item.folate_mcg, item.omega3_g,
         ) + item.supplemental_nutrients_g.values
         if (item.name.isBlank() || item.calories < 0 || values.any { !it.isFinite() || it < 0 }) {
-            throw DiaryImportException("The diary contains an invalid food entry: ${item.name.ifBlank { "Unnamed food" }}.")
+            throw DiaryImportException(
+                "The diary contains an invalid food entry: ${item.name.ifBlank { "Unnamed food" }}.",
+                R.string.st_import_invalid_food_entry,
+                item.name.ifBlank { null }
+            )
         }
     }
 
     private fun validate(ingredient: Ingredient, foodName: String) {
         val values = listOf(ingredient.quantity_g, ingredient.protein_g, ingredient.carbs_g, ingredient.fat_g)
         if (ingredient.name.isBlank() || ingredient.calories < 0 || values.any { !it.isFinite() || it < 0 }) {
-            throw DiaryImportException("The diary contains an invalid ingredient in $foodName.")
+            throw DiaryImportException("The diary contains an invalid ingredient in $foodName.", R.string.st_import_invalid_ingredient, foodName)
         }
     }
 
     private fun parseDate(value: String): LocalDate = try {
         LocalDate.parse(value)
     } catch (_: DateTimeParseException) {
-        throw DiaryImportException("The diary contains an invalid date: $value.")
+        throw DiaryImportException("The diary contains an invalid date: $value.", R.string.st_import_invalid_date, value)
     }
 
     private fun matchKey(entry: FoodEntry): String {

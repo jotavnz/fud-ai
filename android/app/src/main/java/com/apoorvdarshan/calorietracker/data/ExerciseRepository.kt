@@ -17,13 +17,17 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ExerciseRepository private constructor(
     val exercises: List<ExerciseItem>,
-    private val authoredFrames: Map<String, GenderedExerciseFrames>
+    private val authoredFrames: Map<String, GenderedExerciseFrames>,
+    /** Language the names and instructions were loaded in ("en" or "es"). */
+    val language: String = "en"
 ) {
 
     fun includingActivities(activities: List<com.apoorvdarshan.calorietracker.models.PlannedExercise>): ExerciseRepository =
         if (activities.isEmpty()) this else ExerciseRepository(
-            (exercises + activities.map { it.asExerciseItem() }).distinctBy { it.id }, authoredFrames
+            (exercises + activities.map { it.asExerciseItem() }).distinctBy { it.id }, authoredFrames, language
         )
+
+    val byId: Map<String, ExerciseItem> by lazy { exercises.associateBy { it.id } }
 
     val availableLevels: List<String> by lazy { sortedUnique(exercises.map { it.level }) }
     val availablePrimaryMuscles: List<String> by lazy { sortedUnique(exercises.flatMap { it.primaryMuscles }) }
@@ -119,15 +123,19 @@ class ExerciseRepository private constructor(
             Thread(runnable, "exercise-repo-warm").apply { isDaemon = true }
         }
 
-        /** Already-loaded singleton, or null if [get]/[warm] has not finished yet. */
-        fun peek(): ExerciseRepository? = instance
+        /**
+         * Already-loaded singleton in the current app language, or null if [get]/[warm] has
+         * not finished yet (or the language changed since, so it must reload).
+         */
+        fun peek(): ExerciseRepository? =
+            instance?.takeIf { it.language == ExerciseLocalization.currentLanguage() }
 
         /**
          * Parses catalog + visual manifest on a background thread so the first Workouts
          * tab open is not blocked by I/O. Safe to call repeatedly.
          */
         fun warm(context: Context) {
-            if (instance != null || !warming.compareAndSet(false, true)) return
+            if (peek() != null || !warming.compareAndSet(false, true)) return
             val app = context.applicationContext
             warmExecutor.execute {
                 try {
@@ -139,23 +147,25 @@ class ExerciseRepository private constructor(
         }
 
         fun get(context: Context): ExerciseRepository =
-            instance ?: synchronized(this) {
-                instance ?: load(context.applicationContext).also { instance = it }
+            peek() ?: synchronized(this) {
+                peek() ?: load(context.applicationContext).also { instance = it }
             }
 
         private fun load(context: Context): ExerciseRepository {
             val startedAt = SystemClock.elapsedRealtime()
-            val items = loadExercises(context)
+            val language = ExerciseLocalization.currentLanguage()
+            val items = ExerciseLocalization.localize(context, loadExercises(context), language)
+                .sortedWith { a, b -> a.name.compareTo(b.name, ignoreCase = true) }
             // Frames are not bundled (release ships only the manifest; WorkoutFrameStore
             // fetches frames on demand), so the manifest alone decides which exercises
             // have authored visuals. Corpus completeness is enforced by the sync script.
             val authoredFrames = loadAuthoredFrames(context)
             Log.d(
                 TAG,
-                "load complete exercises=${items.size} visuals=${authoredFrames.size} " +
+                "load complete exercises=${items.size} visuals=${authoredFrames.size} language=$language " +
                     "ms=${SystemClock.elapsedRealtime() - startedAt}"
             )
-            return ExerciseRepository(items, authoredFrames)
+            return ExerciseRepository(items, authoredFrames, language)
         }
 
         private fun loadExercises(context: Context): List<ExerciseItem> = try {

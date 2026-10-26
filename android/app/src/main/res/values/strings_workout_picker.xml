@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Workout picker sheet -->
+    <string name="wp_title_all">All exercises</string>
+    <string name="wp_title_saved">Saved exercises</string>
+    <string name="wp_remove_from_day">Remove from day</string>
+    <string name="wp_add_exercise">Add exercise</string>
+    <string name="wp_add_to_day">Add to day</string>
+    <string name="wp_unsave">Unsave</string>
+    <string name="wp_unsave_exercise">Unsave exercise</string>
+    <string name="wp_save_exercise">Save exercise</string>
+    <string name="wp_preview_exercise">Preview %1$s</string>
+    <string name="wp_empty_saved_title">No saved exercises</string>
+    <string name="wp_empty_saved_subtitle">Bookmark exercises from the dataset to keep them here.</string>
+    <string name="wp_empty_no_match_subtitle">Try clearing filters — or create your own exercise.</string>
+
+    <!-- Copy from day sheet -->
+    <string name="wp_copy_title">Copy from day</string>
+    <string name="wp_copy_subtitle">Add a previous plan to %1$s</string>
+    <string name="wp_copy_what">What to copy</string>
+    <string name="wp_copy_without_details">Without details</string>
+    <string name="wp_copy_with_details">With set details</string>
+    <string name="wp_copy_with_details_note">Copies sets, weights, reps, RPE, units, and timers.</string>
+    <string name="wp_copy_without_details_note">Adds exercise names only, with blank sets.</string>
+    <string name="wp_copy_empty">No earlier workout days to copy.</string>
+    <string name="wp_copy_close">Close copy picker</string>
+
+    <!-- Custom exercise editor -->
+    <string name="wp_editor_delete_title">Delete this custom exercise?</string>
+    <string name="wp_editor_delete_message">This removes the exercise from your library. Logged workouts keep their history.</string>
+    <string name="wp_editor_edit_title">Edit exercise</string>
+    <string name="wp_editor_add_photo">Add photo (optional)</string>
+    <string name="wp_editor_remove_photo">Remove photo</string>
+    <string name="wp_editor_primary_muscles">Primary muscles</string>
+    <string name="wp_editor_secondary_muscles">Secondary muscles</string>
+    <string name="wp_editor_delete_exercise">Delete exercise</string>
+
+    <!-- Describe workout sheet -->
+    <string name="wp_text_prepare_failed">Could not prepare the workout. Try again.</string>
+    <string name="wp_text_save_failed">Could not save the workout. Try again.</string>
+    <string name="wp_text_your_answer">Your answer</string>
+    <string name="wp_text_voice_reply">Voice reply</string>
+    <string name="wp_text_continue">Continue</string>
+    <string name="wp_text_start_over">Start over</string>
+
+    <!-- Workout text validation and clarification messages -->
+    <string name="wp_err_future_date">Choose today or an earlier date.</string>
+    <string name="wp_err_exercise_count">Add between 1 and 30 exercises.</string>
+    <string name="wp_err_exercise_not_found">Exercise not found. Describe the exercise again.</string>
+    <string name="wp_err_activity_name">Enter an activity name.</string>
+    <string name="wp_err_duration">Duration must be between 0 and 1,440 minutes.</string>
+    <string name="wp_err_max_sets">Use at most 12 sets per exercise.</string>
+    <string name="wp_err_unit">Choose kg or lbs.</string>
+    <string name="wp_err_effort">Choose light, moderate, or vigorous effort.</string>
+    <string name="wp_err_reps">Enter 1–999 reps for each set.</string>
+    <string name="wp_err_weight">Enter a valid weight between 0 and 1,500.</string>
+    <string name="wp_err_rpe">Enter an RPE from 1 to 10.</string>
+    <string name="wp_err_variation">Which variation of %1$s did you do?</string>
+    <string name="wp_err_minutes_of">How many minutes of %1$s did you do?</string>
+    <string name="wp_err_sets_reps_of">How many sets and reps of %1$s did you do?</string>
+    <string name="wp_err_that_exercise">that exercise</string>
+    <string name="wp_err_read_workout">Could not read the workout. Please try again.</string>
+    <string name="wp_err_reply_length">Reply in up to 500 characters.</string>
+    <string name="wp_err_start_over">Please start over with the details gathered so far.</string>
+    <string name="wp_option_barbell">Barbell</string>
+    <string name="wp_option_dumbbells">Dumbbells</string>
+    <string name="wp_option_machine">Machine</string>
+    <string name="wp_option_seated">Seated</string>
+    <string name="wp_option_standing">Standing</string>
+</resources>

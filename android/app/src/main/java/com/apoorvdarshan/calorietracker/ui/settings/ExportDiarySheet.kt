@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -80,7 +81,11 @@ fun ExportDiarySheet(
     var status by remember { mutableStateOf<String?>(null) }
 
     val mealNames: Map<MealType, String> = MealType.values().associateWith { stringResource(it.displayNameRes) }
-    val niceDate = DateTimeFormatter.ofPattern("d MMM yyyy")
+    val dateLocale = LocalConfiguration.current.locales[0]
+    val niceDate = DateTimeFormatter.ofPattern(
+        android.text.format.DateFormat.getBestDateTimePattern(dateLocale, "dMMMyyyy"),
+        dateLocale
+    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

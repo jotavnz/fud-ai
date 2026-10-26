@@ -70,6 +70,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialog
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialogActions
@@ -169,7 +170,7 @@ fun AllergenSensitivitiesScreen(
                     }
                 },
                 onFailure = { error ->
-                    importError = error.message ?: importFailed
+                    importError = (error as? AiError)?.userMessage(context) ?: error.message ?: importFailed
                 }
             )
         }

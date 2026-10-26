@@ -80,6 +80,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -273,6 +274,9 @@ private fun MyProgressContent(container: AppContainer) {
     var showImportedWorkouts by remember { mutableStateOf(false) }
     var workoutPendingDelete by remember { mutableStateOf<WorkoutSession?>(null) }
     var selectedMetric by rememberSaveable { mutableStateOf(ProgressMetric.WEIGHT) }
+    // Full-screen Year in review; the year follows the recap's "today" (last year through January).
+    var showYearInReview by rememberSaveable { mutableStateOf(false) }
+    val reviewYear = defaultReviewYear(recapToday)
 
     // Filter weights + body fats to range
     val (rangeStartDate, rangeEndDate) = range.dateRange(offset = periodOffset)
@@ -390,6 +394,11 @@ private fun MyProgressContent(container: AppContainer) {
             ),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
+            // Year in review: everything logged this year (or all time), story style.
+            item {
+                YearInReviewEntryCard(year = reviewYear) { showYearInReview = true }
+            }
+
             // 0. Recap of the last completed week (#431); waits for the profile's targets.
             ui.profile?.let { profile ->
                 item {
@@ -565,6 +574,13 @@ private fun MyProgressContent(container: AppContainer) {
         }
     }
 
+    if (showYearInReview) {
+        YearInReviewDialog(
+            container = container,
+            initialYear = reviewYear,
+            onDismiss = { showYearInReview = false }
+        )
+    }
     if (showAddDialog) {
         // Seed the wheel from the most recent entry, or fall back to the profile
         // weight, or a sane default. Avoids the picker landing on its min row
@@ -1041,7 +1057,8 @@ private fun WeightChartCanvas(entries: List<WeightEntry>, goalKg: Double?, useMe
     val spanDays = maxOf(1L, (tEnd - tStart) / 86_400_000L)
     val showsYear = spanDays > 150 &&
         Instant.ofEpochMilli(tStart).atZone(zone).year != Instant.ofEpochMilli(tEnd).atZone(zone).year
-    val xLabelFmt = DateTimeFormatter.ofPattern(if (showsYear) "MMM yyyy" else "MMM d", Locale.US).withZone(zone)
+    val dateLocale = LocalConfiguration.current.locales[0]
+    val xLabelFmt = localizedDateFormatter(if (showsYear) "MMMyyyy" else "MMMd", dateLocale).withZone(zone)
     // Dense ranges plot bucket averages so the line stays a readable curve;
     // dots only render while each reading is still distinguishable.
     val points = remember(sortedEntries, useMetric) {
@@ -1056,8 +1073,8 @@ private fun WeightChartCanvas(entries: List<WeightEntry>, goalKg: Double?, useMe
     val density = LocalDensity.current
     var selectedIndex by remember(points) { mutableStateOf<Int?>(null) }
     val selectedPoint = selectedIndex?.let(points::getOrNull)
-    val inspectorDateFormat = remember {
-        DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()).withZone(ZoneId.systemDefault())
+    val inspectorDateFormat = remember(dateLocale) {
+        localizedDateFormatter("MMMdyyyy", dateLocale).withZone(ZoneId.systemDefault())
     }
 
     Row(Modifier.fillMaxWidth().height(190.dp)) {
@@ -1544,11 +1561,12 @@ internal fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: In
     val density = androidx.compose.ui.platform.LocalDensity.current
     val ticks = niceAxisTicks(0.0, maxValue, count = 5)
     val yTop = ticks.last().coerceAtLeast(maxValue)
-    val xLabelFmt = DateTimeFormatter.ofPattern("MMM d", Locale.US)
+    val dateLocale = LocalConfiguration.current.locales[0]
+    val xLabelFmt = localizedDateFormatter("MMMd", dateLocale)
     val haptic = LocalHapticFeedback.current
     var selectedIndex by remember(dailyCalories) { mutableStateOf<Int?>(null) }
-    val inspectorDateFormat = remember {
-        DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM).withLocale(Locale.getDefault())
+    val inspectorDateFormat = remember(dateLocale) {
+        DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM).withLocale(dateLocale)
     }
 
     Column {
@@ -1978,7 +1996,7 @@ private fun AllWeightHistorySheet(
     onDismiss: () -> Unit
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val fmt = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US).withZone(ZoneId.systemDefault())
+    val fmt = localizedDateFormatter("MMMdyyyy", LocalConfiguration.current.locales[0]).withZone(ZoneId.systemDefault())
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val sheetSurface = if (isDark) MaterialTheme.colorScheme.surface else Color(0xFFFAF3EE)
     ModalBottomSheet(
@@ -2041,7 +2059,7 @@ private fun AllBodyFatHistorySheet(
     onDismiss: () -> Unit
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val fmt = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US).withZone(ZoneId.systemDefault())
+    val fmt = localizedDateFormatter("MMMdyyyy", LocalConfiguration.current.locales[0]).withZone(ZoneId.systemDefault())
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val sheetSurface = if (isDark) MaterialTheme.colorScheme.surface else Color(0xFFFAF3EE)
     ModalBottomSheet(
@@ -2104,7 +2122,7 @@ private fun AllWorkoutHistorySheet(
     onDismiss: () -> Unit
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val displayDate = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US)
+    val displayDate = localizedDateFormatter("MMMdyyyy", LocalConfiguration.current.locales[0])
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val sheetSurface = if (isDark) MaterialTheme.colorScheme.surface else Color(0xFFFAF3EE)
     ModalBottomSheet(
@@ -2193,7 +2211,8 @@ private fun AddWeightDialog(
     // they happened instead of piling up on today.
     var day by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
-    val dayFormatter = remember { DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()) }
+    val dateLocale = LocalConfiguration.current.locales[0]
+    val dayFormatter = remember(dateLocale) { localizedDateFormatter("MMMdyyyy", dateLocale) }
     FudGlassDialog(onDismissRequest = onDismiss) {
         Text(stringResource(R.string.progress_log_weight_title), fontSize = 21.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(10.dp))
@@ -2375,7 +2394,8 @@ private fun BodyFatChartCanvas(entries: List<BodyFatEntry>, goalFraction: Double
     val spanDays = maxOf(1L, (tEnd - tStart) / 86_400_000L)
     val showsYear = spanDays > 150 &&
         Instant.ofEpochMilli(tStart).atZone(zone).year != Instant.ofEpochMilli(tEnd).atZone(zone).year
-    val xLabelFmt = DateTimeFormatter.ofPattern(if (showsYear) "MMM yyyy" else "MMM d", Locale.US).withZone(zone)
+    val dateLocale = LocalConfiguration.current.locales[0]
+    val xLabelFmt = localizedDateFormatter(if (showsYear) "MMMyyyy" else "MMMd", dateLocale).withZone(zone)
     val points = remember(sortedEntries) {
         downsampleTrend(sortedEntries.map { TrendPoint(it.date.toEpochMilli(), it.bodyFatFraction * 100) })
     }
@@ -2384,8 +2404,8 @@ private fun BodyFatChartCanvas(entries: List<BodyFatEntry>, goalFraction: Double
     val density = LocalDensity.current
     var selectedIndex by remember(points) { mutableStateOf<Int?>(null) }
     val selectedPoint = selectedIndex?.let(points::getOrNull)
-    val inspectorDateFormat = remember {
-        DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()).withZone(ZoneId.systemDefault())
+    val inspectorDateFormat = remember(dateLocale) {
+        localizedDateFormatter("MMMdyyyy", dateLocale).withZone(ZoneId.systemDefault())
     }
 
     Row(Modifier.fillMaxWidth().height(190.dp)) {
@@ -2622,8 +2642,12 @@ private fun formatPercentChange(deltaPercent: Double): String {
 
 // ── Body Measurements (optional tape-measure tracking) ──────────────────
 
-private val measurementHistoryFmt: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US).withZone(ZoneId.systemDefault())
+/** Date formatter in the order and month names of [locale], e.g. "Oct 5, 2026" or "5 oct 2026". */
+private fun localizedDateFormatter(skeleton: String, locale: Locale): DateTimeFormatter =
+    DateTimeFormatter.ofPattern(android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton), locale)
+
+private fun measurementHistoryFmt(locale: Locale): DateTimeFormatter =
+    localizedDateFormatter("MMMdyyyy", locale).withZone(ZoneId.systemDefault())
 
 private fun displayLengthCm(context: android.content.Context, cm: Double, useMetric: Boolean): String =
     if (useMetric) String.format(Locale.US, "%.1f %s", cm, context.getString(R.string.unit_cm))
@@ -2651,7 +2675,7 @@ private fun derivedMetricList(context: android.content.Context, m: BodyMeasureme
 
 private fun measurementHistorySummary(context: android.content.Context, m: BodyMeasurement, gender: Gender, heightCm: Double, useMetric: Boolean): String {
     val sites = measurementSiteList(context, m).map { "${it.first} ${displayLengthCm(context, it.second, useMetric)}" }
-    val bf = m.usNavyBodyFatPercent(gender, heightCm)?.let { "BF ${String.format(Locale.US, "%.0f%%", it)}" }
+    val bf = m.usNavyBodyFatPercent(gender, heightCm)?.let { context.getString(R.string.st_progress_bf_summary, String.format(Locale.US, "%.0f%%", it)) }
     return (sites + listOfNotNull(bf)).joinToString(" · ")
 }
 
@@ -2666,6 +2690,8 @@ private fun BodyMeasurementsHistorySheet(
     onDismiss: () -> Unit
 ) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val historyLocale = LocalConfiguration.current.locales[0]
+    val historyDateFmt = remember(historyLocale) { measurementHistoryFmt(historyLocale) }
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val sheetSurface = if (isDark) MaterialTheme.colorScheme.surface else Color(0xFFFAF3EE)
     ModalBottomSheet(
@@ -2689,7 +2715,7 @@ private fun BodyMeasurementsHistorySheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(measurementHistoryFmt.format(entry.date), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                Text(historyDateFmt.format(entry.date), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                 Text(
                                     measurementHistorySummary(LocalContext.current, entry, gender, heightCm, useMetric),
                                     fontSize = 13.sp,
@@ -2769,7 +2795,7 @@ fun BodyMeasurementsScreen(container: AppContainer, onBack: () -> Unit) {
                 Text(stringResource(R.string.body_measurements_title), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Optional. Fud AI turns these into waist-to-hip, waist-to-height, body-fat %, and frame size, and reads them when it recalculates your goals and in Coach.",
+                    stringResource(R.string.st_progress_measurements_helper),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )

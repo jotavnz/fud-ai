@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.services.ondevice
 
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import java.io.EOFException
 import java.io.File
 import java.io.FileOutputStream
@@ -44,7 +46,9 @@ internal class ModelDownloader(
         if (!isResumable(part, descriptor)) discardPartial(part)
         if (!part.exists()) {
             sourceFile(part).writeText(sourceIdentity(descriptor))
-            check(part.createNewFile()) { "The model download could not be started." }
+            if (!part.createNewFile()) {
+                throw ModelStateException("The model download could not be started.", R.string.st_model_start_failed)
+            }
         }
         val digest = MessageDigest.getInstance("SHA-256")
         val transfer = Transfer(hashExisting(part, digest), digest)
@@ -68,7 +72,7 @@ internal class ModelDownloader(
         val actualHash = digest.digest().joinToString("") { "%02x".format(it) }
         if (!actualHash.equals(descriptor.sha256, ignoreCase = true)) {
             discardPartial(part)
-            error("The model download failed integrity verification.")
+            throw ModelStateException("The model download failed integrity verification.", R.string.st_model_integrity_failed)
         }
     }
 
@@ -94,7 +98,7 @@ internal class ModelDownloader(
             when (response.code) {
                 206 -> if (!continuesAt(response, transfer.offset, expected)) {
                     restart(part, transfer, onProgress)
-                    throw IOException("The model server returned an unexpected byte range.")
+                    throw ModelIoException("The model server returned an unexpected byte range.", R.string.st_model_bad_range)
                 }
                 200 -> {
                     // The server ignored the Range header, so the body starts at byte zero.
@@ -102,17 +106,20 @@ internal class ModelDownloader(
                     val declaredLength = response.body.contentLength()
                     if (declaredLength >= 0L && declaredLength != expected) {
                         discardPartial(part)
-                        error("The model download size did not match the published artifact.")
+                        throw ModelStateException(
+                            "The model download size did not match the published artifact.",
+                            R.string.st_model_size_mismatch
+                        )
                     }
                 }
                 // Only reachable with a partial shorter than the artifact, which the server no
                 // longer accepts as a resume point.
                 416 -> {
                     restart(part, transfer, onProgress)
-                    throw IOException("The model server rejected the resume offset.")
+                    throw ModelIoException("The model server rejected the resume offset.", R.string.st_model_resume_rejected)
                 }
-                408, 429, in 500..599 -> throw IOException("Download failed (HTTP ${response.code}).")
-                else -> error("Download failed (HTTP ${response.code}).")
+                408, 429, in 500..599 -> throw ModelIoException("Download failed (HTTP ${response.code}).", R.string.st_model_http_failed, arrayOf(response.code))
+                else -> throw ModelStateException("Download failed (HTTP ${response.code}).", R.string.st_model_http_failed, arrayOf(response.code))
             }
             var lastPublished = transfer.offset
             openOutput(part).use { output ->
@@ -124,7 +131,10 @@ internal class ModelDownloader(
                         if (count < 0) break
                         if (count > expected - transfer.offset) {
                             discardPartial(part)
-                            error("The model download size did not match the published artifact.")
+                            throw ModelStateException(
+                            "The model download size did not match the published artifact.",
+                            R.string.st_model_size_mismatch
+                        )
                         }
                         writeLocally { output.write(buffer, 0, count) }
                         transfer.digest.update(buffer, 0, count)
@@ -138,7 +148,7 @@ internal class ModelDownloader(
                 writeLocally { output.fd.sync() }
             }
             onProgress(transfer.offset)
-            if (transfer.offset < expected) throw EOFException("The model download was incomplete.")
+            if (transfer.offset < expected) throw ModelEofException("The model download was incomplete.", R.string.st_model_incomplete)
         }
     }
 
@@ -220,3 +230,30 @@ internal class ModelDownloader(
 
 /** Writing the partial failed on this device; the bytes written before it stay for a resume. */
 internal class ModelStorageException(cause: IOException) : IllegalStateException(cause.message, cause)
+
+/**
+ * A model failure with a translatable message. [Throwable.message] stays English for logs and
+ * tests; [LocalModelManager] resolves [messageRes] when it publishes the failed status.
+ */
+internal interface LocalizedModelFailure {
+    @get:StringRes val messageRes: Int
+    val messageArgs: Array<Any>
+}
+
+internal class ModelStateException(
+    message: String,
+    @StringRes override val messageRes: Int,
+    override val messageArgs: Array<Any> = emptyArray()
+) : IllegalStateException(message), LocalizedModelFailure
+
+internal class ModelIoException(
+    message: String,
+    @StringRes override val messageRes: Int,
+    override val messageArgs: Array<Any> = emptyArray()
+) : IOException(message), LocalizedModelFailure
+
+internal class ModelEofException(
+    message: String,
+    @StringRes override val messageRes: Int,
+    override val messageArgs: Array<Any> = emptyArray()
+) : EOFException(message), LocalizedModelFailure

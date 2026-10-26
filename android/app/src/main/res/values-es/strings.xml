@@ -242,7 +242,7 @@
     <string name="nav_progress">Progreso</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_settings">Ajustes</string>
-    <string name="nav_workouts">Entrenamientos</string>
+    <string name="nav_workouts">Training</string>
     <string name="back">Atrás</string>
     <string name="clear_search">Borrar búsqueda</string>
     <string name="empty_subtitle">Prueba con otro músculo, equipamiento o búsqueda, o restablece los filtros de arriba.</string>
@@ -1480,4 +1480,34 @@
     <string name="cd_clear_quantity">Borrar cantidad</string>
     <string name="cd_hold_to_record">Mantén pulsado para grabar, toca para bloquear</string>
     <string name="cd_cancel_recording">Cancelar grabación</string>
+    <!-- Machine coach: elegir músculo y recibir tres máquinas con series y repeticiones -->
+    <string name="machine_coach_title">¿Qué quieres entrenar hoy?</string>
+    <string name="machine_coach_subtitle">Elige un músculo y te sugerimos 3 máquinas con tus series y repeticiones</string>
+    <string name="machine_coach_group_chest">Pecho</string>
+    <string name="machine_coach_group_back">Espalda</string>
+    <string name="machine_coach_group_shoulders">Hombros</string>
+    <string name="machine_coach_group_biceps">Bíceps</string>
+    <string name="machine_coach_group_triceps">Tríceps</string>
+    <string name="machine_coach_group_legs">Piernas</string>
+    <string name="machine_coach_group_hamstrings">Femorales</string>
+    <string name="machine_coach_group_glutes">Glúteos</string>
+    <string name="machine_coach_group_calves">Pantorrillas</string>
+    <string name="machine_coach_group_abs">Abdomen</string>
+    <string name="machine_coach_goal_label">Tu objetivo</string>
+    <string name="machine_coach_goal_hypertrophy">Músculo</string>
+    <string name="machine_coach_goal_hypertrophy_desc">Ganar masa muscular (hipertrofia)</string>
+    <string name="machine_coach_goal_strength">Fuerza</string>
+    <string name="machine_coach_goal_strength_desc">Levantar más peso con menos repeticiones</string>
+    <string name="machine_coach_goal_endurance">Tonificar</string>
+    <string name="machine_coach_goal_endurance_desc">Tonificar y ganar resistencia</string>
+    <string name="machine_coach_prescription">%1$d series × %2$d–%3$d repeticiones</string>
+    <string name="machine_coach_rest_seconds">Descanso %1$d s</string>
+    <string name="machine_coach_rest_minutes">Descanso %1$d min</string>
+    <string name="machine_coach_how_to">Cómo se hace</string>
+    <string name="machine_coach_add_today">Agregar a hoy</string>
+    <string name="machine_coach_added_today">En tu entrenamiento de hoy</string>
+    <string name="machine_coach_more_options">Ver otras 3 opciones</string>
+    <string name="machine_coach_disclaimer">Las series y repeticiones son una guía general. Usa un peso que controles en cada repetición y detente si sientes dolor.</string>
+    <string name="machine_coach_empty">Todavía no hay máquinas para este músculo.</string>
+    <string name="youtube_exercise_search_suffix">ejercicio</string>
 </resources>

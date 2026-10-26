@@ -2,36 +2,27 @@ package com.apoorvdarshan.calorietracker.models
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppLanguageTest {
     @Test
     fun supportedTagsMatchShippedLocales() {
-        assertEquals(
-            listOf(
-                "en", "ar", "az", "cs", "de", "es", "fr", "hi", "it",
-                "ja", "ko", "nl", "pl", "pt-BR", "ro", "ru", "tr", "uk", "zh-CN"
-            ),
-            AppLanguage.supportedTags
-        )
+        assertEquals(listOf("en", "es"), AppLanguage.supportedTags)
     }
 
     @Test
     fun displayNameUsesNativeLocale() {
-        assertEquals("Deutsch", AppLanguage.displayName("de"))
-        assertEquals("日本語", AppLanguage.displayName("ja"))
-        assertTrue(AppLanguage.displayName("pt-BR").contains("Portugu", ignoreCase = true))
+        assertEquals("English", AppLanguage.displayName("en"))
+        assertEquals("Español", AppLanguage.displayName("es"))
     }
 
     @Test
     fun matchSupportedAcceptsExactAndLanguageOnlyTags() {
         assertNull(AppLanguage.matchSupported(null))
         assertNull(AppLanguage.matchSupported(""))
-        assertEquals("de", AppLanguage.matchSupported("de"))
-        assertEquals("pt-BR", AppLanguage.matchSupported("pt-BR"))
-        assertEquals("zh-CN", AppLanguage.matchSupported("zh-CN"))
+        assertEquals("es", AppLanguage.matchSupported("es"))
+        assertEquals("es", AppLanguage.matchSupported("es-VE"))
         assertEquals("en", AppLanguage.matchSupported("en-US"))
-        assertEquals("tr", AppLanguage.matchSupported("tr-TR"))
+        assertNull(AppLanguage.matchSupported("de"))
     }
 }

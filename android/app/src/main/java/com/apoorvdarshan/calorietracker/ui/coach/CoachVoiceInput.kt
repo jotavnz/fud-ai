@@ -325,7 +325,7 @@ fun CoachRecordingIndicator(controller: CoachVoiceController, modifier: Modifier
                 strokeWidth = 2.dp
             )
             Text(
-                "Transcribing…",
+                stringResource(R.string.st_coach_transcribing),
                 fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )

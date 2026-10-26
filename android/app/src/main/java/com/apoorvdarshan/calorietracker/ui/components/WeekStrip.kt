@@ -227,12 +227,5 @@ private fun DayTile(
 }
 
 /** SwiftUI's `.dateTime.weekday(.narrow)` — single-letter short day name. */
-private fun narrowDay(dow: DayOfWeek): String = when (dow) {
-    DayOfWeek.MONDAY -> "M"
-    DayOfWeek.TUESDAY -> "T"
-    DayOfWeek.WEDNESDAY -> "W"
-    DayOfWeek.THURSDAY -> "T"
-    DayOfWeek.FRIDAY -> "F"
-    DayOfWeek.SATURDAY -> "S"
-    DayOfWeek.SUNDAY -> "S"
-}
+private fun narrowDay(dow: DayOfWeek): String =
+    dow.getDisplayName(java.time.format.TextStyle.NARROW, Locale.getDefault())

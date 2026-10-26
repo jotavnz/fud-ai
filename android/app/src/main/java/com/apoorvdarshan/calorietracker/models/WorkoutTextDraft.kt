@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.models
 
+import android.content.Context
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
@@ -11,31 +14,36 @@ import java.util.UUID
 data class WorkoutTextDraft(val date: String, val exercises: List<WorkoutTextExercise>) {
     fun planned(library: List<ExerciseItem>, today: LocalDate = LocalDate.now()): List<PlannedExercise> {
         val day = LocalDate.parse(date)
-        require(!day.isAfter(today)) { "Choose today or an earlier date." }
-        require(exercises.size in 1..30) { "Add between 1 and 30 exercises." }
+        if (day.isAfter(today)) throw WorkoutInputException("Choose today or an earlier date.", R.string.wp_err_future_date)
+        if (exercises.size !in 1..30) throw WorkoutInputException("Add between 1 and 30 exercises.", R.string.wp_err_exercise_count)
         return exercises.map { entry ->
             val item = entry.exerciseId?.let { id ->
-                library.find { it.id == id } ?: error("Exercise not found. Describe the exercise again.")
+                library.find { it.id == id }
+                    ?: throw WorkoutStateException("Exercise not found. Describe the exercise again.", R.string.wp_err_exercise_not_found)
             }
-            require(entry.name.isNotBlank() && entry.name.length <= 120) { "Enter an activity name." }
+            if (!(entry.name.isNotBlank() && entry.name.length <= 120)) {
+                throw WorkoutInputException("Enter an activity name.", R.string.wp_err_activity_name)
+            }
             val minutes = entry.minutes.takeIf { it.isNotBlank() }?.let {
                 it.replace(',', '.').toDoubleOrNull()?.takeIf { n -> n.isFinite() && n > 0 && n <= 1440 }
-                    ?: error("Duration must be between 0 and 1,440 minutes.")
+                    ?: throw WorkoutStateException("Duration must be between 0 and 1,440 minutes.", R.string.wp_err_duration)
             }
-            require(entry.sets.size <= 12) { "Use at most 12 sets per exercise." }
-            require(entry.unit in listOf("kg", "lbs")) { "Choose kg or lbs." }
+            if (entry.sets.size > 12) throw WorkoutInputException("Use at most 12 sets per exercise.", R.string.wp_err_max_sets)
+            if (entry.unit !in listOf("kg", "lbs")) throw WorkoutInputException("Choose kg or lbs.", R.string.wp_err_unit)
             val intensity = WorkoutIntensity.entries.find { it.name.lowercase() == entry.intensity }
-                ?: error("Choose light, moderate, or vigorous effort.")
+                ?: throw WorkoutStateException("Choose light, moderate, or vigorous effort.", R.string.wp_err_effort)
             val sets = entry.sets.map { set ->
                 val reps = set.reps.toIntOrNull()
                 if (reps == null) throw missingDetails(entry, item)
-                require(reps in 1..999) { "Enter 1–999 reps for each set." }
+                if (reps !in 1..999) throw WorkoutInputException("Enter 1–999 reps for each set.", R.string.wp_err_reps)
                 val weight = set.weight.takeIf { it.isNotBlank() }?.let {
                     it.replace(',', '.').toDoubleOrNull()?.takeIf { n -> n.isFinite() && n in 0.0..1500.0 }
-                        ?: error("Enter a valid weight between 0 and 1,500.")
+                        ?: throw WorkoutStateException("Enter a valid weight between 0 and 1,500.", R.string.wp_err_weight)
                 }
                 val rpe = set.rpe.takeIf { it.isNotBlank() }?.replace(',', '.')?.toDoubleOrNull()
-                require(set.rpe.isBlank() || (rpe != null && rpe.isFinite() && rpe in 1.0..10.0)) { "Enter an RPE from 1 to 10." }
+                if (!(set.rpe.isBlank() || (rpe != null && rpe.isFinite() && rpe in 1.0..10.0))) {
+                    throw WorkoutInputException("Enter an RPE from 1 to 10.", R.string.wp_err_rpe)
+                }
                 PlannedSet(weight = weight?.toString().orEmpty(), reps = reps.toString(),
                     rpe = rpe?.toString().orEmpty(), rpeScale = rpe?.let { WorkoutRpeScale.STRENGTH },
                     weightUnit = WorkoutWeightUnit.fromStorage(entry.unit))
@@ -44,7 +52,8 @@ data class WorkoutTextDraft(val date: String, val exercises: List<WorkoutTextExe
             if (item == null && (minutes == null || sets.isNotEmpty())) {
                 throw WorkoutClarification(
                     "Which variation of ${entry.name} did you do?",
-                    listOf("Barbell", "Dumbbells", "Machine")
+                    listOf("Barbell", "Dumbbells", "Machine"),
+                    R.string.wp_err_variation, listOf(entry.name)
                 )
             }
             val base = item?.let(PlannedExercise::from) ?: PlannedExercise(
@@ -59,17 +68,23 @@ data class WorkoutTextDraft(val date: String, val exercises: List<WorkoutTextExe
     }
 
     private fun missingDetails(entry: WorkoutTextExercise, item: ExerciseItem?): Nothing {
-        val name = entry.name.trim().ifBlank { "that exercise" }
+        val trimmed = entry.name.trim()
+        val name = trimmed.ifBlank { "that exercise" }
+        val nameArg: Any = if (trimmed.isBlank()) WorkoutStringRef(R.string.wp_err_that_exercise) else trimmed
         if (item?.category.equals("cardio", ignoreCase = true)) {
-            throw WorkoutClarification("How many minutes of $name did you do?", listOf("10", "20", "30", "45"))
+            throw WorkoutClarification("How many minutes of $name did you do?", listOf("10", "20", "30", "45"),
+                R.string.wp_err_minutes_of, listOf(nameArg))
         }
-        throw WorkoutClarification("How many sets and reps of $name did you do?", listOf("3x10", "3x8", "3x12"))
+        throw WorkoutClarification("How many sets and reps of $name did you do?", listOf("3x10", "3x8", "3x12"),
+            R.string.wp_err_sets_reps_of, listOf(nameArg))
     }
 
     companion object {
         fun parse(response: String, library: List<ExerciseItem>, today: LocalDate = LocalDate.now()): WorkoutTextDraft {
             val start = response.indexOf('{'); val end = response.lastIndexOf('}')
-            require(start >= 0 && end >= start) { "Could not read the workout. Please try again." }
+            if (!(start >= 0 && end >= start)) {
+                throw WorkoutInputException("Could not read the workout. Please try again.", R.string.wp_err_read_workout)
+            }
             val root = Json.parseToJsonElement(response.substring(start, end + 1)).jsonObject
             val question = root["question"]?.jsonPrimitive?.contentOrNull
             if (!question.isNullOrBlank()) throw WorkoutClarification(question,
@@ -160,8 +175,47 @@ data class WorkoutTextExercise(
 @Serializable
 data class WorkoutTextSet(val id: String = UUID.randomUUID().toString(), val weight: String = "", val reps: String = "", val rpe: String = "")
 
+/**
+ * A workout message that can be shown in the app language. The exception message stays
+ * English (logs, voice tools, tests); the UI resolves [messageRes] with [messageArgs].
+ * A resource id of 0 means there is no localized text.
+ */
+interface WorkoutLocalizedMessage {
+    val messageRes: Int
+    val messageArgs: List<Any>
+
+    /** Localized text in the app language, or null when no resource is attached. */
+    fun localizedText(context: Context): String? {
+        if (messageRes == 0) return null
+        val args = messageArgs.map { if (it is WorkoutStringRef) context.getString(it.id) else it }
+        return context.getString(messageRes, *args.toTypedArray())
+    }
+}
+
+/** A format argument that is itself a string resource (resolved at display time). */
+class WorkoutStringRef(@StringRes val id: Int)
+
+/** Validation failure; same type as the former `require(...)` it replaces. */
+class WorkoutInputException(
+    message: String,
+    @StringRes override val messageRes: Int,
+    override val messageArgs: List<Any> = emptyList()
+) : IllegalArgumentException(message), WorkoutLocalizedMessage
+
+/** Validation failure; same type as the former `error(...)` it replaces. */
+class WorkoutStateException(
+    message: String,
+    @StringRes override val messageRes: Int,
+    override val messageArgs: List<Any> = emptyList()
+) : IllegalStateException(message), WorkoutLocalizedMessage
+
 /** Clarification is a conversation turn, not a failed request. */
-class WorkoutClarification(question: String, options: List<String> = emptyList()) : IllegalArgumentException(question.take(500)) {
+class WorkoutClarification(
+    question: String,
+    options: List<String> = emptyList(),
+    override val messageRes: Int = 0,
+    override val messageArgs: List<Any> = emptyList()
+) : IllegalArgumentException(question.take(500)), WorkoutLocalizedMessage {
     val options: List<String> = options.map { it.trim().take(80) }.filter { it.isNotBlank() }.distinct().take(4)
         .ifEmpty { listOf("Barbell", "Dumbbells", "Machine", "Seated", "Standing")
             .filter { question.contains(it, ignoreCase = true) }.take(4) }
@@ -173,8 +227,10 @@ data class WorkoutFollowUp(val question: String, val answer: String)
 @Serializable
 data class WorkoutConversation(val original: String, val turns: List<WorkoutFollowUp> = emptyList()) {
     fun answering(question: String, answer: String): WorkoutConversation {
-        require(answer.isNotBlank() && answer.length <= 500) { "Reply in up to 500 characters." }
-        require(turns.size < 6) { "Please start over with the details gathered so far." }
+        if (!(answer.isNotBlank() && answer.length <= 500)) {
+            throw WorkoutInputException("Reply in up to 500 characters.", R.string.wp_err_reply_length)
+        }
+        if (turns.size >= 6) throw WorkoutInputException("Please start over with the details gathered so far.", R.string.wp_err_start_over)
         return copy(turns = turns + WorkoutFollowUp(question.take(500), answer.trim()))
     }
     fun requestDescription(): String = if (turns.isEmpty()) original else buildJsonObject {

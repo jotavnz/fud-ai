@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Workout diary: add menu -->
+    <string name="wk_all_exercises">Todos los ejercicios</string>
+    <string name="wk_copy_from_day">Copiar de otro día</string>
+    <string name="wk_cd_add_workout">Agregar ejercicio</string>
+
+    <!-- Workout diary: calorie burn hero -->
+    <string name="wk_metric_sets">Series</string>
+    <string name="wk_metric_workouts">Entrenos</string>
+    <string name="wk_metric_reps">Reps</string>
+    <string name="wk_metric_burn">Quemadas</string>
+    <string name="wk_calculating">Calculando…</string>
+    <string name="wk_calculate">Calcular</string>
+    <string name="wk_calorie_burn_caps">CALORÍAS QUEMADAS</string>
+    <string name="wk_cd_calculating">Calculando calorías quemadas</string>
+    <string name="wk_cd_calculate">Calcular calorías quemadas</string>
+    <string name="wk_log_first_title">Registra tu entrenamiento primero</string>
+    <string name="wk_notice_calculate_body">Detén y guarda el cronómetro de un ejercicio, o ingresa las repeticiones de al menos una serie, antes de calcular las calorías del entrenamiento.</string>
+
+    <!-- Workout diary: day header and empty state -->
+    <plurals name="wk_workout_count">
+        <item quantity="one">%d ejercicio</item>
+        <item quantity="other">%d ejercicios</item>
+    </plurals>
+    <string name="wk_empty_title">Sin ejercicios registrados</string>
+    <string name="wk_empty_hint">Usa + para elegir ejercicios para este día (%1$s)</string>
+
+    <!-- Dates -->
+    <string name="wk_today">Hoy</string>
+    <string name="wk_tomorrow">Mañana</string>
+    <string name="wk_yesterday">Ayer</string>
+    <string name="wk_selected_day">Día seleccionado</string>
+
+    <!-- Swipe actions -->
+    <string name="wk_swipe_unsave">Quitar</string>
+
+    <!-- Exercise card -->
+    <string name="wk_cd_open_instructions">Abrir instrucciones del ejercicio</string>
+    <string name="wk_last_time">Última vez: %1$s</string>
+    <string name="wk_history">Historial</string>
+    <string name="wk_cd_remove_set">Quitar serie</string>
+    <string name="wk_cd_add_set">Agregar serie en blanco</string>
+    <plurals name="wk_set_count">
+        <item quantity="one">%d serie</item>
+        <item quantity="other">%d series</item>
+    </plurals>
+    <string name="wk_cd_unsave_exercise">Quitar ejercicio de guardados</string>
+    <string name="wk_cd_save_exercise">Guardar ejercicio</string>
+    <string name="wk_cd_remove_exercise">Quitar ejercicio</string>
+    <string name="wk_set_number">Serie %1$d</string>
+    <string name="wk_placeholder_reps">Reps</string>
+    <string name="wk_placeholder_rpe">RPE</string>
+
+    <!-- Exercise timer -->
+    <string name="wk_cd_start_timer">Iniciar cronómetro de %1$s</string>
+    <string name="wk_cd_timer_options">Opciones del cronómetro de %1$s, %2$s, %3$s</string>
+    <string name="wk_timer_running">en marcha</string>
+    <string name="wk_timer_saved">guardado</string>
+    <string name="wk_timer_paused">en pausa</string>
+    <string name="wk_timer_pause">Pausar</string>
+    <string name="wk_timer_resume">Reanudar</string>
+    <string name="wk_timer_stop_save">Detener y guardar</string>
+    <string name="wk_timer_restart">Reiniciar cronómetro</string>
+    <string name="wk_timer_discard">Descartar cronómetro</string>
+    <string name="wk_timer_restart_title">¿Reiniciar el cronómetro?</string>
+    <string name="wk_timer_discard_title">¿Descartar el cronómetro?</string>
+    <string name="wk_timer_clear_message">Esto borra el tiempo registrado de %1$s.</string>
+    <string name="wk_restart">Reiniciar</string>
+
+    <!-- Workouts screen -->
+    <string name="wk_filter_body_part">Grupo muscular</string>
+    <string name="wk_cd_show_library">Mostrar biblioteca de ejercicios</string>
+    <string name="wk_cd_show_log">Mostrar registro de entrenamiento</string>
+    <string name="wk_edit">Editar</string>
+
+    <!-- Exercise history sheet -->
+    <string name="wk_no_lift_history">Aún no hay historial de levantamientos</string>
+
+    <!-- RPE scales -->
+    <string name="wk_rpe_strength">Fuerza 1–10</string>
+    <string name="wk_rpe_cr10">CR10 0–10</string>
+    <string name="wk_rpe_borg">Borg 6–20</string>
+
+    <!-- Training splits -->
+    <string name="wk_split_push_pull_legs">Empuje / Tirón / Piernas</string>
+    <string name="wk_split_upper_lower">Tren superior / inferior</string>
+    <string name="wk_split_body_part">Rutina por grupo muscular</string>
+    <string name="wk_split_arnold">Rutina Arnold</string>
+    <string name="wk_split_push_pull">Empuje / Tirón</string>
+    <string name="wk_split_antagonist">Rutina de antagonistas</string>
+    <string name="wk_split_hybrid">Rutina híbrida</string>
+    <string name="wk_split_full_body">Cuerpo completo</string>
+    <string name="wk_split_custom">Personalizada</string>
+
+    <!-- Split day groups -->
+    <string name="wk_group_push">Empuje</string>
+    <string name="wk_group_pull">Tirón</string>
+    <string name="wk_group_legs">Piernas</string>
+    <string name="wk_group_core">Core</string>
+    <string name="wk_group_upper">Tren superior</string>
+    <string name="wk_group_lower">Tren inferior</string>
+    <string name="wk_group_chest">Pecho</string>
+    <string name="wk_group_back">Espalda</string>
+    <string name="wk_group_shoulders">Hombros</string>
+    <string name="wk_group_arms">Brazos</string>
+    <string name="wk_group_chest_back">Pecho + espalda</string>
+    <string name="wk_group_shoulders_arms">Hombros + brazos</string>
+    <string name="wk_group_accessory_core">Accesorios/Core</string>
+    <string name="wk_group_biceps_triceps">Bíceps + tríceps</string>
+    <string name="wk_group_quads_hams_glutes">Cuádriceps + isquios/glúteos</string>
+    <string name="wk_group_shoulders_lats_traps">Hombros + dorsales/trapecios</string>
+    <string name="wk_group_core_accessory">Core/Accesorios</string>
+    <string name="wk_group_strength_compound">Fuerza/Compuestos</string>
+    <string name="wk_group_accessory_hypertrophy">Accesorios/Hipertrofia</string>
+</resources>

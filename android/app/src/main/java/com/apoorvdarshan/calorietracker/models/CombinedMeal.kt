@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import android.content.Context
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import java.util.UUID
 
@@ -47,15 +49,37 @@ fun FoodEntry.withIngredients(ingredients: List<MealIngredient>): FoodEntry {
     )
 }
 
+/**
+ * Words used when naming a combined entry. The name is stored with the entry, so it is built in
+ * the language active when the meals are combined; [English] is the default for callers without
+ * a Context, and [from] resolves the current app language.
+ */
+class CombinedMealLabels(
+    val combinedMeal: String,
+    val more: (Int) -> String
+) {
+    companion object {
+        val English = CombinedMealLabels("Combined meal") { "$it more" }
+
+        fun from(context: Context): CombinedMealLabels = CombinedMealLabels(
+            combinedMeal = context.getString(R.string.hm_combined_meal),
+            more = { context.getString(R.string.hm_combined_more_format, it) }
+        )
+    }
+}
+
 object CombinedMeal {
-    fun combinedName(entries: List<FoodEntry>): String {
+    fun combinedName(entries: List<FoodEntry>, labels: CombinedMealLabels = CombinedMealLabels.English): String {
         val names = entries.map { it.name.trim() }.filter { it.isNotEmpty() }
-        if (names.isEmpty()) return "Combined meal"
+        if (names.isEmpty()) return labels.combinedMeal
         if (names.size <= 3) return names.joinToString(" + ")
-        return names.take(2).joinToString(" + ") + " + ${names.size - 2} more"
+        return names.take(2).joinToString(" + ") + " + " + labels.more(names.size - 2)
     }
 
-    fun combineFoodEntries(entries: List<FoodEntry>): FoodEntry {
+    fun combineFoodEntries(
+        entries: List<FoodEntry>,
+        labels: CombinedMealLabels = CombinedMealLabels.English
+    ): FoodEntry {
         require(entries.size >= 2) { "Combine requires at least two food entries" }
         val ingredients = entries.map { it.toMealIngredient() }
         val totals = ingredients.totals()
@@ -63,7 +87,7 @@ object CombinedMeal {
         val filenames = entries.flatMap { it.allImageFilenames }.distinct()
         return FoodEntry(
             id = UUID.randomUUID(),
-            name = combinedName(entries),
+            name = combinedName(entries, labels),
             calories = totals.calories,
             protein = totals.protein,
             carbs = totals.carbs,
@@ -81,4 +105,7 @@ object CombinedMeal {
     }
 }
 
-fun combineFoodEntries(entries: List<FoodEntry>): FoodEntry = CombinedMeal.combineFoodEntries(entries)
+fun combineFoodEntries(
+    entries: List<FoodEntry>,
+    labels: CombinedMealLabels = CombinedMealLabels.English
+): FoodEntry = CombinedMeal.combineFoodEntries(entries, labels)

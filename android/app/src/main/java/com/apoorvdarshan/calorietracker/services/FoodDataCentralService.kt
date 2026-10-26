@@ -351,7 +351,7 @@ object FoodDataCentralService {
         ) {
             return "$brand $description"
         }
-        return description ?: brand ?: "Barcode $barcode"
+        return description ?: brand ?: OpenFoodFactsService.barcodeFallbackName(barcode)
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.coach
 
 import android.Manifest
-import android.content.res.Configuration
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -138,7 +137,6 @@ import java.io.ByteArrayOutputStream
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Base64
-import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -165,7 +163,6 @@ fun CoachScreen(container: AppContainer) {
     val listState = rememberLazyListState()
     var showResetConfirm by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
-    val configuration = LocalConfiguration.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -304,11 +301,7 @@ fun CoachScreen(container: AppContainer) {
                 hideKeyboard()
                 input = ""
                 attachedImageBytes = null
-                val englishConfiguration = Configuration(configuration).apply {
-                    setLocale(Locale.ENGLISH)
-                }
-                val englishContext = ctx.createConfigurationContext(englishConfiguration)
-                vm.send(englishContext.getString(promptResourceId))
+                vm.send(ctx.getString(promptResourceId))
             }
 
             // Top region — empty state OR message list

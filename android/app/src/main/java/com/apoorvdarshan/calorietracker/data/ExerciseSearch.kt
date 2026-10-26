@@ -91,7 +91,11 @@ object ExerciseSearch {
         return null
     }
 
-    fun relevance(item: ExerciseItem, query: String): Int? = relevance(item.searchIndex, query, item.id)
+    fun relevance(item: ExerciseItem, query: String): Int? {
+        val shown = relevance(item.searchIndex, query, item.id)
+        val english = item.englishSearchIndex?.let { relevance(it, query, item.id) }
+        return listOfNotNull(shown, english).minOrNull()
+    }
 
     fun matches(item: ExerciseItem, query: String): Boolean = relevance(item, query) != null
 

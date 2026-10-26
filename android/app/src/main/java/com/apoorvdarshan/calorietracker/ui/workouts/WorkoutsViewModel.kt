@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.ExerciseSort
@@ -16,7 +17,15 @@ import com.apoorvdarshan.calorietracker.models.ExerciseTimerAction
 import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftDay
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftHistory
+import com.apoorvdarshan.calorietracker.models.GroupFatigue
+import com.apoorvdarshan.calorietracker.models.MachineMuscleGroup
 import com.apoorvdarshan.calorietracker.models.PlannedExercise
+import com.apoorvdarshan.calorietracker.models.PlannedSet
+import com.apoorvdarshan.calorietracker.models.ProgressionHint
+import com.apoorvdarshan.calorietracker.models.SetPrescription
+import com.apoorvdarshan.calorietracker.models.TrainingGoal
+import com.apoorvdarshan.calorietracker.models.TrainingInsight
+import com.apoorvdarshan.calorietracker.models.TrainingInsights
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
 import com.apoorvdarshan.calorietracker.models.WorkoutPersistedState
 import com.apoorvdarshan.calorietracker.models.WorkoutPreferences
@@ -70,6 +79,14 @@ data class WorkoutDiaryUiState(
     val routines: List<WorkoutRoutine> = emptyList(),
     val weightUnit: WorkoutWeightUnit = WorkoutWeightUnit.LBS,
     val visualGender: Gender = Gender.MALE,
+    /** Catalog ids already on today's plan, so the machine coach can mark them added. */
+    val todayItemIds: Set<String> = emptySet(),
+    /** Groups still recovering from yesterday's (or a heavy recent) session. */
+    val fatigue: Map<MachineMuscleGroup, GroupFatigue> = emptyMap(),
+    /** Dataset muscles worked hard today or yesterday, for cross-fatigue ranking. */
+    val fatiguedMuscles: Set<String> = emptySet(),
+    /** Diary tips (overuse, neglect, imbalance, plateaus), dismissed ones removed. */
+    val insights: List<TrainingInsight> = emptyList(),
     val isCalculatingBurn: Boolean = false,
     val notice: String? = null
 ) {
@@ -215,6 +232,72 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Diary plans snapshot their exercise metadata, so detail still works after dataset changes. */
     var openExerciseSnapshot by mutableStateOf<ExerciseItem?>(null)
+
+    /** Muscle group open in the machine coach, or null when it is closed. Not persisted. */
+    var machineGroup by mutableStateOf<MachineMuscleGroup?>(null)
+
+    /** Which page of three suggestions the machine coach shows ("show 3 other options"). */
+    var machinePage by mutableStateOf(0)
+
+    private val _trainingGoal = mutableStateOf(
+        prefs.getString(K_TRAINING_GOAL, null)?.let { runCatching { TrainingGoal.valueOf(it) }.getOrNull() }
+    )
+
+    /** The user's chosen goal, or null until they pick one (callers default from the profile). */
+    var trainingGoal: TrainingGoal?
+        get() = _trainingGoal.value
+        set(v) {
+            _trainingGoal.value = v
+            prefs.edit().putString(K_TRAINING_GOAL, v?.name).apply()
+        }
+
+    fun openMachineCoach(group: MachineMuscleGroup) {
+        machinePage = 0
+        machineGroup = group
+    }
+
+    fun closeMachineCoach() {
+        machineGroup = null
+    }
+
+    /** Overuse warning for [group] this week, if any. */
+    fun overuseFor(group: MachineMuscleGroup): TrainingInsight.Overuse? =
+        TrainingInsights.overuse(latestPersistedState, LocalDate.now()).firstOrNull { it.group == group }
+
+    /** Plateau on this exact exercise over recent sessions, if any. */
+    fun plateauFor(itemId: String): TrainingInsight.Plateau? =
+        TrainingInsights.plateaus(latestPersistedState, LocalDate.now(), workoutWeightUnit)
+            .firstOrNull { it.exerciseId == itemId }
+
+    /** Groups to train instead of [group] today. */
+    fun restedAlternatives(group: MachineMuscleGroup): List<MachineMuscleGroup> =
+        TrainingInsights.restedAlternatives(latestPersistedState, LocalDate.now(), exclude = setOf(group))
+
+    fun progressionHint(itemId: String, prescription: SetPrescription): ProgressionHint? =
+        TrainingInsights.progression(latestPersistedState, itemId, LocalDate.now(), prescription, workoutWeightUnit)
+
+    /** Hides a diary tip until tomorrow. */
+    fun dismissInsight(insight: TrainingInsight) {
+        val today = LocalDate.now().toString()
+        val kept = loadSet(K_DISMISSED_INSIGHTS).filterTo(mutableSetOf()) { it.startsWith("$today|") }
+        saveSet(K_DISMISSED_INSIGHTS, kept + "$today|${insightKey(insight)}")
+        rebuildDiaryState()
+    }
+
+    private fun insightKey(insight: TrainingInsight): String = when (insight) {
+        is TrainingInsight.Plateau -> "plateau:${insight.exerciseId}"
+        else -> "${insight::class.simpleName}:${insight.group.name}"
+    }
+
+    /** Adds a suggested machine to today's plan with the prescribed number of empty sets. */
+    fun addSuggestedExercise(item: ExerciseItem, sets: Int) {
+        val today = LocalDate.now()
+        val exercise = PlannedExercise.from(item).copy(sets = List(sets.coerceIn(1, 12)) { PlannedSet() })
+        viewModelScope.launch {
+            workoutRepository?.addPlannedExercise(exercise, WorkoutDate.key(today))
+        }
+        selectDate(today)
+    }
 
     /**
      * Binds the persistent diary without making the legacy library browser depend on DI.
@@ -483,7 +566,7 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         if (diaryUiState.isCalculatingBurn) return
         if (diaryUiState.exercises.none { it.hasCalculableWork }) {
             diaryUiState = diaryUiState.copy(
-                notice = "Stop and save an exercise timer, or enter reps for at least one set, before calculating workout calories."
+                notice = calculateNoticeBody()
             )
             return
         }
@@ -501,11 +584,14 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
             diaryUiState = diaryUiState.copy(
                 isCalculatingBurn = false,
                 notice = if (saved == null) {
-                    "Stop and save an exercise timer, or enter reps for at least one set, before calculating workout calories."
+                    calculateNoticeBody()
                 } else null
             )
         }
     }
+
+    private fun calculateNoticeBody(): String =
+        getApplication<Application>().getString(R.string.wk_notice_calculate_body)
 
     fun dismissNotice() {
         diaryUiState = diaryUiState.copy(notice = null)
@@ -535,6 +621,8 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
     private fun rebuildDiaryState() {
         val date = diaryUiState.selectedDate
         val dateKey = WorkoutDate.key(date)
+        val today = LocalDate.now()
+        val dismissed = loadSet(K_DISMISSED_INSIGHTS)
         val exercises = latestPersistedState.dayPlans[dateKey]?.exercises.orEmpty()
         val burn = latestPersistedState.completedSessions
             .asSequence()
@@ -583,7 +671,15 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
             copyDays = copyDays,
             routines = sortedRoutines(latestPersistedState.routines),
             weightUnit = workoutWeightUnit,
-            visualGender = profileGender
+            visualGender = profileGender,
+            todayItemIds = latestPersistedState.dayPlans[WorkoutDate.key(today)]
+                ?.exercises
+                ?.mapTo(mutableSetOf()) { it.itemId }
+                .orEmpty(),
+            fatigue = TrainingInsights.fatigue(latestPersistedState, today),
+            fatiguedMuscles = TrainingInsights.fatiguedMuscles(latestPersistedState, today),
+            insights = TrainingInsights.dashboard(latestPersistedState, today, workoutWeightUnit)
+                .filterNot { "$today|${insightKey(it)}" in dismissed }
         )
         rebuildExerciseLiftSummariesIfNeeded()
     }
@@ -700,6 +796,8 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         const val K_CATEGORIES = "categories"
         const val K_ONLY_USER_EXERCISES = "only_user_exercises"
         const val K_SORT = "sort"
+        const val K_TRAINING_GOAL = "machine_coach.goal"
+        const val K_DISMISSED_INSIGHTS = "insights.dismissed"
         const val K_PICKER_SOURCE = "picker.source"
         const val K_PICKER_FILTER_PREFIX = "picker.filter."
     }

@@ -88,6 +88,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -145,11 +146,15 @@ internal data class WorkoutPickerRequest(
         }
 
     val isSavedContext: Boolean
-        get() = initialSource == WorkoutPickerSource.SAVED && title == "Saved exercises"
+        get() = initialSource == WorkoutPickerSource.SAVED && title == SAVED_TITLE
 
     companion object {
-        fun all() = WorkoutPickerRequest("All exercises", emptySet(), WorkoutPickerSource.DATASET)
-        fun saved() = WorkoutPickerRequest("Saved exercises", emptySet(), WorkoutPickerSource.SAVED)
+        // The titles below are identities (they build the persisted contextId); shown through displayTitle().
+        private const val ALL_TITLE = "All exercises"
+        private const val SAVED_TITLE = "Saved exercises"
+
+        fun all() = WorkoutPickerRequest(ALL_TITLE, emptySet(), WorkoutPickerSource.DATASET)
+        fun saved() = WorkoutPickerRequest(SAVED_TITLE, emptySet(), WorkoutPickerSource.SAVED)
         fun forSplit(title: String, groups: List<WorkoutSplitGroup>) = WorkoutPickerRequest(
             title = title,
             muscles = groups.flatMapTo(mutableSetOf()) { it.muscles },
@@ -160,6 +165,14 @@ internal data class WorkoutPickerRequest(
             muscles = group.muscles,
             initialSource = WorkoutPickerSource.DATASET
         )
+    }
+
+    /** Title in the app language; [title] itself stays the stable English identity. */
+    @Composable
+    fun displayTitle(): String = when (title) {
+        ALL_TITLE -> stringResource(R.string.wp_title_all)
+        SAVED_TITLE -> stringResource(R.string.wp_title_saved)
+        else -> workoutSplitGroupLabel(title)
     }
 }
 
@@ -338,7 +351,7 @@ internal fun WorkoutPickerSheet(
                     .focusable()
             ) {
             PickerHeader(
-                title = request.title,
+                title = request.displayTitle(),
                 count = items.size,
                 showCreate = source != WorkoutPickerSource.SAVED,
                 onCreate = onCreateExercise,
@@ -374,61 +387,61 @@ internal fun WorkoutPickerSheet(
                 ) {
                     if (!hidePrimaryFilter) {
                         FilterPill(
-                            title = "Primary",
+                            title = stringResource(R.string.label_primary),
                             icon = Icons.Filled.GpsFixed,
                             selected = filter.primaryMuscle?.let(::setOf).orEmpty(),
-                            emptyDisplay = "All ${muscleOptions.size}",
+                            emptyDisplay = stringResource(R.string.filter_all_count, muscleOptions.size),
                             options = muscleOptions,
                             glyphFor = { muscleGlyphAsset(it) },
                             onSelect = { selected -> updateFilter { it.copy(primaryMuscle = selected.firstOrNull()) } }
                         )
                     }
                     FilterPill(
-                        title = "Secondary",
+                        title = stringResource(R.string.label_secondary),
                         icon = Icons.Filled.GpsFixed,
                         selected = filter.secondaryMuscle?.let(::setOf).orEmpty(),
-                        emptyDisplay = "All",
+                        emptyDisplay = stringResource(R.string.filter_all),
                         options = repository.availableSecondaryMuscles,
                         glyphFor = { muscleGlyphAsset(it) },
                         onSelect = { selected -> updateFilter { it.copy(secondaryMuscle = selected.firstOrNull()) } }
                     )
                     FilterPill(
-                        title = "Equipment",
+                        title = stringResource(R.string.label_equipment),
                         icon = Icons.Filled.FitnessCenter,
                         selected = filter.equipment?.let(::setOf).orEmpty(),
-                        emptyDisplay = "All ${equipmentOptions.size}",
+                        emptyDisplay = stringResource(R.string.filter_all_count, equipmentOptions.size),
                         options = equipmentOptions,
                         onSelect = { selected -> updateFilter { it.copy(equipment = selected.firstOrNull()) } }
                     )
                     FilterPill(
-                        title = "Level",
+                        title = stringResource(R.string.label_level),
                         icon = Icons.Filled.BarChart,
                         selected = filter.level?.let(::setOf).orEmpty(),
-                        emptyDisplay = "All",
+                        emptyDisplay = stringResource(R.string.filter_all),
                         options = repository.availableLevels,
                         onSelect = { selected -> updateFilter { it.copy(level = selected.firstOrNull()) } }
                     )
                     FilterPill(
-                        title = "Force",
+                        title = stringResource(R.string.label_force),
                         icon = Icons.Filled.SwapHoriz,
                         selected = filter.force?.let(::setOf).orEmpty(),
-                        emptyDisplay = "All",
+                        emptyDisplay = stringResource(R.string.filter_all),
                         options = repository.availableForces,
                         onSelect = { selected -> updateFilter { it.copy(force = selected.firstOrNull()) } }
                     )
                     FilterPill(
-                        title = "Mechanic",
+                        title = stringResource(R.string.label_mechanic),
                         icon = Icons.Filled.Settings,
                         selected = filter.mechanic?.let(::setOf).orEmpty(),
-                        emptyDisplay = "All",
+                        emptyDisplay = stringResource(R.string.filter_all),
                         options = repository.availableMechanics,
                         onSelect = { selected -> updateFilter { it.copy(mechanic = selected.firstOrNull()) } }
                     )
                     FilterPill(
-                        title = "Category",
+                        title = stringResource(R.string.label_category),
                         icon = Icons.Filled.Tag,
                         selected = filter.category?.let(::setOf).orEmpty(),
-                        emptyDisplay = "All",
+                        emptyDisplay = stringResource(R.string.filter_all),
                         options = repository.availableCategoriesByCount,
                         onSelect = { selected -> updateFilter { it.copy(category = selected.firstOrNull()) } }
                     )
@@ -491,7 +504,7 @@ internal fun WorkoutPickerSheet(
                                             IconButton(onClick = { onToggleSaved(item.id) }, modifier = Modifier.size(36.dp)) {
                                                 Icon(
                                                     if (isSaved) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                                                    contentDescription = if (isSaved) "Unsave exercise" else "Save exercise",
+                                                    contentDescription = stringResource(if (isSaved) R.string.wp_unsave_exercise else R.string.wp_save_exercise),
                                                     tint = if (isSaved) AppColors.Calorie else workoutsColors().mutedText,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -509,7 +522,7 @@ internal fun WorkoutPickerSheet(
                                             ) {
                                                 Icon(
                                                     if (item.id in selectedExerciseIds) Icons.Filled.Check else Icons.Filled.AddCircle,
-                                                    contentDescription = if (item.id in selectedExerciseIds) "Remove from day" else "Add to day",
+                                                    contentDescription = stringResource(if (item.id in selectedExerciseIds) R.string.wp_remove_from_day else R.string.wp_add_to_day),
                                                     tint = if (item.id in selectedExerciseIds) Color.White else workoutsColors().mutedText,
                                                     modifier = Modifier.size(if (item.id in selectedExerciseIds) 18.dp else 23.dp)
                                                 )
@@ -520,7 +533,7 @@ internal fun WorkoutPickerSheet(
                                             ) {
                                                 Icon(
                                                     Icons.Filled.Info,
-                                                    contentDescription = "Preview ${item.name}",
+                                                    contentDescription = stringResource(R.string.wp_preview_exercise, item.name),
                                                     tint = workoutsColors().accent,
                                                     modifier = Modifier.size(20.dp)
                                                 )
@@ -593,7 +606,7 @@ private fun ExercisePickerPreview(
                 )
                 Spacer(Modifier.size(8.dp))
                 Text(
-                    if (isSelected) "Remove from day" else "Add exercise",
+                    stringResource(if (isSelected) R.string.wp_remove_from_day else R.string.wp_add_exercise),
                     color = if (isSelected) colors.charcoal else androidx.compose.ui.graphics.Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -617,7 +630,7 @@ private fun PickerHeader(
     ) {
         if (showCreate && onCreate != null) {
             IconButton(onClick = onCreate) {
-                Icon(Icons.Filled.AddCircle, contentDescription = "Create exercise", tint = workoutsColors().accent)
+                Icon(Icons.Filled.AddCircle, contentDescription = stringResource(R.string.workout_create_exercise), tint = workoutsColors().accent)
             }
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -630,13 +643,13 @@ private fun PickerHeader(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                "$count ${if (count == 1) "exercise" else "exercises"}",
+                pluralStringResource(R.plurals.exercises_count, count, count),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
-        FudGlassTextButton(text = "Done", onClick = onDismiss)
+        FudGlassTextButton(text = stringResource(R.string.action_done), onClick = onDismiss)
     }
 }
 
@@ -767,7 +780,7 @@ private fun BoxScope.PickerSwipeBackground(offsetPx: Float, isSaved: Boolean) {
                 if (revealWidth >= 76.dp) {
                     Spacer(Modifier.size(4.dp))
                     Text(
-                        if (isSaved) "Unsave" else "Save",
+                        stringResource(if (isSaved) R.string.wp_unsave else R.string.action_save),
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
@@ -802,9 +815,9 @@ private fun PickerEmptyState(
         )
         Text(
             when {
-                source == WorkoutPickerSource.SAVED -> "No saved exercises"
+                source == WorkoutPickerSource.SAVED -> stringResource(R.string.wp_empty_saved_title)
                 noCustomExercises -> stringResource(R.string.workout_mine_empty_title)
-                else -> "No matching exercises"
+                else -> stringResource(R.string.empty_title)
             },
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 16.sp,
@@ -812,15 +825,15 @@ private fun PickerEmptyState(
         )
         Text(
             when {
-                source == WorkoutPickerSource.SAVED -> "Bookmark exercises from the dataset to keep them here."
+                source == WorkoutPickerSource.SAVED -> stringResource(R.string.wp_empty_saved_subtitle)
                 noCustomExercises -> stringResource(R.string.workout_mine_empty_subtitle)
-                else -> "Try clearing filters — or create your own exercise."
+                else -> stringResource(R.string.wp_empty_no_match_subtitle)
             },
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f),
             fontSize = 13.sp
         )
         if (source != WorkoutPickerSource.SAVED && onCreateExercise != null) {
-            FudGlassTextButton(text = "Create exercise", onClick = onCreateExercise)
+            FudGlassTextButton(text = stringResource(R.string.workout_create_exercise), onClick = onCreateExercise)
         }
     }
 }
@@ -846,47 +859,47 @@ internal fun WorkoutCopySheet(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Copy from day", fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(stringResource(R.string.wp_copy_title), fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
                     Text(
-                        "Add a previous plan to ${selectedDateTitle(targetDate)}",
+                        stringResource(R.string.wp_copy_subtitle, workoutDateTitle(targetDate)),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.54f),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Filled.Close, contentDescription = "Close copy picker")
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.wp_copy_close))
                 }
             }
-            Text("What to copy", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.wp_copy_what), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 SegmentedButton(
                     selected = !includeSetDetails,
                     onClick = { includeSetDetails = false },
                     shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
                 ) {
-                    Text("Without details", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.wp_copy_without_details), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 SegmentedButton(
                     selected = includeSetDetails,
                     onClick = { includeSetDetails = true },
                     shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
                 ) {
-                    Text("With set details", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.wp_copy_with_details), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             Text(
                 if (includeSetDetails) {
-                    "Copies sets, weights, reps, RPE, units, and timers."
+                    stringResource(R.string.wp_copy_with_details_note)
                 } else {
-                    "Adds exercise names only, with blank sets."
+                    stringResource(R.string.wp_copy_without_details_note)
                 },
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.54f),
                 fontSize = 12.sp
             )
             if (days.isEmpty()) {
                 Text(
-                    "No earlier workout days to copy.",
+                    stringResource(R.string.wp_copy_empty),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 38.dp),
                     fontSize = 14.sp

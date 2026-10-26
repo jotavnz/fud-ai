@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
+import android.content.Context
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.LocalDate
@@ -82,6 +84,29 @@ data class WidgetSnapshot(
         val visible = selected.take(if (waterTrackingEnabled) 3 else 4)
         if (!waterTrackingEnabled) return visible
         return visible + waterHomeNutrient
+    }
+
+    /**
+     * [displayedHomeNutrients] with labels and units resolved in the current app language.
+     * The stored label/unit were localized when the snapshot was written and the fallbacks
+     * below are English, so widgets render through this instead.
+     */
+    fun displayedHomeNutrientsFor(context: Context): List<WidgetNutrient> =
+        displayedHomeNutrients.map { it.localized(context) }
+
+    fun primaryHomeNutrientFor(context: Context): WidgetNutrient =
+        primaryHomeNutrient.localized(context)
+
+    private fun WidgetNutrient.localized(context: Context): WidgetNutrient {
+        if (id == "water") {
+            return copy(
+                label = context.getString(R.string.water),
+                unit = if (waterUnit == WaterUnit.FLUID_OUNCES) " ${context.getString(R.string.hm_unit_fl_oz)}"
+                else context.getString(R.string.unit_ml)
+            )
+        }
+        val nutrient = HomeTopNutrient.entries.firstOrNull { it.storageKey == id } ?: return this
+        return copy(label = context.getString(nutrient.displayNameRes), unit = context.getString(nutrient.unitRes))
     }
 
     private val defaultHomeNutrients: List<WidgetNutrient>

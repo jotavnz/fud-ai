@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.services
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodProductMetadata
 import com.apoorvdarshan.calorietracker.models.FoodSource
@@ -100,20 +101,25 @@ object MealShare {
         val shareLink = preferredLink(entries, style)
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, shareText(entries, shareLink))
+            putExtra(Intent.EXTRA_TEXT, shareText(entries, shareLink, context))
         }
-        context.startActivity(Intent.createChooser(send, "Share meal"))
+        context.startActivity(Intent.createChooser(send, context.getString(R.string.cd_share_meal)))
     }
 
-    /** Human-readable summary plus the import link — the text put on the share sheet. */
-    fun shareText(entries: List<FoodEntry>, shareLink: String = link(entries)): String {
+    /**
+     * Human-readable summary plus the import link — the text put on the share sheet. Pass
+     * [context] to word it in the app language; without one it falls back to English.
+     */
+    fun shareText(entries: List<FoodEntry>, shareLink: String = link(entries), context: Context? = null): String {
         val lines = entries.map { e ->
-            val macros = "${e.protein.roundToInt()}P · ${e.carbs.roundToInt()}C · ${e.fat.roundToInt()}F"
+            val macros = context?.getString(
+                R.string.hm_macro_line_format, e.protein.roundToInt(), e.carbs.roundToInt(), e.fat.roundToInt()
+            ) ?: "${e.protein.roundToInt()}P · ${e.carbs.roundToInt()}C · ${e.fat.roundToInt()}F"
             val prefix = e.emoji?.let { "$it " } ?: ""
             "$prefix${e.name} — ${e.calories} kcal · $macros"
         }.toMutableList()
         lines.add("")
-        lines.add("Open in Fud AI to add:")
+        lines.add(context?.getString(R.string.hm_share_open_in_app) ?: "Open in Fud AI to add:")
         lines.add(shareLink)
         return lines.joinToString("\n")
     }

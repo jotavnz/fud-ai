@@ -85,9 +85,11 @@ import coil.compose.AsyncImage
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
+import com.apoorvdarshan.calorietracker.data.ExerciseLocalization
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.ExerciseSort
 import com.apoorvdarshan.calorietracker.data.ExerciseVisual
+import com.apoorvdarshan.calorietracker.models.TrainingGoal
 import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
@@ -128,6 +130,7 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
     val latestWeight by container.weightRepository.latest.collectAsState(initial = null)
     val weightUnitRaw by container.prefs.weightUnit.collectAsState(initial = "kg")
     val weekStartsOnMonday by container.prefs.weekStartsOnMonday.collectAsState(initial = true)
+    val smartSuggestions by container.prefs.smartSuggestionsEnabled.collectAsState(initial = true)
     val weightUnit = WorkoutWeightUnit.fromStorage(weightUnitRaw)
     val bodyWeightKg = latestWeight?.weightKg ?: profile?.weightKg ?: 70.0
 
@@ -142,8 +145,10 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
         )
     }
 
-    val openItem = vm.openExerciseSnapshot
-        ?: vm.openExerciseId?.let { id -> repo.exercises.firstOrNull { it.id == id } }
+    // Prefer the catalog copy (current app language); the diary snapshot is the fallback for
+    // exercises no longer in the dataset.
+    val openItem = vm.openExerciseId?.let { id -> repo.exercises.firstOrNull { it.id == id } }
+        ?: vm.openExerciseSnapshot
     UserExerciseEditorSheet(
         visible = showCreateUserExercise || editingUserExerciseId != null,
         existingItemId = editingUserExerciseId,
@@ -182,6 +187,20 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
                 null
             },
             modifier = modifier
+        )
+        return
+    }
+
+    // Machine coach sits under the detail screen, so "How to do it" returns here on back.
+    vm.machineGroup?.let { group ->
+        BackHandler(onBack = vm::closeMachineCoach)
+        MachineCoachScreen(
+            group = group,
+            repo = repo,
+            vm = vm,
+            goal = vm.trainingGoal ?: TrainingGoal.from(profile?.goal),
+            modifier = modifier,
+            smart = smartSuggestions
         )
         return
     }
@@ -232,7 +251,7 @@ internal fun WorkoutModeToggleButton(
     ) {
         Icon(
             imageVector = if (mode == WorkoutTabMode.LOG) Icons.Filled.FitnessCenter else Icons.Filled.SportsGymnastics,
-            contentDescription = if (mode == WorkoutTabMode.LOG) "Show exercise library" else "Show workout log",
+            contentDescription = stringResource(if (mode == WorkoutTabMode.LOG) R.string.wk_cd_show_library else R.string.wk_cd_show_log),
             tint = AppColors.Calorie,
             modifier = Modifier.size(24.dp)
         )
@@ -432,12 +451,17 @@ private fun FilterRow(repo: ExerciseRepository, vm: WorkoutsViewModel) {
             options = listOf(mineLabel),
             onSelect = { vm.onlyUserExercises = it.isNotEmpty() }
         )
+        // Group titles are persisted filter keys; only their display text is localized.
+        val groupLabels = (vm.diaryUiState.splitGroups.map { it.title } + vm.splitGroupTitles)
+            .distinct()
+            .associateWith { workoutSplitGroupLabel(it) }
         FilterPill(
-            title = "Body Part",
+            title = stringResource(R.string.wk_filter_body_part),
             icon = Icons.Filled.GridView,
             selected = vm.splitGroupTitles,
             emptyDisplay = allLabel,
             options = vm.diaryUiState.splitGroups.map { it.title },
+            optionLabel = { groupLabels[it] ?: it },
             onSelect = { vm.splitGroupTitles = it }
         )
         val hidePrimary = vm.diaryUiState.preferences.split == com.apoorvdarshan.calorietracker.models.WorkoutSplit.FULL_BODY &&
@@ -498,12 +522,14 @@ internal fun FilterPill(
     emptyDisplay: String,
     options: List<String>,
     glyphFor: ((String) -> String)? = null,
+    /** Display text for an option; options stay dataset tokens so selections persist. */
+    optionLabel: (String) -> String = ExerciseLocalization::label,
     onSelect: (Set<String>) -> Unit
 ) {
     val colors = workoutsColors()
     var expanded by remember { mutableStateOf(false) }
     val active = selected.isNotEmpty()
-    val value = if (active) selected.first() else emptyDisplay
+    val value = if (active) optionLabel(selected.first()) else emptyDisplay
     val clearLabel = "${stringResource(R.string.filter_all)} $title"
 
     Box {
@@ -547,7 +573,7 @@ internal fun FilterPill(
             options.forEach { option ->
                 val isSel = selected.contains(option)
                 DropdownMenuItem(
-                    text = { Text(option, color = if (isSel) colors.accent else colors.charcoal, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal) },
+                    text = { Text(optionLabel(option), color = if (isSel) colors.accent else colors.charcoal, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal) },
                     onClick = { onSelect(setOf(option)); expanded = false },
                     leadingIcon = glyphFor?.let { fn ->
                         {
@@ -681,8 +707,8 @@ internal fun ExerciseRow(
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Tag(item.primaryMusclesTitle, Icons.Filled.GpsFixed)
-                Tag(item.equipment, Icons.Filled.FitnessCenter)
-                Tag(item.level, Icons.Filled.BarChart)
+                Tag(ExerciseLocalization.label(item.equipment), Icons.Filled.FitnessCenter)
+                Tag(ExerciseLocalization.label(item.level), Icons.Filled.BarChart)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 Icon(Icons.Filled.Storage, null, tint = colors.secondaryAccent, modifier = Modifier.size(13.dp))

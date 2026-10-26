@@ -27,26 +27,35 @@ data class ExerciseItem(
     val equipment: String,
     val primaryMuscles: List<String>,
     val secondaryMuscles: List<String>,
-    val instructions: List<String>
+    val instructions: List<String>,
+    /** Original dataset name; [name] may be translated (see [ExerciseLocalization]). */
+    val englishName: String = name
 ) {
     val primaryMusclesTitle: String
-        get() = if (primaryMuscles.isEmpty()) "Unspecified" else primaryMuscles.joinToString(", ")
+        get() = if (primaryMuscles.isEmpty()) ExerciseLocalization.label("Unspecified") else ExerciseLocalization.labels(primaryMuscles)
 
     val secondaryMusclesTitle: String
-        get() = if (secondaryMuscles.isEmpty()) "None" else secondaryMuscles.joinToString(", ")
+        get() = if (secondaryMuscles.isEmpty()) ExerciseLocalization.label("None") else ExerciseLocalization.labels(secondaryMuscles)
 
     val databaseMetadataSummary: String
         get() {
             val parts = listOf(category, force, mechanic).filter { it != "Unspecified" }
-            return if (parts.isEmpty()) "Database metadata" else parts.joinToString(" - ")
+            return if (parts.isEmpty()) "" else parts.joinToString(" - ") { ExerciseLocalization.label(it) }
         }
 
     /** Word lists for free-text search (precomputed once; mirrors iOS `searchIndex`). */
     val searchIndex: ExerciseSearchIndex by lazy(LazyThreadSafetyMode.NONE) {
+        val metadata = listOf(equipment, category).filter { it != "Unspecified" } + primaryMuscles
         ExerciseSearchIndex(
             name = name,
-            metadata = listOf(equipment, category).filter { it != "Unspecified" } + primaryMuscles
+            // Translated labels too, so "pecho" or "máquina" find what "chest" or "machine" do.
+            metadata = (metadata + metadata.map { ExerciseLocalization.label(it) }).distinct()
         )
+    }
+
+    /** The untranslated name, so English gym names ("lat pulldown") still match. */
+    val englishSearchIndex: ExerciseSearchIndex? by lazy(LazyThreadSafetyMode.NONE) {
+        englishName.takeIf { it != name }?.let { ExerciseSearchIndex(name = it, metadata = emptyList()) }
     }
 
     companion object {

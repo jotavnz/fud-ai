@@ -4,7 +4,10 @@ import android.accounts.Account
 import android.accounts.AccountManager
 import android.app.Activity
 import android.content.Intent
+import android.content.Context
 import android.content.IntentSender
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.gms.auth.api.identity.Identity
@@ -96,7 +99,7 @@ class DriveCloudBackupClient(
         return if (pending != null) {
             AuthOutcome.Resolution(pending.intentSender)
         } else {
-            val token = result.accessToken ?: error("Google did not return an access token")
+            val token = result.accessToken ?: throw DriveBackupException("Google did not return an access token", R.string.st_drive_no_token)
             AuthOutcome.Token(token)
         }
     }
@@ -132,7 +135,7 @@ class DriveCloudBackupClient(
             .get()
             .build()
         http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) error("Drive list failed (${response.code})")
+            if (!response.isSuccessful) throw DriveBackupException("Drive list failed (${response.code})", R.string.st_drive_list_failed, response.code)
             val file = listJson.decodeFromString<DriveFileList>(response.body.string()).files.firstOrNull()
                 ?: return@use null
             val id = file.id.takeIf { it.isNotBlank() } ?: return@use null
@@ -164,7 +167,7 @@ class DriveCloudBackupClient(
             .get()
             .build()
         http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) error("Drive download failed (${response.code})")
+            if (!response.isSuccessful) throw DriveBackupException("Drive download failed (${response.code})", R.string.st_drive_download_failed, response.code)
             response.body.byteStream().use { input ->
                 destination.outputStream().use { input.copyTo(it) }
             }
@@ -179,7 +182,7 @@ class DriveCloudBackupClient(
             .build()
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful && response.code != 404) {
-                error("Drive delete failed (${response.code})")
+                throw DriveBackupException("Drive delete failed (${response.code})", R.string.st_drive_delete_failed, response.code)
             }
         }
     }
@@ -192,7 +195,7 @@ class DriveCloudBackupClient(
             .build()
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful && response.code != 400) {
-                error("Google token revoke failed (${response.code})")
+                throw DriveBackupException("Google token revoke failed (${response.code})", R.string.st_drive_revoke_failed, response.code)
             }
         }
     }
@@ -221,8 +224,8 @@ class DriveCloudBackupClient(
             .post(body)
             .build()
         http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) error("Drive upload failed (${response.code})")
-            val json = JSONObject(response.body?.string() ?: error("Empty Drive create response"))
+            if (!response.isSuccessful) throw DriveBackupException("Drive upload failed (${response.code})", R.string.st_drive_upload_failed, response.code)
+            val json = JSONObject(response.body?.string() ?: throw DriveBackupException("Empty Drive create response", R.string.st_drive_empty_create))
             return json.getString("id")
         }
     }
@@ -234,7 +237,7 @@ class DriveCloudBackupClient(
             .patch(zip.asRequestBody("application/zip".toMediaType()))
             .build()
         http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) error("Drive update failed (${response.code})")
+            if (!response.isSuccessful) throw DriveBackupException("Drive update failed (${response.code})", R.string.st_drive_update_failed, response.code)
         }
     }
 
@@ -244,4 +247,17 @@ class DriveCloudBackupClient(
         private const val DRIVE_FILE_QUERY = "name%3D%27fudai-backup.zip%27"
         private val listJson = Json { ignoreUnknownKeys = true }
     }
+}
+
+/**
+ * A Google Drive / token failure. [message] stays English for logs and tests; the UI shows
+ * [userMessage] instead.
+ */
+class DriveBackupException(
+    message: String,
+    @StringRes private val messageRes: Int,
+    private val httpCode: Int? = null
+) : IllegalStateException(message) {
+    fun userMessage(context: Context): String =
+        if (httpCode != null) context.getString(messageRes, httpCode) else context.getString(messageRes)
 }

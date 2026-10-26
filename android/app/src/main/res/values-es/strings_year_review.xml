@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Resumen del año (Progreso > "Tu 2026 en resumen") -->
+    <string name="yr_title">Tu año en resumen</string>
+    <string name="yr_entry_title">Tu %1$d en resumen</string>
+    <string name="yr_entry_subtitle">Pesas, comidas, rachas y logros, todo en un solo lugar</string>
+    <string name="yr_period_all_time">Todo el tiempo</string>
+    <string name="yr_share_cd">Compartir</string>
+
+    <!-- Portada -->
+    <string name="yr_hero_year">Tu %1$d</string>
+    <string name="yr_hero_all_time">Tu camino hasta hoy</string>
+    <plurals name="yr_hero_active_days">
+        <item quantity="one">%1$s día dándolo todo</item>
+        <item quantity="many">%1$s días dándolo todo</item>
+        <item quantity="other">%1$s días dándolo todo</item>
+    </plurals>
+    <string name="yr_hero_subtitle">Esto es todo lo que lograste. Desliza y disfrútalo.</string>
+
+    <!-- Secciones -->
+    <string name="yr_section_training">Entrenamiento</string>
+    <string name="yr_section_nutrition">Nutrición</string>
+    <string name="yr_section_body">Cuerpo</string>
+
+    <!-- Entrenamiento -->
+    <string name="yr_lifted_label_this_year">Este año levantaste</string>
+    <string name="yr_lifted_label_year">En %1$d levantaste</string>
+    <string name="yr_lifted_label_all_time">Hasta ahora has levantado</string>
+    <string name="yr_lifted_no_load">Héroe del peso corporal: cada repetición contó.</string>
+    <plurals name="yr_equiv_elephant">
+        <item quantity="one">¡Eso pesa lo mismo que %1$s elefante!</item>
+        <item quantity="many">¡Eso pesa lo mismo que %1$s elefantes!</item>
+        <item quantity="other">¡Eso pesa lo mismo que %1$s elefantes!</item>
+    </plurals>
+    <plurals name="yr_equiv_car">
+        <item quantity="one">¡Eso pesa lo mismo que %1$s auto!</item>
+        <item quantity="many">¡Eso pesa lo mismo que %1$s autos!</item>
+        <item quantity="other">¡Eso pesa lo mismo que %1$s autos!</item>
+    </plurals>
+    <plurals name="yr_equiv_grand_piano">
+        <item quantity="one">¡Eso pesa lo mismo que %1$s piano de cola!</item>
+        <item quantity="many">¡Eso pesa lo mismo que %1$s pianos de cola!</item>
+        <item quantity="other">¡Eso pesa lo mismo que %1$s pianos de cola!</item>
+    </plurals>
+    <string name="yr_stat_workout_days">Días entrenando</string>
+    <string name="yr_stat_sets">Series</string>
+    <string name="yr_stat_reps">Repeticiones</string>
+    <string name="yr_stat_exercises">Ejercicios</string>
+    <string name="yr_streak_label">Tu mejor racha</string>
+    <string name="yr_streak_caption">Días seguidos entrenando. ¡Imparable!</string>
+    <plurals name="yr_days_count">
+        <item quantity="one">%1$s día</item>
+        <item quantity="many">%1$s días</item>
+        <item quantity="other">%1$s días</item>
+    </plurals>
+    <string name="yr_favorite_muscle_label">Tu músculo favorito</string>
+    <plurals name="yr_favorite_muscle_sets">
+        <item quantity="one">Le dedicaste %1$s serie.</item>
+        <item quantity="many">Le dedicaste %1$s series.</item>
+        <item quantity="other">Le dedicaste %1$s series.</item>
+    </plurals>
+    <string name="yr_top_volume_title">Tus pesos pesados</string>
+    <string name="yr_top_volume_subtitle">Ejercicios con más volumen</string>
+    <string name="yr_top_frequency_title">Tus infaltables</string>
+    <string name="yr_top_frequency_subtitle">Ejercicios más frecuentes</string>
+    <string name="yr_personal_bests_title">Récords personales</string>
+    <string name="yr_personal_bests_subtitle">Mayor carga por ejercicio</string>
+    <string name="yr_burn_label">Calorías quemadas</string>
+    <string name="yr_burn_label_kj">Energía quemada</string>
+    <string name="yr_burn_logged">De tus entrenamientos: %1$s</string>
+    <string name="yr_burn_imported">De Health Connect: %1$s</string>
+    <plurals name="yr_imported_workouts">
+        <item quantity="one">%1$s entrenamiento de otras apps · %2$s min</item>
+        <item quantity="many">%1$s entrenamientos de otras apps · %2$s min</item>
+        <item quantity="other">%1$s entrenamientos de otras apps · %2$s min</item>
+    </plurals>
+
+    <!-- Nutrición -->
+    <string name="yr_eaten_label">Te diste energía con</string>
+    <plurals name="yr_eaten_days">
+        <item quantity="one">en %1$s día registrado</item>
+        <item quantity="many">en %1$s días registrados</item>
+        <item quantity="other">en %1$s días registrados</item>
+    </plurals>
+    <string name="yr_eaten_average">Eso es %1$s al día en promedio.</string>
+    <string name="yr_macros_title">Tus macros, todo sumado</string>
+    <string name="yr_value_with_unit">%1$s %2$s</string>
+    <string name="yr_grams_value">%1$s g</string>
+    <string name="yr_top_foods_title">Tus favoritos</string>
+    <string name="yr_top_foods_subtitle">Lo que más registraste</string>
+    <plurals name="yr_times_logged">
+        <item quantity="one">%1$s vez</item>
+        <item quantity="many">%1$s veces</item>
+        <item quantity="other">%1$s veces</item>
+    </plurals>
+    <string name="yr_water_label">Tomaste</string>
+    <string name="yr_liters_value">%1$s L</string>
+    <string name="yr_gallons_value">%1$s gal</string>
+    <plurals name="yr_water_days">
+        <item quantity="one">de agua en %1$s día. ¡Sigue hidratándote!</item>
+        <item quantity="many">de agua en %1$s días. ¡Sigue hidratándote!</item>
+        <item quantity="other">de agua en %1$s días. ¡Sigue hidratándote!</item>
+    </plurals>
+    <string name="yr_fasting_label">Ayunaste durante</string>
+    <string name="yr_hours_value">%1$s h</string>
+    <plurals name="yr_fasts_completed">
+        <item quantity="one">en %1$s ayuno completado</item>
+        <item quantity="many">en %1$s ayunos completados</item>
+        <item quantity="other">en %1$s ayunos completados</item>
+    </plurals>
+    <plurals name="yr_fast_goals">
+        <item quantity="one">Cumpliste tu meta %1$s vez</item>
+        <item quantity="many">Cumpliste tu meta %1$s veces</item>
+        <item quantity="other">Cumpliste tu meta %1$s veces</item>
+    </plurals>
+    <string name="yr_fast_longest">El más largo: %1$s h</string>
+
+    <!-- Cuerpo -->
+    <string name="yr_weight_label">Cambio de peso</string>
+    <string name="yr_weight_latest_label">Tu peso</string>
+    <string name="yr_weight_from_to">De %1$s a %2$s</string>
+    <plurals name="yr_weigh_ins">
+        <item quantity="one">%1$s registro de peso</item>
+        <item quantity="many">%1$s registros de peso</item>
+        <item quantity="other">%1$s registros de peso</item>
+    </plurals>
+    <string name="yr_body_fat_label">Cambio de grasa corporal</string>
+    <string name="yr_percent_value">%1$s %%</string>
+
+    <!-- Cierre -->
+    <string name="yr_closing_this_year">¡Y el año aún no termina!</string>
+    <string name="yr_closing_year">¡Así cerraste tu %1$d!</string>
+    <string name="yr_closing_all_time">Sigue escribiendo tu historia.</string>
+    <string name="yr_closing_caption">Cada registro es un voto por la persona en la que te estás convirtiendo.</string>
+    <string name="yr_share_button">Compartir mi resumen</string>
+
+    <!-- Vacío -->
+    <string name="yr_empty_title">Aún no hay nada registrado aquí</string>
+    <string name="yr_empty_body">Registra comidas, entrenamientos o tu peso y tu resumen empezará a llenarse.</string>
+
+    <!-- Texto para compartir -->
+    <string name="yr_share_header_year">Mi %1$d con Fud AI</string>
+    <string name="yr_share_header_all_time">Mi camino con Fud AI</string>
+    <string name="yr_share_lifted">Levanté %1$s</string>
+    <plurals name="yr_share_workout_days">
+        <item quantity="one">%1$s día de entrenamiento</item>
+        <item quantity="many">%1$s días de entrenamiento</item>
+        <item quantity="other">%1$s días de entrenamiento</item>
+    </plurals>
+    <string name="yr_share_streak">Mejor racha: %1$s</string>
+    <string name="yr_share_favorite">Músculo favorito: %1$s</string>
+    <string name="yr_share_burned">Quemé %1$s</string>
+    <string name="yr_share_eaten">Registré %1$s en comidas</string>
+    <string name="yr_share_protein">%1$s g de proteína</string>
+    <string name="yr_share_water">Tomé %1$s de agua</string>
+    <string name="yr_share_fasting">Ayuné %1$s h</string>
+    <string name="yr_share_weight">Cambio de peso: %1$s</string>
+    <string name="yr_share_footer">Registrado con mi entrenador IA</string>
+    <string name="yr_share_chooser">Comparte tu resumen</string>
+</resources>

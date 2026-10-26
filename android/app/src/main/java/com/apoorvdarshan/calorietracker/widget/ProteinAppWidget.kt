@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
@@ -86,7 +87,7 @@ private fun ProteinWidgetContent(snapshot: WidgetSnapshot) {
 
 @Composable
 private fun ProteinSmall(snapshot: WidgetSnapshot) {
-    val nutrient = snapshot.primaryHomeNutrient
+    val nutrient = snapshot.primaryHomeNutrientFor(LocalContext.current)
     val remaining = maxOf(0.0, nutrient.goal - nutrient.value)
     val size = LocalSize.current
     val contentW = size.width.value - 28f
@@ -109,7 +110,7 @@ private fun ProteinSmall(snapshot: WidgetSnapshot) {
             )
         }
         Text(
-            text = "${MacroValueFormatter.string(remaining)}${nutrient.unit} left",
+            text = LocalContext.current.getString(R.string.hm_widget_left_format, "${MacroValueFormatter.string(remaining)}${nutrient.unit}"),
             style = TextStyle(
                 color = WidgetTheme.themeTextProvider(snapshot.themeStartHex),
                 fontWeight = FontWeight.Medium,
@@ -121,7 +122,7 @@ private fun ProteinSmall(snapshot: WidgetSnapshot) {
 
 @Composable
 private fun ProteinMedium(snapshot: WidgetSnapshot) {
-    val nutrient = snapshot.primaryHomeNutrient
+    val nutrient = snapshot.primaryHomeNutrientFor(LocalContext.current)
     val remaining = maxOf(0.0, nutrient.goal - nutrient.value)
     val size = LocalSize.current
     val contentH = size.height.value - 28f
@@ -143,7 +144,7 @@ private fun ProteinMedium(snapshot: WidgetSnapshot) {
             )
             Spacer(modifier = GlanceModifier.height(2.dp))
             Text(
-                text = "${MacroValueFormatter.string(remaining)}${nutrient.unit} left",
+                text = LocalContext.current.getString(R.string.hm_widget_left_format, "${MacroValueFormatter.string(remaining)}${nutrient.unit}"),
                 style = TextStyle(
                     color = WidgetTheme.themeTextProvider(snapshot.themeStartHex),
                     fontWeight = FontWeight.Medium,

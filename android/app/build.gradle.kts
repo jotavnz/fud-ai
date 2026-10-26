@@ -150,6 +150,12 @@ android {
         resValues = true
     }
 
+    androidResources {
+        // Ship only the fully translated UI languages (see AppLanguage.supportedTags), so a
+        // device in another language falls back to complete English instead of mixed text.
+        localeFilters += listOf("en", "es")
+    }
+
     lint {
         // The default resources intentionally provide English fallback copy while
         // translated locales are updated incrementally. Keep all other release

@@ -351,7 +351,7 @@ private fun settingValue(key: VoiceSettingKey, value: String): String = when (ke
         LocalEnergyUnit.current.displayValue(value.toIntOrNull() ?: 0)
     )
     VoiceSettingKey.PROTEIN_GOAL_G, VoiceSettingKey.CARBS_GOAL_G, VoiceSettingKey.FAT_GOAL_G -> "$value g"
-    VoiceSettingKey.WATER_GOAL_ML -> "$value ml"
+    VoiceSettingKey.WATER_GOAL_ML -> "$value ${stringResource(R.string.unit_ml)}"
     VoiceSettingKey.ASSISTANT_VOICE -> LiveProvider.voiceDisplayName(value)
     VoiceSettingKey.ASSISTANT_AUTO_CAPTURE, VoiceSettingKey.ASSISTANT_CONFIRM_SAVES ->
         stringResource(if (value == "true") R.string.voice_on else R.string.voice_off)

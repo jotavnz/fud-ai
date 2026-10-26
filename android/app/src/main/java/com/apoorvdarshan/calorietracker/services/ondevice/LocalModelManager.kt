@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
 import android.os.StatFs
+import com.apoorvdarshan.calorietracker.R
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
@@ -151,8 +152,12 @@ class LocalModelManager(
             val reserve = maxOf(256L * 1024L * 1024L, descriptor.expectedBytes / 10L)
             // Bytes kept from an interrupted attempt already occupy their share of the space.
             val kept = ModelDownloader.keptBytes(part, descriptor)
-            require(available >= descriptor.expectedBytes - kept + reserve) {
-                "Not enough free storage for ${descriptor.displayName}."
+            if (available < descriptor.expectedBytes - kept + reserve) {
+                throw ModelStateException(
+                    "Not enough free storage for ${descriptor.displayName}.",
+                    R.string.st_model_no_space,
+                    arrayOf(descriptor.displayName)
+                )
             }
             downloader.download(
                 descriptor = descriptor,
@@ -165,13 +170,17 @@ class LocalModelManager(
 
             val destination = modelFile(id)
             destination.delete()
-            check(part.renameTo(destination)) { "The verified model could not be installed." }
+            if (!part.renameTo(destination)) {
+                throw ModelStateException("The verified model could not be installed.", R.string.st_model_install_failed)
+            }
             ModelDownloader.sourceFile(part).delete()
             val marker = markerFile(descriptor)
             val markerPart = File(marker.parentFile, "${marker.name}.part")
             markerPart.writeText(descriptor.sha256)
             marker.delete()
-            check(markerPart.renameTo(marker)) { "The verification marker could not be installed." }
+            if (!markerPart.renameTo(marker)) {
+                throw ModelStateException("The verification marker could not be installed.", R.string.st_model_marker_failed)
+            }
             update(id, LocalModelInstallStatus.Installed)
         } catch (cancelled: CancellationException) {
             // Only the user's Cancel/Delete cancels a download, so its partial goes too.
@@ -188,7 +197,7 @@ class LocalModelManager(
             // downloader already deleted it if the bytes failed verification.
             update(
                 id,
-                LocalModelInstallStatus.Failed(error.message ?: "Model download failed."),
+                LocalModelInstallStatus.Failed(failureMessage(error)),
                 keptBytes = ModelDownloader.keptBytes(part, descriptor)
             )
         } finally {
@@ -196,6 +205,12 @@ class LocalModelManager(
             jobs.remove(id)
         }
     }
+
+    /** Localized text for a failed download; the exception [Throwable.message] stays English. */
+    private fun failureMessage(error: Throwable): String =
+        (error as? LocalizedModelFailure)?.let { appContext.getString(it.messageRes, *it.messageArgs) }
+            ?: error.message
+            ?: appContext.getString(R.string.st_model_download_failed)
 
     private fun installedStatus(descriptor: LocalModelDescriptor): LocalModelInstallStatus {
         val file = modelFile(descriptor.id)

@@ -8,7 +8,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,6 +49,8 @@ internal fun WorkoutTextSheet(
     var followUpsJson by rememberSaveable { mutableStateOf("[]") }
     val followUps = remember(followUpsJson) { Json.decodeFromString<List<WorkoutFollowUp>>(followUpsJson) }
     var question by rememberSaveable { mutableStateOf<String?>(null) }
+    // The question as shown to the user; `question` stays the original text sent back to the AI.
+    var questionDisplay by rememberSaveable { mutableStateOf<String?>(null) }
     var options by rememberSaveable { mutableStateOf(listOf<String>()) }
     var reply by rememberSaveable { mutableStateOf("") }
     var voiceReply by rememberSaveable { mutableStateOf(false) }
@@ -56,6 +60,7 @@ internal fun WorkoutTextSheet(
     var saving by remember { mutableStateOf(false) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val appContext = LocalContext.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     var started by rememberSaveable { mutableStateOf(false) }
     val dismiss = { if (!saving) onDismiss() }
@@ -75,10 +80,12 @@ internal fun WorkoutTextSheet(
                 if (generation == requestGeneration) update(result)
             } catch (e: CancellationException) { throw e }
             catch (e: WorkoutClarification) {
-                if (generation == requestGeneration) { question = e.message; options = e.options; reply = "" }
+                if (generation == requestGeneration) {
+                    question = e.message; questionDisplay = e.localizedText(appContext); options = e.options; reply = ""
+                }
             }
             catch (e: Exception) {
-                if (generation == requestGeneration) error = e.localizedMessage ?: "Could not prepare the workout. Try again."
+                if (generation == requestGeneration) error = workoutErrorMessage(appContext, e) ?: appContext.getString(R.string.wp_text_prepare_failed)
             }
             finally { if (generation == requestGeneration) busy = false }
         }
@@ -88,9 +95,9 @@ internal fun WorkoutTextSheet(
         try {
             val conversation = WorkoutConversation(description, followUps).answering(currentQuestion, text)
             followUpsJson = Json.encodeToString(conversation.turns)
-            question = null; options = emptyList(); reply = ""
+            question = null; questionDisplay = null; options = emptyList(); reply = ""
             analyze(conversation.requestDescription())
-        } catch (e: Exception) { error = e.localizedMessage }
+        } catch (e: Exception) { error = workoutErrorMessage(appContext, e) }
     }
     fun startOver() {
         requestGeneration++
@@ -111,19 +118,19 @@ internal fun WorkoutTextSheet(
                 Text(description, style = MaterialTheme.typography.bodyMedium)
                 followUps.forEach { Text(it.answer, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 if (question != null) {
-                    Text(question.orEmpty(), style = MaterialTheme.typography.titleMedium)
+                    Text(questionDisplay ?: question.orEmpty(), style = MaterialTheme.typography.titleMedium)
                     options.chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             row.forEach { option ->
-                                OutlinedButton(onClick = { answer(option) }, enabled = !busy, modifier = Modifier.weight(1f)) { Text(option) }
+                                OutlinedButton(onClick = { answer(option) }, enabled = !busy, modifier = Modifier.weight(1f)) { Text(workoutOptionLabel(option)) }
                             }
                         }
                     }
                     OutlinedTextField(value = reply, onValueChange = { reply = it.take(500) },
-                        label = { Text("Your answer") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                        label = { Text(stringResource(R.string.wp_text_your_answer)) }, enabled = !busy, modifier = Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { voiceReply = true }, enabled = !busy) { Text("Voice reply") }
-                        Button(onClick = { answer(reply) }, enabled = !busy && reply.isNotBlank()) { Text("Continue") }
+                        OutlinedButton(onClick = { voiceReply = true }, enabled = !busy) { Text(stringResource(R.string.wp_text_voice_reply)) }
+                        Button(onClick = { answer(reply) }, enabled = !busy && reply.isNotBlank()) { Text(stringResource(R.string.wp_text_continue)) }
                     }
                 } else {
                     Button(modifier = Modifier.fillMaxWidth(), onClick = { analyze() }, enabled = !busy) {
@@ -231,13 +238,13 @@ internal fun WorkoutTextSheet(
                                 saveWorkout(draft)
                                 onAdded(LocalDate.parse(draft.date))
                             } catch (e: CancellationException) { throw e }
-                            catch (e: Exception) { error = e.localizedMessage ?: "Could not save the workout. Try again." }
+                            catch (e: Exception) { error = workoutErrorMessage(appContext, e) ?: appContext.getString(R.string.wp_text_save_failed) }
                             finally { saving = false }
                         }
                     }, enabled = !saving && draft.exercises.isNotEmpty()) { Text(stringResource(if (saving) R.string.workout_text_adding else R.string.workout_text_add)) }
                 }
             }
-            TextButton(onClick = { startOver() }, enabled = !saving) { Text("Start over") }
+            TextButton(onClick = { startOver() }, enabled = !saving) { Text(stringResource(R.string.wp_text_start_over)) }
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
     }
@@ -245,4 +252,21 @@ internal fun WorkoutTextSheet(
         container = container, onDismiss = { voiceReply = false },
         onSubmit = { voiceReply = false; answer(it) }
     )
+}
+
+/** Localized text for a failed workout request: our own messages, then AI errors, then the raw message. */
+private fun workoutErrorMessage(context: android.content.Context, error: Throwable): String? =
+    (error as? WorkoutLocalizedMessage)?.localizedText(context)
+        ?: (error as? AiError)?.userMessage(context)
+        ?: error.localizedMessage
+
+/** Clarification options are English tokens sent back to the AI; only their display is translated. */
+@Composable
+private fun workoutOptionLabel(option: String): String = when (option.trim().lowercase()) {
+    "barbell" -> stringResource(R.string.wp_option_barbell)
+    "dumbbells" -> stringResource(R.string.wp_option_dumbbells)
+    "machine" -> stringResource(R.string.wp_option_machine)
+    "seated" -> stringResource(R.string.wp_option_seated)
+    "standing" -> stringResource(R.string.wp_option_standing)
+    else -> option
 }

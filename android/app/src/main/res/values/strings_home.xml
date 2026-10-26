@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home screen, food sheets, widgets, quick actions and share text. -->
+<resources>
+    <string name="hm_unit_fl_oz">fl oz</string>
+    <string name="hm_today_lower">today</string>
+    <string name="hm_copy_foods_footer">Foods will be copied to %1$s. Original entries stay unchanged.</string>
+
+    <!-- Delete dialogs -->
+    <string name="hm_delete_food_log">Delete Food Log</string>
+    <string name="hm_delete_food_log_title">Delete Food Log?</string>
+    <string name="hm_delete_water_log_title">Delete Water Log?</string>
+    <string name="hm_delete_fasting_log_title">Delete Fasting Log?</string>
+    <string name="hm_delete_food_log_message">This removes the food from your diary. Saved favorites are kept.</string>
+    <string name="hm_delete_water_log_message">This removes the water entry from your diary.</string>
+    <string name="hm_delete_fasting_log_message">This removes the completed fast from your diary.</string>
+
+    <!-- Macro initials (P / C / F) and the compact macro line -->
+    <string name="hm_macro_initial_protein">P</string>
+    <string name="hm_macro_initial_carbs">C</string>
+    <string name="hm_macro_initial_fat">F</string>
+    <string name="hm_macro_line_format">%1$dP · %2$dC · %3$dF</string>
+
+    <!-- Meal photos sheet -->
+    <string name="hm_meal_photos">Meal Photos</string>
+    <string name="hm_photos_count_format">%1$d of 10 photos</string>
+    <string name="hm_photo_number_format">Photo %1$d</string>
+    <string name="hm_remove_photo">Remove photo</string>
+    <string name="hm_add_photos">Add Photos</string>
+    <string name="hm_add_photo">Add Photo</string>
+    <string name="hm_note_for_analysis">Note for food analysis (optional)</string>
+    <string name="hm_note_placeholder">e.g. chicken is 180g, rice is 220g, use half the sauce</string>
+    <string name="hm_photo_draft_save_failed">Could not save photo draft</string>
+
+    <!-- Edit food sheet -->
+    <string name="hm_actions">Actions</string>
+    <string name="hm_remove_from_favorites">Remove from Favorites</string>
+    <string name="hm_save_to_favorites">Save to Favorites</string>
+
+    <!-- Camera -->
+    <string name="hm_flash_on">Flash on</string>
+    <string name="hm_flash_auto">Flash auto</string>
+    <string name="hm_flash_off">Flash off</string>
+
+    <!-- Allergen check -->
+    <string name="hm_allergen_declared_match">Declared allergen match</string>
+    <string name="hm_allergen_may_contain">May contain</string>
+    <string name="hm_allergen_possible">Possible allergen</string>
+    <string name="hm_allergen_unable">Unable to assess</string>
+
+    <!-- Quick actions -->
+    <string name="hm_qa_photos">Photos</string>
+    <string name="hm_qa_text">Text</string>
+    <string name="hm_qa_recent">Recent</string>
+    <string name="hm_qa_manual">Manual</string>
+
+    <!-- Combined meal name -->
+    <string name="hm_combined_meal">Combined meal</string>
+    <string name="hm_combined_more_format">%1$d more</string>
+
+    <!-- Share text, widgets, barcode fallback name -->
+    <string name="hm_share_open_in_app">Open in Fud AI to add:</string>
+    <string name="hm_widget_left_format">%1$s left</string>
+    <string name="hm_widget_enable_in_app">Enable in Fud AI</string>
+    <string name="hm_barcode_name_format">Barcode %1$s</string>
+</resources>

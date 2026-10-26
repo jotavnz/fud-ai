@@ -1496,4 +1496,34 @@
     <string name="workout_rpe_help_strength">Optional—how hard this set felt. Strength scale: 1 = very easy; 10 = maximum effort. Decimals are allowed. Leave blank if unsure.</string>
     <string name="workout_rpe_help_cr10">Optional—how hard this set felt. CR10 scale: 0 = no effort; 10 = maximum effort. Decimals are allowed. Leave blank if unsure.</string>
     <string name="workout_rpe_help_borg">Optional—how hard this set felt. Borg scale: 6 = no exertion; 20 = maximum exertion. Use whole numbers. Leave blank if unsure.</string>
+    <!-- Machine coach: pick a muscle, get three machines with sets and reps -->
+    <string name="machine_coach_title">What do you want to train today?</string>
+    <string name="machine_coach_subtitle">Pick a muscle and get 3 machines with your sets and reps</string>
+    <string name="machine_coach_group_chest">Chest</string>
+    <string name="machine_coach_group_back">Back</string>
+    <string name="machine_coach_group_shoulders">Shoulders</string>
+    <string name="machine_coach_group_biceps">Biceps</string>
+    <string name="machine_coach_group_triceps">Triceps</string>
+    <string name="machine_coach_group_legs">Legs</string>
+    <string name="machine_coach_group_hamstrings">Hamstrings</string>
+    <string name="machine_coach_group_glutes">Glutes</string>
+    <string name="machine_coach_group_calves">Calves</string>
+    <string name="machine_coach_group_abs">Abs</string>
+    <string name="machine_coach_goal_label">Your goal</string>
+    <string name="machine_coach_goal_hypertrophy">Muscle</string>
+    <string name="machine_coach_goal_hypertrophy_desc">Build muscle size (hypertrophy)</string>
+    <string name="machine_coach_goal_strength">Strength</string>
+    <string name="machine_coach_goal_strength_desc">Lift heavier with fewer reps</string>
+    <string name="machine_coach_goal_endurance">Tone</string>
+    <string name="machine_coach_goal_endurance_desc">Tone up and build endurance</string>
+    <string name="machine_coach_prescription">%1$d sets × %2$d–%3$d reps</string>
+    <string name="machine_coach_rest_seconds">Rest %1$d s</string>
+    <string name="machine_coach_rest_minutes">Rest %1$d min</string>
+    <string name="machine_coach_how_to">How to do it</string>
+    <string name="machine_coach_add_today">Add to today</string>
+    <string name="machine_coach_added_today">In today\'s workout</string>
+    <string name="machine_coach_more_options">Show 3 other options</string>
+    <string name="machine_coach_disclaimer">Sets and reps are general guidance. Use a weight you can control for every rep and stop if you feel pain.</string>
+    <string name="machine_coach_empty">No machines found for this muscle yet.</string>
+    <string name="youtube_exercise_search_suffix">exercise</string>
 </resources>

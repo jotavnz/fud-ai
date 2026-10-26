@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Workout diary: add menu -->
+    <string name="wk_all_exercises">All exercises</string>
+    <string name="wk_copy_from_day">Copy from day</string>
+    <string name="wk_cd_add_workout">Add workout</string>
+
+    <!-- Workout diary: calorie burn hero -->
+    <string name="wk_metric_sets">Sets</string>
+    <string name="wk_metric_workouts">Workouts</string>
+    <string name="wk_metric_reps">Reps</string>
+    <string name="wk_metric_burn">Burn</string>
+    <string name="wk_calculating">Calculating…</string>
+    <string name="wk_calculate">Calculate</string>
+    <string name="wk_calorie_burn_caps">CALORIE BURN</string>
+    <string name="wk_cd_calculating">Calculating calorie burn</string>
+    <string name="wk_cd_calculate">Calculate calorie burn</string>
+    <string name="wk_log_first_title">Log your workout first</string>
+    <string name="wk_notice_calculate_body">Stop and save an exercise timer, or enter reps for at least one set, before calculating workout calories.</string>
+
+    <!-- Workout diary: day header and empty state -->
+    <plurals name="wk_workout_count">
+        <item quantity="one">%d workout</item>
+        <item quantity="other">%d workouts</item>
+    </plurals>
+    <string name="wk_empty_title">No workouts logged</string>
+    <string name="wk_empty_hint">Use + to pick %1$s exercises for this day</string>
+
+    <!-- Dates -->
+    <string name="wk_today">Today</string>
+    <string name="wk_tomorrow">Tomorrow</string>
+    <string name="wk_yesterday">Yesterday</string>
+    <string name="wk_selected_day">Selected day</string>
+
+    <!-- Swipe actions -->
+    <string name="wk_swipe_unsave">Unsave</string>
+
+    <!-- Exercise card -->
+    <string name="wk_cd_open_instructions">Open exercise instructions</string>
+    <string name="wk_last_time">Last time: %1$s</string>
+    <string name="wk_history">History</string>
+    <string name="wk_cd_remove_set">Remove set</string>
+    <string name="wk_cd_add_set">Add blank set</string>
+    <plurals name="wk_set_count">
+        <item quantity="one">%d set</item>
+        <item quantity="other">%d sets</item>
+    </plurals>
+    <string name="wk_cd_unsave_exercise">Unsave exercise</string>
+    <string name="wk_cd_save_exercise">Save exercise</string>
+    <string name="wk_cd_remove_exercise">Remove exercise</string>
+    <string name="wk_set_number">Set %1$d</string>
+    <string name="wk_placeholder_reps">Reps</string>
+    <string name="wk_placeholder_rpe">RPE</string>
+
+    <!-- Exercise timer -->
+    <string name="wk_cd_start_timer">Start timer for %1$s</string>
+    <string name="wk_cd_timer_options">Timer options for %1$s, %2$s, %3$s</string>
+    <string name="wk_timer_running">running</string>
+    <string name="wk_timer_saved">saved</string>
+    <string name="wk_timer_paused">paused</string>
+    <string name="wk_timer_pause">Pause</string>
+    <string name="wk_timer_resume">Resume</string>
+    <string name="wk_timer_stop_save">Stop &amp; save</string>
+    <string name="wk_timer_restart">Restart timer</string>
+    <string name="wk_timer_discard">Discard timer</string>
+    <string name="wk_timer_restart_title">Restart timer?</string>
+    <string name="wk_timer_discard_title">Discard timer?</string>
+    <string name="wk_timer_clear_message">This clears the recorded time for %1$s.</string>
+    <string name="wk_restart">Restart</string>
+
+    <!-- Workouts screen -->
+    <string name="wk_filter_body_part">Body Part</string>
+    <string name="wk_cd_show_library">Show exercise library</string>
+    <string name="wk_cd_show_log">Show workout log</string>
+    <string name="wk_edit">Edit</string>
+
+    <!-- Exercise history sheet -->
+    <string name="wk_no_lift_history">No lift history yet</string>
+
+    <!-- RPE scales -->
+    <string name="wk_rpe_strength">Strength 1–10</string>
+    <string name="wk_rpe_cr10">CR10 0–10</string>
+    <string name="wk_rpe_borg">Borg 6–20</string>
+
+    <!-- Training splits -->
+    <string name="wk_split_push_pull_legs">Push / Pull / Legs</string>
+    <string name="wk_split_upper_lower">Upper / Lower</string>
+    <string name="wk_split_body_part">Body-part split</string>
+    <string name="wk_split_arnold">Arnold split</string>
+    <string name="wk_split_push_pull">Push / Pull</string>
+    <string name="wk_split_antagonist">Antagonist split</string>
+    <string name="wk_split_hybrid">Hybrid split</string>
+    <string name="wk_split_full_body">Full body</string>
+    <string name="wk_split_custom">Custom</string>
+
+    <!-- Split day groups -->
+    <string name="wk_group_push">Push</string>
+    <string name="wk_group_pull">Pull</string>
+    <string name="wk_group_legs">Legs</string>
+    <string name="wk_group_core">Core</string>
+    <string name="wk_group_upper">Upper</string>
+    <string name="wk_group_lower">Lower</string>
+    <string name="wk_group_chest">Chest</string>
+    <string name="wk_group_back">Back</string>
+    <string name="wk_group_shoulders">Shoulders</string>
+    <string name="wk_group_arms">Arms</string>
+    <string name="wk_group_chest_back">Chest + Back</string>
+    <string name="wk_group_shoulders_arms">Shoulders + Arms</string>
+    <string name="wk_group_accessory_core">Accessory/Core</string>
+    <string name="wk_group_biceps_triceps">Biceps + Triceps</string>
+    <string name="wk_group_quads_hams_glutes">Quads + Hamstrings/Glutes</string>
+    <string name="wk_group_shoulders_lats_traps">Shoulders + Lats/Traps</string>
+    <string name="wk_group_core_accessory">Core/Accessory</string>
+    <string name="wk_group_strength_compound">Strength/Compound</string>
+    <string name="wk_group_accessory_hypertrophy">Accessory/Hypertrophy</string>
+</resources>

@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.services.voice
 
+import android.content.Context
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -105,7 +108,10 @@ sealed interface LiveEvent {
     data class HostedNotice(val code: String) : LiveEvent
 
     /** The provider reported a problem; the session continues unless it also closes. */
-    data class ProviderError(val message: String) : LiveEvent
+    data class ProviderError(val message: String, @StringRes val messageRes: Int? = null) : LiveEvent {
+        /** [message] is the provider's own text, or an English fallback; [messageRes] localizes that fallback. */
+        fun displayMessage(context: Context): String = messageRes?.let { context.getString(it) } ?: message
+    }
 
     /** The connection ended. A null failure is a normal close the app asked for. */
     data class Closed(val failure: LiveFailure?) : LiveEvent
@@ -296,7 +302,11 @@ open class GeminiLiveWire : LiveWire {
         }
         if (json.containsKey("goAway")) events += LiveEvent.GoAway
         (json["error"] as? JsonObject)?.let { error ->
-            events += LiveEvent.ProviderError(LiveJson.string(error, "message") ?: "Gemini reported an error.")
+            val providerMessage = LiveJson.string(error, "message")
+            events += LiveEvent.ProviderError(
+                providerMessage ?: "Gemini reported an error.",
+                messageRes = if (providerMessage == null) R.string.st_live_gemini_error else null
+            )
         }
         return events
     }
@@ -546,8 +556,10 @@ open class OpenAIRealtimeWire : LiveWire {
                 if (status == "failed") {
                     val details = response?.get("status_details") as? JsonObject
                     val error = details?.get("error") as? JsonObject
+                    val providerMessage = LiveJson.string(error, "message")
                     events += LiveEvent.ProviderError(
-                        LiveJson.string(error, "message") ?: "The voice response failed. Please try again."
+                        providerMessage ?: "The voice response failed. Please try again.",
+                        messageRes = if (providerMessage == null) R.string.st_live_response_failed else null
                     )
                 }
                 events += LiveEvent.TurnComplete(responseId, successful = status == null || status == "completed")
@@ -555,10 +567,14 @@ open class OpenAIRealtimeWire : LiveWire {
             }
             "error" -> {
                 val error = json["error"]
-                val message = (error as? JsonObject)?.let { LiveJson.string(it, "message") }
+                val providerMessage = (error as? JsonObject)?.let { LiveJson.string(it, "message") }
                     ?: (error as? JsonPrimitive)?.takeIf { it.isString }?.content
-                    ?: "The provider reported an error."
-                listOf(LiveEvent.ProviderError(message))
+                listOf(
+                    LiveEvent.ProviderError(
+                        providerMessage ?: "The provider reported an error.",
+                        messageRes = if (providerMessage == null) R.string.st_live_provider_error else null
+                    )
+                )
             }
             else -> emptyList()
         }

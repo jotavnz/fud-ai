@@ -542,10 +542,11 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
             is LiveEvent.ProviderError -> {
                 VoiceLog.warn(TAG, "The provider reported an error")
                 responseInProgress = false
+                val message = event.displayMessage(container.appContext)
                 if (_ui.value.phase == VoicePhase.CONNECTING) {
-                    end(VoiceNotice.ProviderMessage(event.message.take(300)))
+                    end(VoiceNotice.ProviderMessage(message.take(300)))
                 } else {
-                    showTransientError(event.message)
+                    showTransientError(message)
                 }
             }
             is LiveEvent.Closed -> {

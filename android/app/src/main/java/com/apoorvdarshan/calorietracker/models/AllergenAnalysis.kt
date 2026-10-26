@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.models
 
+import android.content.Context
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import java.text.Normalizer
 
 enum class AllergenAssessment {
@@ -22,6 +25,15 @@ data class AllergenAnalysis(
                 append(matchedSensitivities.joinToString(", "))
             }
         }
+
+    /** Localized [summary]; prefer this wherever a Context is available. */
+    fun summary(context: Context): String = buildString {
+        append(context.getString(assessment.displayNameRes))
+        if (matchedSensitivities.isNotEmpty()) {
+            append(": ")
+            append(matchedSensitivities.joinToString(", "))
+        }
+    }
 
     companion object {
         fun evaluate(entry: FoodEntry, sensitivities: List<String>): AllergenAnalysis {
@@ -109,6 +121,14 @@ val AllergenAssessment.displayName: String
         AllergenAssessment.MAY_CONTAIN -> "May contain"
         AllergenAssessment.POSSIBLE_ALLERGEN -> "Possible allergen"
         AllergenAssessment.UNABLE_TO_ASSESS -> "Unable to assess"
+    }
+
+val AllergenAssessment.displayNameRes: Int
+    @StringRes get() = when (this) {
+        AllergenAssessment.DECLARED_ALLERGEN_MATCH -> R.string.hm_allergen_declared_match
+        AllergenAssessment.MAY_CONTAIN -> R.string.hm_allergen_may_contain
+        AllergenAssessment.POSSIBLE_ALLERGEN -> R.string.hm_allergen_possible
+        AllergenAssessment.UNABLE_TO_ASSESS -> R.string.hm_allergen_unable
     }
 
 fun FoodEntry.allergenAnalysis(sensitivities: List<String>): AllergenAnalysis =

@@ -62,6 +62,7 @@ import android.net.Uri
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
+import com.apoorvdarshan.calorietracker.data.ExerciseLocalization
 import com.apoorvdarshan.calorietracker.data.ExerciseVisual
 import com.apoorvdarshan.calorietracker.ui.workouts.AnimatedExerciseImage
 import java.net.URLEncoder
@@ -103,7 +104,7 @@ fun ExerciseDetailScreen(
             )
             if (onEdit != null) {
                 Text(
-                    "Edit",
+                    stringResource(R.string.wk_edit),
                     color = colors.accent,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
@@ -192,16 +193,16 @@ private fun Hero(item: ExerciseItem, visual: ExerciseVisual, showMetrics: Boolea
 private fun MetricGrid(item: ExerciseItem, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCard(stringResource(R.string.label_level), item.level, Icons.Filled.BarChart, 1, 15.sp, Modifier.weight(1f))
-            MetricCard(stringResource(R.string.label_category), item.category, Icons.Filled.Tag, 1, 15.sp, Modifier.weight(1f))
+            MetricCard(stringResource(R.string.label_level), ExerciseLocalization.label(item.level), Icons.Filled.BarChart, 1, 15.sp, Modifier.weight(1f))
+            MetricCard(stringResource(R.string.label_category), ExerciseLocalization.label(item.category), Icons.Filled.Tag, 1, 15.sp, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCard(stringResource(R.string.label_force), item.force, Icons.Filled.SwapHoriz, 1, 15.sp, Modifier.weight(1f))
-            MetricCard(stringResource(R.string.label_mechanic), item.mechanic, Icons.Filled.Settings, 1, 15.sp, Modifier.weight(1f))
+            MetricCard(stringResource(R.string.label_force), ExerciseLocalization.label(item.force), Icons.Filled.SwapHoriz, 1, 15.sp, Modifier.weight(1f))
+            MetricCard(stringResource(R.string.label_mechanic), ExerciseLocalization.label(item.mechanic), Icons.Filled.Settings, 1, 15.sp, Modifier.weight(1f))
         }
         MetricCard(stringResource(R.string.label_primary), item.primaryMusclesTitle, Icons.Filled.GpsFixed, 2, 14.sp, Modifier.fillMaxWidth())
         MetricCard(stringResource(R.string.label_secondary), item.secondaryMusclesTitle, Icons.Filled.GpsFixed, 3, 13.sp, Modifier.fillMaxWidth())
-        MetricCard(stringResource(R.string.label_equipment), item.equipment, Icons.Filled.FitnessCenter, 2, 14.sp, Modifier.fillMaxWidth())
+        MetricCard(stringResource(R.string.label_equipment), ExerciseLocalization.label(item.equipment), Icons.Filled.FitnessCenter, 2, 14.sp, Modifier.fillMaxWidth())
     }
 }
 
@@ -244,6 +245,7 @@ private fun InstructionSection(
 ) {
     val colors = workoutsColors()
     val context = LocalContext.current
+    val searchSuffix = stringResource(R.string.youtube_exercise_search_suffix)
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(
@@ -268,7 +270,7 @@ private fun InstructionSection(
                 .background(colors.panel.copy(alpha = 0.16f))
                 .border(0.5.dp, colors.hairline.copy(alpha = 0.20f), RoundedCornerShape(18.dp))
                 .clickable {
-                    val query = URLEncoder.encode("$exerciseName exercise", StandardCharsets.UTF_8.toString())
+                    val query = URLEncoder.encode("$exerciseName $searchSuffix", StandardCharsets.UTF_8.toString())
                     val uri = Uri.parse("https://www.youtube.com/results?search_query=$query")
                     context.startActivity(Intent(Intent.ACTION_VIEW, uri))
                 }

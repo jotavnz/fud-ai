@@ -133,7 +133,11 @@ class FoodRepository(
      * Merge selected diary foods into one combined meal entry and remove the
      * originals so macros are not double-counted.
      */
-    suspend fun combineIntoMeal(entryIds: Collection<UUID>): FoodEntry? {
+    suspend fun combineIntoMeal(
+        entryIds: Collection<UUID>,
+        labels: com.apoorvdarshan.calorietracker.models.CombinedMealLabels =
+            com.apoorvdarshan.calorietracker.models.CombinedMealLabels.English
+    ): FoodEntry? {
         if (prefs.fastingSessions.first().any { it.isActive }) return null
         ensureFavoritesMigrated()
         val idSet = entryIds.toSet()
@@ -143,7 +147,7 @@ class FoodRepository(
         prefs.updateFoodEntries { current ->
             selected = current.filter { it.id in idSet }
             if (selected.size < 2) return@updateFoodEntries current
-            val merged = combineFoodEntries(selected)
+            val merged = combineFoodEntries(selected, labels)
             combined = merged
             current.filter { it.id !in idSet } + merged
         }

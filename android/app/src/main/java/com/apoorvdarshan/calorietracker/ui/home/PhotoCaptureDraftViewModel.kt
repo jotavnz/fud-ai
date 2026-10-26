@@ -9,6 +9,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.apoorvdarshan.calorietracker.R
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -22,9 +23,12 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /** Capture files are separate from logged-food photos, so diary cleanup cannot delete a draft. */
-internal class CapturePhotoFiles(private val directory: File) {
+internal class CapturePhotoFiles(
+    private val directory: File,
+    private val saveFailedMessage: () -> String = { "Could not save photo draft" }
+) {
     fun write(bytes: ByteArray): String {
-        check(directory.isDirectory || directory.mkdirs()) { "Could not save photo draft" }
+        check(directory.isDirectory || directory.mkdirs()) { saveFailedMessage() }
         val name = "${UUID.randomUUID()}.jpg"
         val photo = File(directory, name)
         try { photo.writeBytes(bytes) } catch (error: Exception) {
@@ -193,7 +197,10 @@ internal class PhotoCaptureDraftViewModel(
         fun factory(context: Context) = viewModelFactory {
             initializer {
                 PhotoCaptureDraftViewModel(createSavedStateHandle(),
-                    CapturePhotoFiles(File(context.applicationContext.filesDir, "food-capture-drafts")))
+                    CapturePhotoFiles(
+                        File(context.applicationContext.filesDir, "food-capture-drafts"),
+                        saveFailedMessage = { context.applicationContext.getString(R.string.hm_photo_draft_save_failed) }
+                    ))
             }
         }
     }

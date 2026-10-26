@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hm_unit_fl_oz">fl oz</string>
+    <string name="hm_today_lower">hoy</string>
+    <string name="hm_copy_foods_footer">Las comidas se copiarán a %1$s. Los registros originales no cambian.</string>
+
+    <string name="hm_delete_food_log">Eliminar comida</string>
+    <string name="hm_delete_food_log_title">¿Eliminar comida?</string>
+    <string name="hm_delete_water_log_title">¿Eliminar registro de agua?</string>
+    <string name="hm_delete_fasting_log_title">¿Eliminar registro de ayuno?</string>
+    <string name="hm_delete_food_log_message">Esto quita la comida de tu diario. Tus favoritos guardados se conservan.</string>
+    <string name="hm_delete_water_log_message">Esto quita el registro de agua de tu diario.</string>
+    <string name="hm_delete_fasting_log_message">Esto quita el ayuno completado de tu diario.</string>
+
+    <string name="hm_macro_initial_protein">P</string>
+    <string name="hm_macro_initial_carbs">C</string>
+    <string name="hm_macro_initial_fat">G</string>
+    <string name="hm_macro_line_format">%1$dP · %2$dC · %3$dG</string>
+
+    <string name="hm_meal_photos">Fotos de la comida</string>
+    <string name="hm_photos_count_format">%1$d de 10 fotos</string>
+    <string name="hm_photo_number_format">Foto %1$d</string>
+    <string name="hm_remove_photo">Quitar foto</string>
+    <string name="hm_add_photos">Agregar fotos</string>
+    <string name="hm_add_photo">Agregar foto</string>
+    <string name="hm_note_for_analysis">Nota para el análisis de la comida (opcional)</string>
+    <string name="hm_note_placeholder">p. ej. el pollo pesa 180 g, el arroz 220 g, usa la mitad de la salsa</string>
+    <string name="hm_photo_draft_save_failed">No se pudo guardar el borrador de la foto</string>
+
+    <string name="hm_actions">Acciones</string>
+    <string name="hm_remove_from_favorites">Quitar de favoritos</string>
+    <string name="hm_save_to_favorites">Guardar en favoritos</string>
+
+    <string name="hm_flash_on">Flash activado</string>
+    <string name="hm_flash_auto">Flash automático</string>
+    <string name="hm_flash_off">Flash desactivado</string>
+
+    <string name="hm_allergen_declared_match">Coincidencia con alérgeno declarado</string>
+    <string name="hm_allergen_may_contain">Puede contener</string>
+    <string name="hm_allergen_possible">Posible alérgeno</string>
+    <string name="hm_allergen_unable">No se puede evaluar</string>
+
+    <string name="hm_qa_photos">Fotos</string>
+    <string name="hm_qa_text">Texto</string>
+    <string name="hm_qa_recent">Recientes</string>
+    <string name="hm_qa_manual">Manual</string>
+
+    <string name="hm_combined_meal">Comida combinada</string>
+    <string name="hm_combined_more_format">%1$d más</string>
+
+    <string name="hm_share_open_in_app">Abre en Fud AI para agregar:</string>
+    <string name="hm_widget_left_format">%1$s restantes</string>
+    <string name="hm_widget_enable_in_app">Actívalo en Fud AI</string>
+    <string name="hm_barcode_name_format">Código de barras %1$s</string>
+</resources>

@@ -32,10 +32,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.time.LocalDate
 import java.time.YearMonth
@@ -313,6 +315,8 @@ fun FeetInchesWheelPicker(
     val totalInches = (cm / 2.54).roundToInt().coerceIn(36, 95) // 3'0" to 7'11"
     val feet = totalInches / 12
     val inches = totalInches % 12
+    val feetFormat = stringResource(R.string.st_wheel_ft_format)
+    val inchesFormat = stringResource(R.string.st_wheel_in_format)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -326,7 +330,7 @@ fun FeetInchesWheelPicker(
                 val newTotal = f * 12 + inches
                 onValueChange((newTotal * 2.54).roundToInt())
             },
-            label = { "$it ft" },
+            label = { feetFormat.format(it) },
             modifier = Modifier.weight(1f)
         )
         WheelPicker(
@@ -336,7 +340,7 @@ fun FeetInchesWheelPicker(
                 val newTotal = feet * 12 + i
                 onValueChange((newTotal * 2.54).roundToInt())
             },
-            label = { "$it in" },
+            label = { inchesFormat.format(it) },
             modifier = Modifier.weight(1f)
         )
     }

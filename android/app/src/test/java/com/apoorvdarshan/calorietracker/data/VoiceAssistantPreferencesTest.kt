@@ -36,11 +36,9 @@ class VoiceAssistantPreferencesTest {
     fun appLanguageIsTheLanguageTheAppShows() {
         // Finnish has no translation, so the app shows English.
         assertEquals("en", AppLanguage.shownTag(null, listOf("fi-FI")))
-        assertEquals("de", AppLanguage.shownTag(null, listOf("fi-FI", "de-DE")))
-        assertEquals("tr", AppLanguage.shownTag(null, listOf("tr-TR")))
-        assertEquals("pt-BR", AppLanguage.shownTag(null, listOf("pt-BR")))
-        assertEquals("zh-CN", AppLanguage.shownTag(null, listOf("zh-CN")))
-        assertEquals("ja", AppLanguage.shownTag("ja", listOf("fi-FI")))
+        assertEquals("es", AppLanguage.shownTag(null, listOf("fi-FI", "es-VE")))
+        assertEquals("en", AppLanguage.shownTag(null, listOf("de-DE")))
+        assertEquals("es", AppLanguage.shownTag("es", listOf("fi-FI")))
         assertEquals("en", AppLanguage.shownTag(null, emptyList()))
     }
 }

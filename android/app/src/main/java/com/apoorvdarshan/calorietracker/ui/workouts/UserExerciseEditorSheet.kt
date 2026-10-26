@@ -71,6 +71,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.data.ExerciseLocalization
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.WorkoutRepository
 import com.apoorvdarshan.calorietracker.models.PlannedExercise
@@ -306,9 +307,9 @@ fun UserExerciseEditorSheet(
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text("Delete this custom exercise?") },
+            title = { Text(stringResource(R.string.wp_editor_delete_title)) },
             text = {
-                Text("This removes the exercise from your library. Logged workouts keep their history.")
+                Text(stringResource(R.string.wp_editor_delete_message))
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -319,12 +320,12 @@ fun UserExerciseEditorSheet(
                         onDismiss()
                     }
                 }) {
-                    Text("Delete", color = colors.accent)
+                    Text(stringResource(R.string.action_delete), color = colors.accent)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -345,7 +346,7 @@ fun UserExerciseEditorSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                if (existingItemId == null) "Create exercise" else "Edit exercise",
+                if (existingItemId == null) stringResource(R.string.workout_create_exercise) else stringResource(R.string.wp_editor_edit_title),
                 color = colors.charcoal,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
@@ -373,7 +374,7 @@ fun UserExerciseEditorSheet(
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Filled.FitnessCenter, null, tint = colors.charcoal, modifier = Modifier.size(32.dp))
-                        Text("Add photo (optional)", color = colors.mutedText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.wp_editor_add_photo), color = colors.mutedText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -398,7 +399,7 @@ fun UserExerciseEditorSheet(
                                 isPhotoLoading = false
                             },
                             enabled = !isPhotoLoading && !isFillingWithAi
-                        ) { Text("Remove photo", color = colors.accent) }
+                        ) { Text(stringResource(R.string.wp_editor_remove_photo), color = colors.accent) }
                     }
                 }
             }
@@ -445,7 +446,7 @@ fun UserExerciseEditorSheet(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text(stringResource(R.string.label_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = fieldsEnabled,
                 singleLine = true
@@ -454,27 +455,27 @@ fun UserExerciseEditorSheet(
             OutlinedTextField(
                 value = instructions,
                 onValueChange = { instructions = it },
-                label = { Text("Instructions") },
+                label = { Text(stringResource(R.string.instructions)) },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
                 enabled = fieldsEnabled,
                 minLines = 4
             )
 
-            DropdownField("Level", level, listOf("Beginner", "Intermediate", "Expert")) { level = it }
-            DropdownField("Category", category, categoryOptions, enabled = fieldsEnabled) { category = it }
-            DropdownField("Equipment", equipment, equipmentOptions, enabled = fieldsEnabled) { equipment = it }
-            DropdownField("Force", force, listOf("Unspecified") + catalog.availableForces.filter { it != "Unspecified" }) { force = it }
-            DropdownField("Mechanic", mechanic, listOf("Unspecified") + catalog.availableMechanics.filter { it != "Unspecified" }) { mechanic = it }
+            DropdownField(stringResource(R.string.label_level), level, listOf("Beginner", "Intermediate", "Expert")) { level = it }
+            DropdownField(stringResource(R.string.label_category), category, categoryOptions, enabled = fieldsEnabled) { category = it }
+            DropdownField(stringResource(R.string.label_equipment), equipment, equipmentOptions, enabled = fieldsEnabled) { equipment = it }
+            DropdownField(stringResource(R.string.label_force), force, listOf("Unspecified") + catalog.availableForces.filter { it != "Unspecified" }) { force = it }
+            DropdownField(stringResource(R.string.label_mechanic), mechanic, listOf("Unspecified") + catalog.availableMechanics.filter { it != "Unspecified" }) { mechanic = it }
 
-            MuscleMultiSelect("Primary muscles", catalog.availablePrimaryMuscles, primaryMuscles, enabled = fieldsEnabled) {
+            MuscleMultiSelect(stringResource(R.string.wp_editor_primary_muscles), catalog.availablePrimaryMuscles, primaryMuscles, enabled = fieldsEnabled) {
                 primaryMuscles = it
             }
-            MuscleMultiSelect("Secondary muscles", catalog.availableSecondaryMuscles, secondaryMuscles, enabled = fieldsEnabled) {
+            MuscleMultiSelect(stringResource(R.string.wp_editor_secondary_muscles), catalog.availableSecondaryMuscles, secondaryMuscles, enabled = fieldsEnabled) {
                 secondaryMuscles = it
             }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancel") }
+                TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_cancel)) }
                 Button(
                     onClick = {
                         scope.launch {
@@ -499,7 +500,7 @@ fun UserExerciseEditorSheet(
                     // Waits for a running AI fill, so its suggestions are never dropped.
                     enabled = name.trim().isNotEmpty() && !isPhotoLoading && !isFillingWithAi,
                     modifier = Modifier.weight(1f)
-                ) { Text("Save") }
+                ) { Text(stringResource(R.string.action_save)) }
             }
 
             if (existingItemId != null && UserExercise.isUserExercise(existingItemId)) {
@@ -507,7 +508,7 @@ fun UserExerciseEditorSheet(
                 TextButton(
                     onClick = { showDeleteConfirmation = true },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Delete exercise", color = colors.accent) }
+                ) { Text(stringResource(R.string.wp_editor_delete_exercise), color = colors.accent) }
             }
 
             Spacer(Modifier.size(12.dp))
@@ -526,7 +527,7 @@ private fun DropdownField(
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(expanded = expanded && enabled, onExpandedChange = { expanded = it && enabled }) {
         OutlinedTextField(
-            value = value,
+            value = ExerciseLocalization.label(value),
             onValueChange = {},
             readOnly = true,
             enabled = enabled,
@@ -539,7 +540,7 @@ private fun DropdownField(
         ExposedDropdownMenu(expanded = expanded && enabled, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(ExerciseLocalization.label(option)) },
                     onClick = {
                         onSelect(option)
                         expanded = false
@@ -576,7 +577,7 @@ private fun MuscleMultiSelect(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(muscle, color = workoutsColors().charcoal, fontSize = 14.sp)
+                Text(ExerciseLocalization.label(muscle), color = workoutsColors().charcoal, fontSize = 14.sp)
                 if (isSelected) Text("✓", color = workoutsColors().accent, fontWeight = FontWeight.Bold)
             }
         }

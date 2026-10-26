@@ -80,6 +80,7 @@ data class SettingsUiState(
     val waterReminderEnabled: Boolean = false,
     val fastingTrackingEnabled: Boolean = false,
     val walkRunQuickLogEnabled: Boolean = false,
+    val smartSuggestionsEnabled: Boolean = true,
     val fastingDefaultGoalMinutes: Int = 16 * 60,
     val fastingGoalNotificationEnabled: Boolean = true,
     val healthConnectEnabled: Boolean = false,
@@ -271,6 +272,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val waterReminder = container.prefs.waterReminderEnabled.first()
             val fastingTracking = container.prefs.fastingTrackingEnabled.first()
             val walkRunQuickLog = container.prefs.walkRunQuickLogEnabled.first()
+            val smartSuggestions = container.prefs.smartSuggestionsEnabled.first()
             val fastingGoal = container.prefs.fastingDefaultGoalMinutes.first()
             val fastingNotification = container.prefs.fastingGoalNotificationEnabled.first()
             val workoutPreferences = container.workoutRepository.preferences.first()
@@ -359,6 +361,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     waterReminderEnabled = waterReminder,
                     fastingTrackingEnabled = fastingTracking,
                     walkRunQuickLogEnabled = walkRunQuickLog,
+                    smartSuggestionsEnabled = smartSuggestions,
                     fastingDefaultGoalMinutes = fastingGoal,
                     fastingGoalNotificationEnabled = fastingNotification,
                     healthConnectEnabled = storedHealthConnect,
@@ -1164,6 +1167,13 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun setSmartSuggestionsEnabled(v: Boolean) {
+        viewModelScope.launch {
+            container.prefs.setSmartSuggestionsEnabled(v)
+            _ui.value = _ui.value.copy(smartSuggestionsEnabled = v)
+        }
+    }
+
     fun setFastingDefaultGoalMinutes(v: Int) {
         viewModelScope.launch {
             container.prefs.setFastingDefaultGoalMinutes(v)
@@ -1530,15 +1540,20 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     val routed = container.hostedUi.handle(e)
                     _ui.value = _ui.value.copy(
                         recalculatingGoals = false,
-                        adaptiveGoalAlertTitle = if (routed) null else "Couldn't Recalculate",
+                        adaptiveGoalAlertTitle = if (routed) null else container.appContext.getString(R.string.st_vm_couldnt_recalculate),
                         adaptiveGoalAlertMessage = if (routed) null else e.userMessage(container.appContext)
                     )
                     return@launch
                 }
                 _ui.value = _ui.value.copy(
                     recalculatingGoals = false,
-                    adaptiveGoalAlertTitle = "Couldn't Recalculate",
-                    adaptiveGoalAlertMessage = "Fud AI couldn't reach your AI provider, so your goals are unchanged. Check your AI provider and API key in Settings, then try again. (${e.localizedMessage ?: "no response"})"
+                    adaptiveGoalAlertTitle = container.appContext.getString(R.string.st_vm_couldnt_recalculate),
+                    adaptiveGoalAlertMessage = container.appContext.getString(
+                        R.string.st_vm_recalc_unreachable,
+                        (e as? AiError)?.userMessage(container.appContext)
+                            ?: e.localizedMessage
+                            ?: container.appContext.getString(R.string.st_vm_no_response)
+                    )
                 )
                 return@launch
             }
@@ -1567,7 +1582,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 customFat = result.fat
             )
             val energy = container.prefs.energyUnit.first().format(container.appContext.resources, result.calories)
-            val message = "Updated to $energy." + (result.reason?.let { " $it" } ?: "")
+            val message = container.appContext.getString(R.string.st_vm_updated_to, energy) + (result.reason?.let { " $it" } ?: "")
             container.profileRepository.save(next)
             // Goals are now fresh — capture this input baseline so the recalc nudge clears.
             lastRecalcSignature = next.goalInputSignature

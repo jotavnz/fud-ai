@@ -100,6 +100,9 @@ open class FudAIApp : Application() {
         // Re-apply the AndroidX per-app locale list on API 32 and below, where
         // AppCompat stores it. Empty list = follow the system language.
         AppCompatDelegate.setApplicationLocales(AppCompatDelegate.getApplicationLocales())
+        // Barcode lookups from Home and the voice assistant name unknown products in the app language.
+        com.apoorvdarshan.calorietracker.services.OpenFoodFactsService.barcodeFallbackName =
+            { barcode -> getString(R.string.hm_barcode_name_format, barcode) }
         if (!backgroundServicesEnabled) {
             container = AppContainer(this)
             ExerciseRepository.warm(this)
@@ -779,7 +782,10 @@ class AppContainer(app: FudAIApp) {
                 profile = next,
                 changed = true,
                 updatedCalories = result.calories,
-                message = "Updated to ${prefs.energyUnit.first().format(appContext.resources, result.calories)} from your latest data." +
+                message = appContext.getString(
+                    R.string.st_app_updated_from_latest,
+                    prefs.energyUnit.first().format(appContext.resources, result.calories)
+                ) +
                     (result.reason?.let { " $it" } ?: "")
             )
         } finally {

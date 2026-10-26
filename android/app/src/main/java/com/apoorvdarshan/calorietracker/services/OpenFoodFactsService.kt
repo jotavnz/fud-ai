@@ -37,6 +37,14 @@ object OpenFoodFactsService {
     ).joinToString(",")
     private val API_BASE_URL = "https://world.openfoodfacts.org/".toHttpUrl()
 
+    /**
+     * Name given to a product that has neither a name nor a brand ("Barcode 123"). It is stored with
+     * the entry, so the app sets this to a localized formatter; the English default keeps the
+     * service usable without a Context. Shared with [FoodDataCentralService].
+     */
+    @Volatile
+    var barcodeFallbackName: (String) -> String = { "Barcode $it" }
+
     data class LookupResult(
         val analysis: FoodAnalysis,
         val productImageBytes: ByteArray?
@@ -311,7 +319,7 @@ object OpenFoodFactsService {
         if (primary != null && brand != null && !primary.lowercase(Locale.US).contains(brand.lowercase(Locale.US))) {
             return "$brand $primary"
         }
-        return primary ?: brand ?: "Barcode $barcode"
+        return primary ?: brand ?: barcodeFallbackName(barcode)
     }
 
     private fun firstNonEmpty(vararg values: String?): String? =

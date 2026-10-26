@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.services.speech
 
+import android.content.Context
+import androidx.annotation.StringRes
+import com.apoorvdarshan.calorietracker.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -25,12 +28,20 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 
-sealed class SttApiError(message: String) : Exception(message) {
-    object NoApiKey : SttApiError("No STT API key configured.")
-    class Network(cause: Throwable) : SttApiError("Network error: ${cause.localizedMessage}")
+sealed class SttApiError(message: String, @StringRes private val messageRes: Int? = null) : Exception(message) {
+    object NoApiKey : SttApiError("No STT API key configured.", R.string.st_stt_no_api_key)
+    class Network(cause: Throwable) : SttApiError("Network error: ${cause.localizedMessage}") {
+        private val detail: String? = cause.localizedMessage
+        override fun userMessage(context: Context): String =
+            context.getString(R.string.st_stt_network_error, detail ?: context.getString(R.string.st_stt_unknown_error))
+    }
     class Api(msg: String) : SttApiError(msg)
-    object InvalidResponse : SttApiError("Could not understand the transcription response.")
-    object Timeout : SttApiError("Transcription timed out.")
+    object InvalidResponse : SttApiError("Could not understand the transcription response.", R.string.st_stt_invalid_response)
+    object Timeout : SttApiError("Transcription timed out.", R.string.st_stt_timeout)
+
+    /** Localized text for the UI; [message] stays English for logs and tests. */
+    open fun userMessage(context: Context): String =
+        messageRes?.let { context.getString(it) } ?: message.orEmpty()
 }
 
 /**

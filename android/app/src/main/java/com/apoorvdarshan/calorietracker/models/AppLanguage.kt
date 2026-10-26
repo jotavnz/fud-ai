@@ -7,27 +7,14 @@ import java.util.Locale
  * (speech-to-text only). Empty / null tag means follow the device locale.
  */
 object AppLanguage {
-    /** BCP-47 tags matching `res/xml/locales_config.xml` and `values-*`. */
+    /**
+     * BCP-47 tags matching `res/xml/locales_config.xml` and the build's `localeFilters`.
+     * Only English and Spanish ship: every screen and the exercise library are fully
+     * translated in both, so a choice never shows mixed-language UI.
+     */
     val supportedTags: List<String> = listOf(
         "en",
-        "ar",
-        "az",
-        "cs",
-        "de",
-        "es",
-        "fr",
-        "hi",
-        "it",
-        "ja",
-        "ko",
-        "nl",
-        "pl",
-        "pt-BR",
-        "ro",
-        "ru",
-        "tr",
-        "uk",
-        "zh-CN"
+        "es"
     )
 
     fun displayName(tag: String): String {

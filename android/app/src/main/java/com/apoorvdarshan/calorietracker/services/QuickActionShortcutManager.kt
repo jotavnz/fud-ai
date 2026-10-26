@@ -23,9 +23,10 @@ object QuickActionShortcutManager {
                 putExtra(EXTRA_ACTION, action.name)
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
+            val title = context.getString(action.titleRes)
             ShortcutInfo.Builder(context, "quick_action_${index + 1}")
-                .setShortLabel(action.title)
-                .setLongLabel("Quick Action ${index + 1}: ${action.title}")
+                .setShortLabel(title)
+                .setLongLabel("${context.getString(R.string.settings_quick_action_number, index + 1)}: $title")
                 .setIcon(Icon.createWithResource(context, R.mipmap.ic_launcher))
                 .setIntent(intent)
                 .build()

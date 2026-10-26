@@ -13,17 +13,19 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftDay
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftHistory
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 data class WorkoutExerciseHistoryRequest(
     val itemId: String,
@@ -61,7 +63,7 @@ fun WorkoutExerciseHistorySheet(
             )
             if (history.isEmpty()) {
                 Text(
-                    "No lift history yet",
+                    stringResource(R.string.wk_no_lift_history),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -91,13 +93,18 @@ fun WorkoutExerciseHistorySheet(
     }
 }
 
+@Composable
 private fun dayTitle(dateKey: String, selectedDate: LocalDate): String {
     val date = WorkoutDate.parse(dateKey) ?: return dateKey
     val today = LocalDate.now()
     return when {
-        date == today -> "Today"
-        date == today.minusDays(1) -> "Yesterday"
-        date == selectedDate -> "Selected day"
-        else -> date.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy", Locale.getDefault()))
+        date == today -> stringResource(R.string.wk_today)
+        date == today.minusDays(1) -> stringResource(R.string.wk_yesterday)
+        date == selectedDate -> stringResource(R.string.wk_selected_day)
+        else -> {
+            val locale = LocalConfiguration.current.locales[0]
+            val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEMMMdyyyy")
+            date.format(DateTimeFormatter.ofPattern(pattern, locale))
+        }
     }
 }

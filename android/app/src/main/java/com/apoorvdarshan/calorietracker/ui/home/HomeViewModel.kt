@@ -632,6 +632,9 @@ viewModelScope.launch {
             try {
                 // Open Food Facts wins when it has nutrition; otherwise reuse the label the
                 // user scanned for this barcode before (#485), then USDA (#533).
+                OpenFoodFactsService.barcodeFallbackName = { code ->
+                    container.appContext.getString(R.string.hm_barcode_name_format, code)
+                }
                 val outcome = BarcodeProductLookup.lookup(
                     barcode = barcode,
                     usdaApiKey = container.keyStore.usdaFoodDataCentralApiKey(),
@@ -822,7 +825,9 @@ viewModelScope.launch {
                 throw error
             } catch (error: Throwable) {
                 _ui.value = _ui.value.copy(
-                    error = error.localizedMessage ?: container.appContext.getString(R.string.error_analysis_failed),
+                    error = (error as? AiError)?.userMessage(container.appContext)
+                        ?: error.localizedMessage
+                        ?: container.appContext.getString(R.string.error_analysis_failed),
                     errorOffersScanLabel = false
                 )
             } finally {
@@ -1002,7 +1007,10 @@ viewModelScope.launch {
             return
         }
         viewModelScope.launch {
-            val combined = container.foodRepository.combineIntoMeal(ids)
+            val combined = container.foodRepository.combineIntoMeal(
+                ids,
+                com.apoorvdarshan.calorietracker.models.CombinedMealLabels.from(container.appContext)
+            )
             if (combined == null) {
                 reportFoodBlockedByFast()
             }

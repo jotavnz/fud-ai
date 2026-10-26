@@ -68,6 +68,7 @@ import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.services.speech.AudioRecorder
 import com.apoorvdarshan.calorietracker.services.speech.NativeSpeechRecognizer
 import com.apoorvdarshan.calorietracker.services.speech.SttEvent
+import com.apoorvdarshan.calorietracker.services.speech.SttApiError
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -177,6 +178,7 @@ fun VoiceInputSheet(
                 error = when {
                     container.hostedUi.handle(e) -> null
                     e is AiError -> e.userMessage(ctx)
+                    e is SttApiError -> e.userMessage(ctx)
                     else -> e.localizedMessage ?: transcriptionFailedMsg
                 }
                 phase = VoicePhase.REVIEWING

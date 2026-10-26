@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.apoorvdarshan.calorietracker.MainActivity
+import com.apoorvdarshan.calorietracker.R
 import com.google.android.gms.tasks.Task
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -67,7 +68,7 @@ object AndroidUpdateChecker {
             .versionName
             ?.substringBefore("-")
             ?.ifBlank { null }
-            ?: "Unknown"
+            ?: context.getString(R.string.st_update_unknown)
 
     suspend fun check(context: Context, current: String): AndroidUpdateState {
         if (context.packageName != RELEASE_PACKAGE_NAME) {
@@ -81,7 +82,7 @@ object AndroidUpdateChecker {
                     if (info.isPlayableUpdate()) {
                         AndroidUpdateState.Available(
                             current = current,
-                            latest = info.playVersionLabel()
+                            latest = info.playVersionLabel(context)
                         )
                     } else {
                         AndroidUpdateState.UpToDate(current = current, latest = current)
@@ -100,9 +101,9 @@ object AndroidUpdateChecker {
             updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
     }
 
-    private fun AppUpdateInfo.playVersionLabel(): String {
+    private fun AppUpdateInfo.playVersionLabel(context: Context): String {
         val versionCode = availableVersionCode()
-        return if (versionCode > 0) "build $versionCode" else "Google Play"
+        return if (versionCode > 0) context.getString(R.string.st_update_build, versionCode) else "Google Play"
     }
 
     private suspend fun <T> Task<T>.awaitTask(): T =

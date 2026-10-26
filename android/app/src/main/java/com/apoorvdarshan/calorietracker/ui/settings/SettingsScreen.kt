@@ -13,6 +13,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import com.apoorvdarshan.calorietracker.backup.CloudBackupNotFoundException
+import com.apoorvdarshan.calorietracker.backup.CloudBackupSignInRequiredException
+import com.apoorvdarshan.calorietracker.backup.DriveBackupException
 import com.apoorvdarshan.calorietracker.backup.DriveCloudBackupClient
 import com.apoorvdarshan.calorietracker.backup.cloudBackupErrorMessage
 import androidx.appcompat.app.AppCompatDelegate
@@ -57,6 +60,7 @@ import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.HourglassEmpty
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.LocalDining
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.SportsMartialArts
@@ -194,9 +198,11 @@ import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.models.WorkoutRestTimerSetting
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
 import com.apoorvdarshan.calorietracker.models.WorkoutSplit
+import com.apoorvdarshan.calorietracker.export.DiaryImportException
 import com.apoorvdarshan.calorietracker.export.DiaryImportMode
 import com.apoorvdarshan.calorietracker.export.DiaryImportPreview
 import com.apoorvdarshan.calorietracker.export.DiaryImporter
+import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.health.HealthAvailabilityMessageKind
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectAvailability
 import com.apoorvdarshan.calorietracker.services.health.healthAvailabilityMessageKind
@@ -236,6 +242,8 @@ import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import com.apoorvdarshan.calorietracker.ui.navigation.FudAIRoutes
 import com.apoorvdarshan.calorietracker.ui.util.clockTimePattern
+import com.apoorvdarshan.calorietracker.ui.workouts.workoutRpeScaleLabel
+import com.apoorvdarshan.calorietracker.ui.workouts.workoutSplitLabel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -441,8 +449,25 @@ fun SettingsScreen(
     val cloudBackupSignInFailed = stringResource(R.string.cloud_backup_sign_in_failed)
     val cloudBackupFailed = stringResource(R.string.error_title)
     val cloudBackupNoSpace = stringResource(R.string.cloud_backup_restore_no_space)
+    val driveNotFoundMsg = stringResource(R.string.st_drive_not_found)
+    val driveSignInRequiredMsg = stringResource(R.string.st_drive_sign_in_required)
+    val importTooLargeMessage = stringResource(R.string.st_import_too_large)
+    // Drive and diary-import failures keep an English [Throwable.message] for logs and tests;
+    // the dialogs show the translated text instead.
+    fun localizedFailure(e: Throwable): String? = when (e) {
+        is DriveBackupException -> e.userMessage(activityContext)
+        is DiaryImportException -> e.userMessage(activityContext)
+        is CloudBackupNotFoundException -> driveNotFoundMsg
+        is CloudBackupSignInRequiredException -> driveSignInRequiredMsg
+        is AiError -> e.userMessage(activityContext)
+        else -> e.localizedMessage
+    }
     val cloudBackupFailure: (Throwable) -> String = {
-        cloudBackupErrorMessage(it, cloudBackupFailed, cloudBackupNoSpace)
+        if (it is DriveBackupException || it is CloudBackupNotFoundException || it is CloudBackupSignInRequiredException) {
+            localizedFailure(it) ?: cloudBackupFailed
+        } else {
+            cloudBackupErrorMessage(it, cloudBackupFailed, cloudBackupNoSpace)
+        }
     }
     val cloudBackup by container.cloudBackup.ui.collectAsState()
     LaunchedEffect(selectedCategory) {
@@ -498,7 +523,7 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    .onFailure { cloudBackupError = it.message }
+                    .onFailure { cloudBackupError = localizedFailure(it) }
             }
         }
     }
@@ -519,7 +544,7 @@ fun SettingsScreen(
     val startDriveSignIn: () -> Unit = {
         runCatching {
             driveAccountPickerLauncher.launch(container.cloudBackup.accountPickerIntent())
-        }.onFailure { cloudBackupError = it.message ?: cloudBackupSignInFailed }
+        }.onFailure { cloudBackupError = localizedFailure(it) ?: cloudBackupSignInFailed }
     }
 
     val importFileLauncher = rememberLauncherForActivityResult(
@@ -532,13 +557,13 @@ fun SettingsScreen(
                     val bytes = activityContext.contentResolver.openInputStream(uri)?.use { input -> input.readBytes() }
                         ?: throw IllegalArgumentException(importReadFailedMessage)
                     if (bytes.size > DiaryImporter.MAXIMUM_FILE_SIZE) {
-                        throw IllegalArgumentException("This file is too large to import.")
+                        throw IllegalArgumentException(importTooLargeMessage)
                     }
                     DiaryImporter.parse(bytes.toString(Charsets.UTF_8))
                 }
             }
             importPreview = result.getOrNull()
-            importError = result.exceptionOrNull()?.localizedMessage ?: if (result.isFailure) importReadFailedMessage else null
+            importError = result.exceptionOrNull()?.let { localizedFailure(it) } ?: if (result.isFailure) importReadFailedMessage else null
             showImportSheet = true
         }
     }
@@ -821,7 +846,8 @@ fun SettingsScreen(
                             stringResource(R.string.settings_weekly_change),
                             WeightDisplayFormatter.weeklyChange(
                                 kilograms = p.weeklyChangeKg ?: 0.5,
-                                useMetric = ui.weightMetric
+                                useMetric = ui.weightMetric,
+                                period = stringResource(R.string.st_unit_week_short)
                             ),
                             icon = Icons.Outlined.Speed
                         ) { sheet = SettingsSheet.GOAL_SPEED }
@@ -1157,14 +1183,14 @@ fun SettingsScreen(
             SectionCard {
                 SettingRow(
                     stringResource(R.string.settings_training_split),
-                    ui.workoutSplit.title,
+                    workoutSplitLabel(ui.workoutSplit),
                     icon = Icons.Outlined.FitnessCenter,
                     inlineMenu = true
                 ) { sheet = SettingsSheet.WORKOUT_SPLIT }
                 HorizontalDivider()
                 SettingRow(
                     stringResource(R.string.settings_rpe_scale),
-                    ui.workoutRpeScale.title,
+                    workoutRpeScaleLabel(ui.workoutRpeScale),
                     icon = Icons.Outlined.Speed,
                     inlineMenu = true
                 ) { sheet = SettingsSheet.WORKOUT_RPE }
@@ -1199,6 +1225,20 @@ fun SettingsScreen(
                 )
                 Text(
                     stringResource(R.string.settings_walk_run_quick_log_footer),
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+                HorizontalDivider()
+                ToggleRow(
+                    stringResource(R.string.settings_smart_suggestions),
+                    ui.smartSuggestionsEnabled,
+                    icon = Icons.Outlined.Lightbulb,
+                    onChange = vm::setSmartSuggestionsEnabled
+                )
+                Text(
+                    stringResource(R.string.settings_smart_suggestions_footer),
                     fontSize = 12.sp,
                     lineHeight = 18.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
@@ -1844,7 +1884,7 @@ fun SettingsScreen(
                                 )
                             )
                         }.onFailure { error ->
-                            importError = error.localizedMessage ?: importReadFailedMessage
+                            importError = localizedFailure(error) ?: importReadFailedMessage
                         }
                         importingDiary = false
                     }
@@ -2486,7 +2526,7 @@ fun OptionalNutrientGoalsScreen(
                 step = nutrient.pickerStep(),
                 allowCustomValue = true,
                 guidanceUpperLimit = nutrient.generalAdultUpperLimit(),
-                customValueDetail = nutrient::customValueDetail,
+                customValueDetail = nutrient.customValueDetail(stringResource(R.string.st_unit_iu_format)),
                 onSave = { value ->
                     vm.setOptionalNutrientGoals(ui.optionalNutrientGoals.withValue(nutrient, value))
                     editing = null
@@ -2559,7 +2599,7 @@ fun QuickActionsScreen(
                             val selected = ui.quickActions.getOrElse(slot) { QuickAction.Defaults[slot] }
                             SettingRow(
                                 stringResource(R.string.settings_quick_action_number, slot + 1),
-                                selected.title,
+                                stringResource(selected.titleRes),
                                 inlineMenu = true
                             ) { expandedSlot = slot }
                             Box(Modifier.align(Alignment.BottomEnd)) {
@@ -2569,7 +2609,7 @@ fun QuickActionsScreen(
                                 ) {
                                     QuickAction.entries.forEach { action ->
                                         DropdownMenuItem(
-                                            text = { Text(action.title) },
+                                            text = { Text(stringResource(action.titleRes)) },
                                             trailingIcon = if (action == selected) {
                                                 { Icon(Icons.Filled.Check, contentDescription = null, tint = AppColors.Calorie) }
                                             } else null,
@@ -2807,7 +2847,7 @@ private fun CalcFormulaCard(
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    "SOURCE",
+                    stringResource(R.string.st_formula_source),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
                 )
@@ -2818,7 +2858,7 @@ private fun CalcFormulaCard(
                 )
                 if (url != null) {
                     Text(
-                        "Open source ↗",
+                        stringResource(R.string.st_formula_open_source),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = AppColors.Calorie,
@@ -3076,7 +3116,7 @@ private fun SettingsSheets(
                 SettingsSheet.WORKOUT_SPLIT -> ListSheet(
                     title = stringResource(R.string.settings_training_split),
                     items = WorkoutSplit.SelectableValues,
-                    label = { it.title },
+                    label = { workoutSplitLabel(it) },
                     selected = { it == ui.workoutSplit },
                     onSelect = { vm.selectWorkoutSplit(it); onDismiss() }
                 )
@@ -3090,7 +3130,7 @@ private fun SettingsSheets(
                 SettingsSheet.WORKOUT_RPE -> ListSheet(
                     title = stringResource(R.string.settings_rpe_scale),
                     items = WorkoutRpeScale.entries,
-                    label = { it.title },
+                    label = { workoutRpeScaleLabel(it) },
                     selected = { it == ui.workoutRpeScale },
                     onSelect = { vm.selectWorkoutRpeScale(it); onDismiss() },
                     subtitle = { it.inputPlaceholder }
@@ -3474,7 +3514,7 @@ private fun OptionalNutrientGoalsSheet(
             step = nutrient.pickerStep(),
             allowCustomValue = true,
             guidanceUpperLimit = nutrient.generalAdultUpperLimit(),
-            customValueDetail = nutrient::customValueDetail,
+            customValueDetail = nutrient.customValueDetail(stringResource(R.string.st_unit_iu_format)),
             onSave = { value ->
                 onChange(goals.withValue(nutrient, value))
                 editing = null
@@ -5041,8 +5081,9 @@ private fun OptionalNutrient.generalAdultUpperLimit(): Int? = when (this) {
     else -> null
 }
 
-private fun OptionalNutrient.customValueDetail(value: Int): String? =
-    if (this == OptionalNutrient.VITAMIN_D) "${value * 40} IU" else null
+private fun OptionalNutrient.customValueDetail(iuFormat: String): (Int) -> String? = { value ->
+    if (this == OptionalNutrient.VITAMIN_D) iuFormat.format(value * 40) else null
+}
 
 @Composable
 private fun birthdayDisplay(profile: UserProfile): String {
