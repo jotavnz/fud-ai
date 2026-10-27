@@ -152,8 +152,12 @@ internal fun WorkoutTextSheet(
                 if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             } else {
                 Text(stringResource(R.string.workout_text_review), style = MaterialTheme.typography.titleMedium)
-                OutlinedTextField(value = draft.date, onValueChange = { update(draft.copy(date = it)) },
-                    enabled = !saving, label = { Text(stringResource(R.string.workout_text_date)) }, singleLine = true)
+                com.apoorvdarshan.calorietracker.ui.components.CalendarDateField(
+                    isoDate = draft.date,
+                    onIsoDateChange = { update(draft.copy(date = it)) },
+                    label = stringResource(R.string.workout_text_date),
+                    enabled = !saving
+                )
                 draft.exercises.forEach { exercise ->
                     key(exercise.id) {
                         fun edit(value: WorkoutTextExercise) = update(draft.copy(exercises = draft.exercises.map {

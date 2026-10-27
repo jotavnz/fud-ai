@@ -96,4 +96,13 @@
     <string name="hs_step_source_title">Steps by source (today)</string>
     <string name="hs_step_source_auto">Most complete (automatic)</string>
     <string name="hs_step_source_note">Your watch and your phone each count steps. Health Connect keeps only one when they overlap, so a day with the watch can look short. Automatic uses the most complete count; pick an app to always use it. If the watch is missing steps, open its app (e.g. Samsung Health) so it syncs.</string>
+    <string name="hs_apps_title">Health apps on this phone</string>
+    <string name="hs_apps_none">No health or watch apps found that work with Health Connect.</string>
+    <string name="hs_apps_open">Open</string>
+    <string name="hs_apps_sharing">Sharing with Health Connect</string>
+    <string name="hs_apps_not_sharing">No data from it in Health Connect in the last 2 weeks</string>
+    <string name="hs_apps_how_samsung">Open Samsung Health → menu (☰) → Settings → Health Connect, turn sync on and allow every data type (steps, sleep, exercise, weight, heart rate). Then open Samsung Health once so it sends its data.</string>
+    <string name="hs_apps_how_generic">Open the app, find Health Connect in its settings and allow it to share every data type.</string>
+    <string name="hs_apps_huawei">Huawei Health does not share with Health Connect. Use the Health Sync app to pass its data along.</string>
+    <string name="hs_apps_note">Watch apps usually share only from the moment you turn Health Connect on, not their whole past. For data older than 30 days, also allow history access below.</string>
 </resources>

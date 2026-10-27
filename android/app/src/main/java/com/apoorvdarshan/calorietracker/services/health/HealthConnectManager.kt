@@ -1151,9 +1151,11 @@ class HealthConnectManager(
          *  v5 = added ActiveCaloriesBurnedRecord write permission (workout burn sync).
          *  v6 = added StepsRecord read permission (daily steps on Home).
          *  v7 = added SleepSessionRecord and HeartRateRecord read (sleep advice, fatigue).
+         *  v8 = ExerciseSessionRecord read is part of the regular access: watch workouts drive
+         *       recovery and overreaching alerts, so asking once beats a hidden optional row.
          *  ExerciseSessionRecord read (imported workouts) is optional and deliberately does
          *  not bump this: Settings offers it on its own row instead of re-prompting everyone. */
-        const val CURRENT_TYPES_VERSION = 7
+        const val CURRENT_TYPES_VERSION = 8
     }
 }
 

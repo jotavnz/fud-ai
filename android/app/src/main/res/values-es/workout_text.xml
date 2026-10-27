@@ -9,7 +9,7 @@
     <string name="workout_text_preview">Analizar</string>
     <string name="workout_text_retry">Reintentar</string>
     <string name="workout_text_review">Revisar entrenamiento</string>
-    <string name="workout_text_date">Fecha (AAAA-MM-DD)</string>
+    <string name="workout_text_date">Fecha</string>
     <string name="workout_text_custom">Actividad cronometrada personalizada · la estimación de calorías usa una tasa de actividad general</string>
     <string name="workout_text_minutes">Minutos</string>
     <string name="workout_text_reps">Repeticiones</string>

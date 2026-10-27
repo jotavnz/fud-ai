@@ -66,6 +66,8 @@ import com.apoorvdarshan.calorietracker.services.health.HealthSyncInspector
 import com.apoorvdarshan.calorietracker.services.health.HealthSyncStatusStore
 import com.apoorvdarshan.calorietracker.services.health.HealthSyncType
 import com.apoorvdarshan.calorietracker.services.health.HealthTypeSnapshot
+import com.apoorvdarshan.calorietracker.services.health.HealthSourceApp
+import com.apoorvdarshan.calorietracker.services.health.HealthSourceApps
 import com.apoorvdarshan.calorietracker.services.health.StepSourceTotals
 import com.apoorvdarshan.calorietracker.services.health.StepSources
 import com.apoorvdarshan.calorietracker.services.health.healthSourceName
@@ -410,6 +412,7 @@ internal fun HealthSyncStatusScreen(container: AppContainer, onDismiss: () -> Un
                         )
                     } else {
                         ConnectionCard(s)
+                        HealthAppsCard(container, inspector, s.granted.orEmpty(), refreshKey = s)
                         PermissionsCard(
                             s, inspector,
                             onGrant = { runCatching { permissionLauncher.launch(requestablePermissions(container)) } },
@@ -743,6 +746,58 @@ private fun StepSourceRow(label: String, steps: String, selected: Boolean, onCli
         RadioButton(selected = selected, onClick = onClick)
         Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         Text(steps, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/**
+ * The health and watch apps on this phone and whether their data reaches Health Connect, with
+ * how to turn sharing on and a button to open each app. Most "my watch does not sync" cases are
+ * an app that never shared, not the import.
+ */
+@Composable
+private fun HealthAppsCard(container: AppContainer, inspector: HealthSyncInspector, granted: Set<String>, refreshKey: Any) {
+    val context = LocalContext.current
+    var apps by remember { mutableStateOf<List<HealthSourceApp>?>(null) }
+    LaunchedEffect(refreshKey) {
+        val origins = runCatching { inspector.recentOrigins(granted) }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrDefault(emptySet())
+        apps = HealthSourceApps.installed(context, origins)
+    }
+    SectionCard(stringResource(R.string.hs_apps_title)) {
+        CardBody {
+            val list = apps
+            when {
+                list == null -> Muted(stringResource(R.string.hs_loading))
+                list.isEmpty() -> Muted(stringResource(R.string.hs_apps_none))
+                else -> list.forEach { app ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(app.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            HealthSourceApps.launchIntent(context, app.packageName)?.let { intent ->
+                                androidx.compose.material3.TextButton(onClick = { runCatching { context.startActivity(intent) } }) {
+                                    Text(stringResource(R.string.hs_apps_open))
+                                }
+                            }
+                        }
+                        when {
+                            app.unsupported -> StatusLine(stringResource(R.string.hs_apps_huawei), "", false)
+                            app.sharing -> StatusLine(stringResource(R.string.hs_apps_sharing), "", true)
+                            else -> {
+                                StatusLine(stringResource(R.string.hs_apps_not_sharing), "", false)
+                                Muted(
+                                    stringResource(
+                                        if (app.packageName == HealthSourceApps.SAMSUNG_HEALTH) R.string.hs_apps_how_samsung
+                                        else R.string.hs_apps_how_generic
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            Muted(stringResource(R.string.hs_apps_note))
+        }
     }
 }
 

@@ -42,6 +42,8 @@
 
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <!-- Huawei Health cannot share with Health Connect; seeing it lets the status screen say so. -->
+        <package android:name="com.huawei.health" />
         <!-- Health Connect clients declare one of these rationale intents; seeing those apps
              lets imported workouts show the recording app's name. -->
         <intent>

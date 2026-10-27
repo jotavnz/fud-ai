@@ -9,7 +9,7 @@
     <string name="workout_text_preview">Analyze</string>
     <string name="workout_text_retry">Retry</string>
     <string name="workout_text_review">Review workout</string>
-    <string name="workout_text_date">Date (YYYY-MM-DD)</string>
+    <string name="workout_text_date">Date</string>
     <string name="workout_text_custom">Custom timed activity · calorie estimate uses a general activity rate</string>
     <string name="workout_text_minutes">Minutes</string>
     <string name="workout_text_reps">Reps</string>

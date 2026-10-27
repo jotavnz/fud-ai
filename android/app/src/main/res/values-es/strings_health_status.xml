@@ -96,4 +96,13 @@
     <string name="hs_step_source_title">Pasos por fuente (hoy)</string>
     <string name="hs_step_source_auto">La más completa (automático)</string>
     <string name="hs_step_source_note">Tu reloj y tu teléfono cuentan pasos por separado. Health Connect se queda con uno solo cuando se cruzan, por eso un día con el reloj puede verse corto. Automático usa el conteo más completo; elige una app para usarla siempre. Si al reloj le faltan pasos, abre su app (p. ej. Samsung Health) para que sincronice.</string>
+    <string name="hs_apps_title">Apps de salud en este teléfono</string>
+    <string name="hs_apps_none">No encontramos apps de salud o de reloj que funcionen con Health Connect.</string>
+    <string name="hs_apps_open">Abrir</string>
+    <string name="hs_apps_sharing">Compartiendo con Health Connect</string>
+    <string name="hs_apps_not_sharing">Sin datos suyos en Health Connect en las últimas 2 semanas</string>
+    <string name="hs_apps_how_samsung">Abre Samsung Health → menú (☰) → Ajustes → Health Connect, activa la sincronización y permite todos los tipos de datos (pasos, sueño, ejercicio, peso, ritmo cardíaco). Luego abre Samsung Health una vez para que envíe sus datos.</string>
+    <string name="hs_apps_how_generic">Abre la app, busca Health Connect en sus ajustes y permite compartir todos los tipos de datos.</string>
+    <string name="hs_apps_huawei">Huawei Salud no comparte con Health Connect. Usa la app Health Sync para pasar sus datos.</string>
+    <string name="hs_apps_note">Las apps de los relojes suelen compartir solo desde que activas Health Connect, no todo su pasado. Para datos de hace más de 30 días, permite también el acceso al historial más abajo.</string>
 </resources>

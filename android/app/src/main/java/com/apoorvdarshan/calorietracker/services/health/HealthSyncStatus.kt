@@ -198,6 +198,7 @@ class HealthSyncInspector(private val context: Context) {
     val activeWrite = HealthPermission.getWritePermission(ActiveCaloriesBurnedRecord::class)
     val totalRead = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
     val stepsRead = HealthPermission.getReadPermission(StepsRecord::class)
+    val sleepRead = HealthPermission.getReadPermission(androidx.health.connect.client.records.SleepSessionRecord::class)
     val historyRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
     val backgroundRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
 
@@ -287,6 +288,35 @@ class HealthSyncInspector(private val context: Context) {
             sources = sources.toList(),
             stepSourcesToday = stepSources
         )
+    }
+
+    /**
+     * Apps that wrote steps, sleep, workouts, weight or active calories in the last [days] days,
+     * among the types the app may read. Shows whether a watch's app is really sharing.
+     */
+    suspend fun recentOrigins(granted: Set<String>, days: Long = 14): Set<String> {
+        val c = client ?: return emptySet()
+        val now = Instant.now()
+        val from = now.minus(Duration.ofDays(days))
+        val origins = mutableSetOf<String>()
+        suspend fun aggregateOrigins(metric: androidx.health.connect.client.aggregate.AggregateMetric<*>) {
+            try {
+                c.aggregate(AggregateRequest(metrics = setOf(metric), timeRangeFilter = TimeRangeFilter.between(from, now)))
+                    .dataOrigins.forEach { origins += it.packageName }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
+        }
+        if (stepsRead in granted) aggregateOrigins(StepsRecord.COUNT_TOTAL)
+        if (activeRead in granted) aggregateOrigins(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)
+        if (sleepRead in granted) {
+            read(androidx.health.connect.client.records.SleepSessionRecord::class, from, now) { it.metadata.dataOrigin.packageName }
+                ?.let { origins += it }
+        }
+        if (exerciseRead in granted) readExercise(from, now)?.let { list -> origins += list.map { it.originPackage } }
+        if (weightRead in granted) readWeights(from, now)?.let { list -> origins += list.map { it.originPackage } }
+        return origins
     }
 
     private suspend fun <T : Record, R> read(type: KClass<T>, from: Instant, to: Instant, map: (T) -> R): List<R>? {

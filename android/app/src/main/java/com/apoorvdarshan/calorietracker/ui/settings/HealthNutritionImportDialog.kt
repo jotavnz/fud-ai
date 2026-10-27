@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.ui.components.CalendarDateField
 import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import com.apoorvdarshan.calorietracker.data.nutritionImportCandidates
 import com.apoorvdarshan.calorietracker.services.health.ExternalNutrition
@@ -95,12 +96,12 @@ internal fun HealthNutritionImportDialog(container: AppContainer, onDismiss: () 
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (!finished) {
                     Text(stringResource(R.string.health_import_description))
-                    OutlinedTextField(fromText, {
+                    CalendarDateField(fromText, {
                         fromText = it; records = null; selectedSource = null; message = null
-                    }, label = { Text(stringResource(R.string.health_import_from)) }, singleLine = true, enabled = !busy)
-                    OutlinedTextField(toText, {
+                    }, label = stringResource(R.string.health_import_from), enabled = !busy)
+                    CalendarDateField(toText, {
                         toText = it; records = null; selectedSource = null; message = null
-                    }, label = { Text(stringResource(R.string.health_import_to)) }, singleLine = true, enabled = !busy)
+                    }, label = stringResource(R.string.health_import_to), enabled = !busy)
                     Text(stringResource(R.string.health_import_history_hint), style = MaterialTheme.typography.bodySmall)
                     TextButton(enabled = !busy && container.health.isAvailable(), onClick = {
                         runCatching { permissionLauncher.launch(container.health.nutritionImportPermissions) }
