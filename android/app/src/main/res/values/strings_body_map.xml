@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Progress › My body: heat map, weekly volume, locked muscles; soreness and ready notices. -->
+<resources>
+    <string name="body_destination">My body</string>
+    <string name="body_mode_recovery">Recovery</string>
+    <string name="body_mode_week">This week</string>
+    <string name="body_info">Recovery shows each muscle right now: red when just worked or locked because you said it is still sore, amber while it recovers, green when ready, grey if you have not trained it this week. This week compares your sets with the 10–20 weekly sets that build muscle (15 = 100%). It comes from your logged sets and your watch\'s workouts, and it is an estimate.</string>
+    <string name="body_tap_hint">Tap a muscle for details</string>
+    <string name="body_week_title">This week</string>
+    <string name="body_week_row">%1$d sets · %2$d%%</string>
+    <string name="body_week_row_long">%1$d sets this week (%2$d%% of the weekly target).</string>
+    <string name="body_week_untrained">Not trained this week: %1$s</string>
+    <string name="body_locked_title">Resting now</string>
+    <string name="body_locked_until">Locked until %1$s because you said it is still sore.</string>
+    <string name="body_soreness_care">Sore and stiff: easy movement, heat and good sleep help most. Ice only for sharp pain or swelling in the first two days. If the pain is strong or does not ease in a few days, see a professional.</string>
+    <string name="body_still_sore">Still sore (+24 h)</string>
+    <string name="body_ask_coach">Ask Coach</string>
+    <string name="body_legend_locked">Resting</string>
+    <string name="body_legend_recovering">Recovering</string>
+    <string name="body_legend_ready">Ready</string>
+    <string name="body_legend_untrained">Not trained</string>
+    <string name="body_legend_low">Little</string>
+    <string name="body_legend_target">On target</string>
+    <string name="body_legend_high">Too much</string>
+
+    <string name="alert_planned_title">Rest your %1$s today</string>
+    <string name="alert_planned_text">You have %1$s planned today, but it is only %2$d%% recovered. Train another group or swap it for something lighter.</string>
+    <string name="alert_ready_title">Ready to train</string>
+    <string name="alert_ready_text">%1$s recovered and can be trained again.</string>
+
+    <string name="cl_soreness">Still sore</string>
+    <string name="cl_soreness_details">Still sore: rest %1$d h more before training it</string>
+</resources>

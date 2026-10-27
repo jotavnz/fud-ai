@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Progreso › Mi cuerpo: mapa de calor, volumen semanal, músculos bloqueados; avisos de dolor y de listo. -->
+<resources>
+    <string name="body_destination">Mi cuerpo</string>
+    <string name="body_mode_recovery">Recuperación</string>
+    <string name="body_mode_week">Esta semana</string>
+    <string name="body_info">Recuperación muestra cada músculo ahora mismo: rojo si se acaba de trabajar o está bloqueado porque dijiste que sigue adolorido, amarillo mientras se recupera, verde cuando está listo y gris si no lo entrenaste esta semana. Esta semana compara tus series con las 10–20 semanales que construyen músculo (15 = 100 %). Sale de las series que registras y de los entrenamientos de tu reloj, y es una estimación.</string>
+    <string name="body_tap_hint">Toca un músculo para ver el detalle</string>
+    <string name="body_week_title">Esta semana</string>
+    <string name="body_week_row">%1$d series · %2$d%%</string>
+    <string name="body_week_row_long">%1$d series esta semana (%2$d%% de la meta semanal).</string>
+    <string name="body_week_untrained">Sin entrenar esta semana: %1$s</string>
+    <string name="body_locked_title">Descansando ahora</string>
+    <string name="body_locked_until">Bloqueado hasta %1$s porque dijiste que sigue adolorido.</string>
+    <string name="body_soreness_care">Si está adolorido o rígido: moverte suave, calor y dormir bien es lo que más ayuda. Hielo solo ante dolor agudo o hinchazón en los primeros dos días. Si el dolor es fuerte o no baja en unos días, consulta a un profesional.</string>
+    <string name="body_still_sore">Sigo adolorido (+24 h)</string>
+    <string name="body_ask_coach">Hablar con el coach</string>
+    <string name="body_legend_locked">Descansando</string>
+    <string name="body_legend_recovering">Recuperando</string>
+    <string name="body_legend_ready">Listo</string>
+    <string name="body_legend_untrained">Sin entrenar</string>
+    <string name="body_legend_low">Poco</string>
+    <string name="body_legend_target">En meta</string>
+    <string name="body_legend_high">Demasiado</string>
+
+    <string name="alert_planned_title">Hoy descansa: %1$s</string>
+    <string name="alert_planned_text">Tienes %1$s planificado hoy, pero solo está %2$d%% recuperado. Entrena otro grupo o cámbialo por algo más ligero.</string>
+    <string name="alert_ready_title">Listo para entrenar</string>
+    <string name="alert_ready_text">%1$s ya se recuperó y lo puedes volver a entrenar.</string>
+
+    <string name="cl_soreness">Sigue adolorido</string>
+    <string name="cl_soreness_details">Sigue adolorido: descansar %1$d h más antes de entrenarlo</string>
+</resources>

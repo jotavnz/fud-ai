@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +40,8 @@ internal enum class ProgressDestination(
     val icon: ImageVector
 ) {
     MY_PROGRESS(R.string.challenge_destination_progress, Icons.AutoMirrored.Filled.ShowChart),
-    WEEKLY_CHALLENGE(R.string.challenge_destination_weekly, Icons.Filled.EmojiEvents)
+    WEEKLY_CHALLENGE(R.string.challenge_destination_weekly, Icons.Filled.EmojiEvents),
+    MY_BODY(R.string.body_destination, Icons.Filled.Accessibility)
 }
 
 /**

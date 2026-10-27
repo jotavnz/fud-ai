@@ -85,6 +85,9 @@ data class CoachLogItem(
     /** Sleep: local bed and wake times, yyyy-MM-ddTHH:mm (the zone is applied when saving). */
     val sleepStart: String? = null,
     val sleepEnd: String? = null,
+    /** Soreness: [MachineMuscleGroup] name and the extra rest asked for. */
+    val sorenessGroup: String? = null,
+    val extraHours: Int? = null,
     val included: Boolean = true,
     val state: State = State.PENDING,
     /** Short reason shown under a failed row. */
@@ -99,7 +102,8 @@ data class CoachLogItem(
         @SerialName("workout") WORKOUT("workout"),
         @SerialName("cardio") CARDIO("cardio"),
         @SerialName("steps") STEPS("steps"),
-        @SerialName("sleep") SLEEP("sleep");
+        @SerialName("sleep") SLEEP("sleep"),
+        @SerialName("soreness") SORENESS("soreness");
 
         companion object {
             fun fromWire(raw: String?): Kind? {
@@ -113,6 +117,7 @@ data class CoachLogItem(
                     "cardio", "activity" -> CARDIO
                     "steps", "step_count", "pasos" -> STEPS
                     "sleep", "nap", "sueño", "sueno", "siesta" -> SLEEP
+                    "soreness", "sore", "doms", "dolor", "agujetas" -> SORENESS
                     else -> null
                 }
             }

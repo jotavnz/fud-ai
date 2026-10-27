@@ -2,6 +2,7 @@ package com.apoorvdarshan.calorietracker.services.ai
 
 import com.apoorvdarshan.calorietracker.models.ManualStepEntry
 import com.apoorvdarshan.calorietracker.models.SleepEntry
+import com.apoorvdarshan.calorietracker.models.SorenessReport
 import java.time.LocalDateTime
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.CoachLogItem
@@ -146,6 +147,15 @@ class CoachLogService(
                 val end = LocalDateTime.parse(item.sleepEnd ?: error(ERROR_SAVE)).atZone(ports.zone()).toInstant()
                 ports.addSleep(SleepEntry(id = item.id, start = start, end = end))
             }
+            CoachLogItem.Kind.SORENESS -> ports.addSoreness(
+                SorenessReport(
+                    id = item.id,
+                    group = item.sorenessGroup ?: error(ERROR_SAVE),
+                    reportedAt = ports.now(),
+                    extraHours = item.extraHours ?: com.apoorvdarshan.calorietracker.models.Soreness.DEFAULT_EXTRA_HOURS,
+                    note = item.description.ifBlank { null }
+                )
+            )
         }
         return WriteResult.OK
     }

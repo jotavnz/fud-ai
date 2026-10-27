@@ -227,6 +227,8 @@ interface VoiceAppPorts {
         error("Manual steps are not supported here.")
     suspend fun addSleep(entry: com.apoorvdarshan.calorietracker.models.SleepEntry): Unit =
         error("Sleep logging is not supported here.")
+    suspend fun addSoreness(report: com.apoorvdarshan.calorietracker.models.SorenessReport): Unit =
+        error("Soreness reports are not supported here.")
 
     // Settings
     suspend fun settings(provider: LiveProvider): VoiceSettingsSnapshot

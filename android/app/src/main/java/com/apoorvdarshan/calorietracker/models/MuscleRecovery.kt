@@ -30,7 +30,9 @@ data class MuscleReadiness(
     val readyInHours: Int,
     /** Effective sets in the last seven days (primary 1, secondary 0.5, leg cardio included). */
     val weeklySets: Int,
-    val lastWorked: Instant?
+    val lastWorked: Instant?,
+    /** Set while the user said the group is still sore: locked until then. */
+    val lockedUntil: Instant? = null
 ) {
     val ready: Boolean get() = readyInHours == 0
 }
@@ -114,6 +116,9 @@ object MuscleRecovery {
     /** Lines for Coach's prompt. Model input, so it is not localized. */
     fun promptLines(readiness: List<MuscleReadiness>): List<String> = buildList {
         val tired = readiness.filter { !it.ready }.sortedBy { it.percent }
+        readiness.filter { it.lockedUntil != null }.forEach {
+            add("- ${it.group.name.lowercase()} is locked by the user (still sore) until ${it.lockedUntil}")
+        }
         add("## Muscle recovery (estimated from the diary and watch cardio)")
         if (tired.isEmpty()) {
             add("- Every muscle group is recovered.")

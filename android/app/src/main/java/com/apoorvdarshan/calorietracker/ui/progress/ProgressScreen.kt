@@ -213,6 +213,7 @@ fun ProgressScreen(container: AppContainer) {
                 when (destination) {
                     ProgressDestination.MY_PROGRESS -> MyProgressContent(container)
                     ProgressDestination.WEEKLY_CHALLENGE -> WeeklyChallengeScreen(container)
+                    ProgressDestination.MY_BODY -> BodyMapScreen(container)
                 }
             }
         }

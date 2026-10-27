@@ -6,6 +6,7 @@ import com.apoorvdarshan.calorietracker.models.CoachLogMacros
 import com.apoorvdarshan.calorietracker.models.CoachLogProposal
 import com.apoorvdarshan.calorietracker.models.MealSchedule
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.models.Soreness
 import com.apoorvdarshan.calorietracker.services.voice.VoiceArguments
 import com.google.gson.GsonBuilder
 import kotlinx.serialization.json.Json
@@ -41,7 +42,8 @@ object CoachLogTool {
         "Use it whenever the user asks you to log, record, add, track or save something (\"regístralo\", \"anótalo\", \"log this\"), " +
         "or clearly reports a meal and wants it in the diary. Steps they walked that the phone or watch did not count go in a steps item " +
         "(a walk with minutes and steps: a cardio item plus a steps item); sleep (bed and wake time, or hours) goes in a sleep item. " +
-        "Never say you cannot update steps or sleep. Put every item in ONE call: one food item per distinct dish or drink " +
+        "When they say a muscle is still sore or not recovered (\"sigo muerto de los bíceps\"), add a soreness item so the app keeps it locked longer. " +
+        "Never say you cannot update steps, sleep or soreness. Put every item in ONE call: one food item per distinct dish or drink " +
         "(keep quantities in description, e.g. \"2 ham and cheese sandwiches\"), with meal = breakfast, lunch, dinner or snack when the user says it. " +
         "Plain water goes in a water item, never as food; other drinks (mate, coffee, juice) are food items. " +
         "This does NOT save anything: the app re-estimates foods with its food analyzer and shows the user a card with Log, Edit and Cancel; " +
@@ -58,7 +60,7 @@ object CoachLogTool {
         val item = linkedMapOf(
             "type" to "object",
             "properties" to linkedMapOf(
-                "type" to prop("string", "One of: food, water, weight, body_fat, workout, cardio, steps, sleep"),
+                "type" to prop("string", "One of: food, water, weight, body_fat, workout, cardio, steps, sleep, soreness"),
                 "description" to prop("string", "food/workout: what the user said with quantities, e.g. \"2 ham and cheese sandwiches\" or \"3x10 bench press 60 kg\""),
                 "name" to prop("string", "Short display name in the user's language, e.g. \"Sándwich de jamón y queso\" or \"Caminata\" (cardio activity)"),
                 "serving" to prop("string", "food: portion, e.g. \"2 sandwiches\" or \"1.5 L\""),
@@ -77,7 +79,9 @@ object CoachLogTool {
                 "steps" to prop("number", "steps: how many steps to add to that day (a walk the phone or watch missed)"),
                 "bed_time" to prop("string", "sleep: when they went to bed, HH:mm"),
                 "wake_time" to prop("string", "sleep: when they woke up, HH:mm; date is the morning they woke up"),
-                "hours" to prop("number", "sleep: hours slept, when they did not give the times")
+                "hours" to prop("number", "sleep: hours slept, when they did not give the times"),
+                "muscle" to prop("string", "soreness: chest, back, shoulders, biceps, triceps, legs, hamstrings, glutes, calves or abs"),
+                "extra_hours" to prop("number", "soreness: extra rest before training it again, 6–96 (default 24; 48 when they are very sore)")
             ),
             "required" to listOf("type")
         )
@@ -128,7 +132,7 @@ object CoachLogTool {
 
     private fun parseItem(map: Map<String, Any?>, today: LocalDate): CoachLogItem {
         val kind = CoachLogItem.Kind.fromWire(text(map["type"]))
-            ?: throw IllegalArgumentException("type must be food, water, weight, body_fat, workout, cardio, steps or sleep.")
+            ?: throw IllegalArgumentException("type must be food, water, weight, body_fat, workout, cardio, steps, sleep or soreness.")
         val date = date(map["date"], today)
         val time = text(map["time"]).takeIf { it.isNotEmpty() }?.let {
             VoiceArguments.parseTime(it)?.let(VoiceArguments::formatTime)
@@ -206,6 +210,12 @@ object CoachLogTool {
             CoachLogItem.Kind.SLEEP -> {
                 val (start, end) = sleepWindow(map, date)
                 base.copy(sleepStart = start.toString(), sleepEnd = end.toString())
+            }
+            CoachLogItem.Kind.SORENESS -> {
+                val group = Soreness.groupFromName(text(map["muscle"]).ifEmpty { name })
+                    ?: throw IllegalArgumentException("soreness needs muscle: chest, back, shoulders, biceps, triceps, legs, hamstrings, glutes, calves or abs.")
+                val hours = number(map["extra_hours"])?.let { Math.round(it).toInt() } ?: Soreness.DEFAULT_EXTRA_HOURS
+                base.copy(sorenessGroup = group.name, extraHours = hours.coerceIn(Soreness.MIN_EXTRA_HOURS, Soreness.MAX_EXTRA_HOURS))
             }
         }
     }

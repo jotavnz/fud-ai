@@ -15,6 +15,7 @@ import com.apoorvdarshan.calorietracker.models.AddMenuConfig
 import com.apoorvdarshan.calorietracker.models.CoachGoalPlan
 import com.apoorvdarshan.calorietracker.models.ManualStepEntry
 import com.apoorvdarshan.calorietracker.models.SleepEntry
+import com.apoorvdarshan.calorietracker.models.SorenessReport
 import com.apoorvdarshan.calorietracker.models.ImportedHealthWorkout
 import com.apoorvdarshan.calorietracker.models.TabBarSettings
 import com.apoorvdarshan.calorietracker.models.AIProvider
@@ -430,6 +431,19 @@ class PreferencesStore(
     /** Sleep advice on Home and in Coach (hours and bedtime for tonight). On by default. */
     val sleepAdviceEnabled: Flow<Boolean> = ds.data.map { it[Keys.SLEEP_ADVICE_ENABLED] ?: true }
     suspend fun setSleepAdviceEnabled(v: Boolean) { ds.edit { it[Keys.SLEEP_ADVICE_ENABLED] = v } }
+
+    /** "Still sore" reports that keep a muscle group locked a while longer. */
+    val sorenessReports: Flow<List<SorenessReport>> = ds.data.map { prefs ->
+        prefs[Keys.SORENESS_REPORTS]?.let { runCatching { json.decodeFromString<List<SorenessReport>>(it) }.getOrNull() }.orEmpty()
+    }
+    suspend fun addSorenessReport(report: SorenessReport) {
+        ds.edit { prefs ->
+            val current = prefs[Keys.SORENESS_REPORTS]?.let { runCatching { json.decodeFromString<List<SorenessReport>>(it) }.getOrNull() }.orEmpty()
+            if (current.none { it.id == report.id }) {
+                prefs[Keys.SORENESS_REPORTS] = json.encodeToString(ListSerializer(SorenessReport.serializer()), (current + report).takeLast(200))
+            }
+        }
+    }
 
     /** Notifications when the user may be overreaching. On by default. */
     val overexertionAlertsEnabled: Flow<Boolean> = ds.data.map { it[Keys.OVEREXERTION_ALERTS_ENABLED] ?: true }
@@ -1702,6 +1716,7 @@ class PreferencesStore(
         val SLEEP_ADVICE_ENABLED = booleanPreferencesKey("sleepAdviceEnabled")
         val OVEREXERTION_ALERTS_ENABLED = booleanPreferencesKey("overexertionAlertsEnabled")
         val OVEREXERTION_ALERTED_KEYS = stringSetPreferencesKey("overexertionAlertedKeys")
+        val SORENESS_REPORTS = stringPreferencesKey("sorenessReports")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")

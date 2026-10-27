@@ -315,6 +315,10 @@ private fun itemTitle(item: CoachLogItem): String = when (item.kind) {
     CoachLogItem.Kind.WORKOUT -> item.name.ifBlank { stringResource(R.string.cl_workout) }
     CoachLogItem.Kind.STEPS -> stringResource(R.string.cl_steps)
     CoachLogItem.Kind.SLEEP -> stringResource(R.string.cl_sleep)
+    CoachLogItem.Kind.SORENESS -> item.sorenessGroup
+        ?.let { runCatching { com.apoorvdarshan.calorietracker.models.MachineMuscleGroup.valueOf(it) }.getOrNull() }
+        ?.let { stringResource(it.titleRes) }
+        ?: stringResource(R.string.cl_soreness)
 }
 
 @Composable
@@ -387,6 +391,7 @@ private fun itemDetails(item: CoachLogItem, today: LocalDate, weightMetric: Bool
             }
             lines += date
         }
+        CoachLogItem.Kind.SORENESS -> lines += stringResource(R.string.cl_soreness_details, item.extraHours ?: 24)
     }
     return lines
 }

@@ -296,6 +296,9 @@ class AndroidVoiceAppPorts(
     override suspend fun addSleep(entry: com.apoorvdarshan.calorietracker.models.SleepEntry) =
         prefs.addSleepEntry(entry)
 
+    override suspend fun addSoreness(report: com.apoorvdarshan.calorietracker.models.SorenessReport) =
+        prefs.addSorenessReport(report)
+
     override suspend fun logCardio(activity: String, minutes: Int, calories: Int?, date: LocalDate): WorkoutWrite {
         val library = library()
         val unit = workoutUnit()

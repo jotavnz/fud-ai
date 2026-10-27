@@ -16,6 +16,9 @@ import com.apoorvdarshan.calorietracker.models.MuscleRecovery
 import com.apoorvdarshan.calorietracker.models.OverexertionAlert
 import com.apoorvdarshan.calorietracker.models.OverexertionMonitor
 import com.apoorvdarshan.calorietracker.models.asCardioBout
+import com.apoorvdarshan.calorietracker.models.MachineMuscleGroup
+import com.apoorvdarshan.calorietracker.models.Soreness
+import com.apoorvdarshan.calorietracker.models.SorenessReport
 import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.LocalDate
@@ -31,10 +34,16 @@ class TrainingLoadService(private val container: AppContainer) {
     private suspend fun cardio(): List<CardioBout> =
         container.importedHealthWorkoutRepository.workouts.first().map { it.asCardioBout() }
 
+    /** Every group's recovery, with the user's "still sore" reports applied. */
     suspend fun readiness(now: Instant = Instant.now()): List<MuscleReadiness> {
         val zone = ZoneId.systemDefault()
         val bouts = MuscleRecovery.bouts(container.workoutRepository.snapshot(), cardio(), now, zone)
-        return MuscleRecovery.readiness(bouts, now)
+        return Soreness.apply(MuscleRecovery.readiness(bouts, now), container.prefs.sorenessReports.first(), now)
+    }
+
+    /** Records that [group] is still sore, keeping it locked [extraHours] more. */
+    suspend fun reportSoreness(group: MachineMuscleGroup, extraHours: Int = Soreness.DEFAULT_EXTRA_HOURS) {
+        container.prefs.addSorenessReport(SorenessReport(group = group.name, reportedAt = Instant.now(), extraHours = extraHours))
     }
 
     /** Sends each new overreaching alert once; returns how many were sent. */
@@ -50,16 +59,25 @@ class TrainingLoadService(private val container: AppContainer) {
         val minutesToday = state.completedSessions.filter { it.diaryDateKey == today.toString() }.sumOf { it.durationMinutes } +
             imported.filter { it.diaryDateKey == today.toString() }.sumOf { it.durationMinutes }
         val sent = prefs.overexertionAlertedKeys.first()
-        val fresh = OverexertionMonitor.check(state, imported.map { it.asCardioBout() }, minutesToday, now, zone)
+        val soreness = prefs.sorenessReports.first()
+        val all = OverexertionMonitor.check(state, imported.map { it.asCardioBout() }, minutesToday, now, zone, soreness)
             .filter { it.key !in sent }
-            .take(MAX_PER_CHECK)
+        // Several groups getting ready at once make one "ready to train" notice.
+        val ready = all.filterIsInstance<OverexertionAlert.ReadyAgain>()
+        val fresh = (all - ready.toSet()).take(MAX_PER_CHECK)
         fresh.forEachIndexed { index, alert ->
             val (title, text) = message(alert)
             container.notifications.showTrainingAlert(index, title, text)
         }
+        if (ready.isNotEmpty()) {
+            val ctx = container.appContext
+            val names = ready.joinToString(", ") { ctx.getString(it.group.titleRes) }
+            container.notifications.showTrainingAlert(MAX_PER_CHECK, ctx.getString(R.string.alert_ready_title), ctx.getString(R.string.alert_ready_text, names))
+        }
         // Remember even what was not shown this time, so the same alert never piles up later.
-        if (fresh.isNotEmpty()) prefs.addOverexertionAlertedKeys(fresh.map { it.key })
-        return fresh.size
+        val shown = fresh + ready
+        if (shown.isNotEmpty()) prefs.addOverexertionAlertedKeys(shown.map { it.key })
+        return shown.size
     }
 
     private fun message(alert: OverexertionAlert): Pair<String, String> {
@@ -79,6 +97,14 @@ class TrainingLoadService(private val container: AppContainer) {
             }
             is OverexertionAlert.NoRestDay ->
                 ctx.getString(R.string.alert_no_rest_title) to ctx.getString(R.string.alert_no_rest_text)
+            is OverexertionAlert.PlannedOnTired -> {
+                val group = ctx.getString(alert.group.titleRes)
+                ctx.getString(R.string.alert_planned_title, group) to ctx.getString(R.string.alert_planned_text, group, alert.percent)
+            }
+            is OverexertionAlert.ReadyAgain -> {
+                val group = ctx.getString(alert.group.titleRes)
+                ctx.getString(R.string.alert_ready_title) to ctx.getString(R.string.alert_ready_text, group)
+            }
         }
     }
 

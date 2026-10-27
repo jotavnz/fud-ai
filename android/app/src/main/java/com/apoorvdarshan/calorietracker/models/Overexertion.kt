@@ -28,6 +28,16 @@ sealed interface OverexertionAlert {
     data class NoRestDay(val day: String) : OverexertionAlert {
         override val key: String get() = "no_rest_$day"
     }
+
+    /** Today's plan has exercises for a group that is still recovering: remember to rest it. */
+    data class PlannedOnTired(val group: MachineMuscleGroup, val percent: Int, val day: String) : OverexertionAlert {
+        override val key: String get() = "planned_${group.name}_$day"
+    }
+
+    /** A group worked hard (or reported sore) has recovered: ready to train again. */
+    data class ReadyAgain(val group: MachineMuscleGroup, val lastWorked: Instant) : OverexertionAlert {
+        override val key: String get() = "ready_${group.name}_${lastWorked.epochSecond}"
+    }
 }
 
 /**
@@ -44,6 +54,8 @@ object OverexertionMonitor {
     private const val MIN_SETS_PER_HOUR = 4.0
     private const val LONG_DAY_MINUTES = 150
     private const val OVERUSE_SETS = 25
+    /** Only groups trained this much this week get a "ready again" notice. */
+    private const val READY_NOTICE_SETS = 6
     /** Only cardio that started recently is news. */
     private val RECENT = Duration.ofHours(6)
 
@@ -53,7 +65,8 @@ object OverexertionMonitor {
         /** Minutes of all exercise today: app sessions plus every imported workout. */
         exerciseMinutesToday: Int,
         now: Instant,
-        zone: ZoneId
+        zone: ZoneId,
+        soreness: List<SorenessReport> = emptyList()
     ): List<OverexertionAlert> {
         val today = now.atZone(zone).toLocalDate()
         val alerts = mutableListOf<OverexertionAlert>()
@@ -74,9 +87,24 @@ object OverexertionMonitor {
         if (exerciseMinutesToday >= LONG_DAY_MINUTES) alerts += OverexertionAlert.LongDay(exerciseMinutesToday, today.toString())
 
         val week = "${today.get(IsoFields.WEEK_BASED_YEAR)}-${today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR)}"
-        MuscleRecovery.readiness(MuscleRecovery.bouts(state, cardio, now, zone), now)
-            .filter { it.weeklySets > OVERUSE_SETS }
+        val current = Soreness.apply(MuscleRecovery.readiness(MuscleRecovery.bouts(state, cardio, now, zone), now), soreness, now)
+        current.filter { it.weeklySets > OVERUSE_SETS }
             .forEach { alerts += OverexertionAlert.WeeklyOveruse(it.group, it.weeklySets, week) }
+
+        // Planned for today but not done yet, on a group under half recovered.
+        val planned = state.dayPlans[WorkoutDate.key(today)]?.exercises.orEmpty()
+            .filter { !it.isCardio && WorkoutVolume.performedSets(it).isEmpty() }
+            .flatMap { it.primaryMuscles.mapNotNull(TrainingInsights::groupOf) }
+            .toSet()
+        current.filter { it.group in planned && it.percent < TIRED_PERCENT }
+            .forEach { alerts += OverexertionAlert.PlannedOnTired(it.group, it.percent, today.toString()) }
+
+        // Recovered again after real work in the last four days (or after a soreness report).
+        val recentlySore = soreness.filter { Duration.between(it.reportedAt, now).toDays() < 5 }.mapNotNull { it.muscleGroup }.toSet()
+        current.filter { r ->
+            val last = r.lastWorked ?: return@filter false
+            r.ready && Duration.between(last, now).toDays() < 4 && (r.weeklySets >= READY_NOTICE_SETS || r.group in recentlySore)
+        }.forEach { alerts += OverexertionAlert.ReadyAgain(it.group, it.lastWorked!!) }
 
         if (MuscleRecovery.activeDays(state, cardio, today, zone) >= 7) alerts += OverexertionAlert.NoRestDay(today.toString())
         return alerts
