@@ -1,7 +1,48 @@
 # Retomar el proyecto en otra PC
 
-Pausado el 2026-10-26. Todo está en GitHub: **jotavnz/fud-ai**, rama **`feature/entrenador-ia-es`**.
-Lee también `PLAN_ENTRENADOR_IA.md` (plan por fases y pendientes).
+Última actualización: 2026-10-27 (PC de casa). Todo está en GitHub: **jotavnz/fud-ai**, rama **`feature/entrenador-ia-es`**
+(último commit `cb231dd`, importador de Samsung Health). Lee también `PLAN_ENTRENADOR_IA.md` (plan por fases y pendientes).
+
+## 0. Mañana en la oficina (2026-10-28): arranque rápido
+
+**Antes, desde la PC de casa:** copia `C:\Users\Job\.android\debug.keystore` a la oficina, **en la misma ruta**
+(`C:\Users\<tu usuario>\.android\debug.keystore`, reemplazando el que haya). Sin eso, las APK de la oficina
+salen con otra firma y no se instalan encima de la beta: habría que desinstalar y se pierden los datos del
+teléfono. Pásalo por un lugar privado (USB, tu Drive personal), nunca por la carpeta de los amigos ni por Git.
+
+**En la PC de la oficina:**
+1. Si ya está el clon del 26-oct, actualízalo (guarda o descarta antes cualquier cambio local con `git status`):
+   ```bash
+   git fetch origin
+   git switch feature/entrenador-ia-es
+   git pull
+   ```
+   Si no está, sigue la sección 1 (clonar fuera de OneDrive).
+2. Comprueba JDK 17 y Android SDK (sección 2) y que `android/local.properties` apunte al SDK de esa PC.
+3. Compila y prueba (PowerShell, dentro de `android/`):
+   ```
+   .\gradlew.bat testDebugUnitTest -PworkoutVectors=none
+   .\gradlew.bat assembleDebug -PworkoutVectors=none
+   ```
+   Pasan todas salvo 3 que fallan solo en Windows: `ConsistentDataStoreTest.reReadsAfterAWriteDoNotReEmitEqualValues`,
+   `StorageMaintenanceTest.compressionOnly…` y `FoodImageStoreRestoreTest.stagingRefusesANameThatIsASymbolicLink…`.
+4. Con el teléfono por cable: `adb install --no-streaming -r --user 0 app\build\outputs\apk\debug\app-debug.apk`
+   (sección 3). Si dice `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, el keystore no es el de casa: no desinstales, copia el keystore.
+5. Abre Claude Code en la carpeta del repo y escribe:
+   > Lee RETOMAR_EN_OTRA_PC.md y PLAN_ENTRENADOR_IA.md y continúa desde la sección 0. Quiero hacer estos cambios: …
+
+**Pendiente del usuario (no es código):**
+- Teléfono: Samsung Health → Ajustes → Health Connect → activar sincronización con **todos** los tipos.
+  Luego en la app: Ajustes → Health Connect → estado → "Apps de salud en este teléfono" debe mostrar
+  Samsung Health "Compartiendo". Por cable: `adb shell dumpsys healthconnect` → "Contributed Data: true".
+- App: Ajustes → Health Connect → "Importar desde Samsung Health" (carpeta de la descarga de datos personales)
+  para traer los 6 meses anteriores. Probado con la descarga real: 132 días de pasos, 148 noches,
+  208 entrenamientos, 8 pesajes.
+- Drive "EntrenarIA": subir `EntrenadorIA-beta-2026-10-27d.apk` (carpeta `APK` junto al repo en la PC de casa)
+  y marcar `EntrenadorIA-debug.apk` (26-oct, oficina, otra firma) como antigua.
+
+**Ideas siguientes (ver `PLAN_ENTRENADOR_IA.md`):** probar en el teléfono todo lo de la tanda del 27; renombrar a
+trAIng / trAIngCoach con logo (todavía no aplicar); escáner de máquinas.
 
 ## 1. Descargar el código
 
@@ -91,30 +132,26 @@ la otra PC (misma ruta) para que las próximas versiones se instalen encima sin 
 En esta PC: JDK 17 y Android SDK en `C:\Users\Job\dev` (`local.properties` apunta ahí). El repo está en
 `C:\Users\Job\Documents\Proyectos OnGoing\Entrenador IA\fud-ai`.
 
-## 5. Próximos pasos para cerrar esta tanda
+## 5. Cómo se sincroniza el reloj (desde el 27-oct)
 
-1. `.\gradlew.bat compileDebugKotlin` y arreglar errores (empezar por `HealthSyncStatusScreen.kt:689`).
-2. Pruebas: `.\gradlew.bat testDebugUnitTest -PworkoutVectors=none`
-   (2 pruebas fallan solo en Windows y no tienen que ver: `ConsistentDataStoreTest.reReadsAfterAWriteDoNotReEmitEqualValues`, `StorageMaintenanceTest.compressionOnly…`).
-3. Revisar que cada texto nuevo exista en `res/values` y `res/values-es`.
-4. `assembleDebug`, instalar y probar en el teléfono:
-   - Coach: escribir lo que comiste → tarjeta de confirmación → aparece en Inicio. Copiar mensaje. "Enviar a registro de comida".
-   - Ajustes → Health Connect → pantalla de estado; "Importar historial".
-   - Training → un músculo → "Cambiar esta", "Ver anterior", "Otras 3 opciones".
-   - Progreso → tarjeta bloqueada "Vuelve en…"; Ajustes → "Verlo antes del año" la desbloquea.
-5. Commit y push a `feature/entrenador-ia-es`.
+- **Hacia adelante es automático** una vez que Samsung Health comparte con Health Connect: pasos y sueño se leen
+  al abrir Inicio, cada 5 min con Inicio abierto y al deslizar hacia abajo; entrenamientos, peso y grasa al abrir
+  la app y cada 2 h (`TrainingAlertsWorker`).
+- **Hacia atrás** (o si Samsung no comparte): importador de la descarga de datos personales
+  (`services/samsung/SamsungHealthExport.kt` + `SamsungHealthImporter.kt`).
+- La integración directa con el SDK de Samsung Health necesita aprobación de socio de Samsung: descartada por ahora.
 
 ## 6. Reloj Samsung (Galaxy Watch) → nuestra app
 
 1. En el teléfono: **Samsung Health → menú (☰) → Ajustes → Health Connect** → permitir que Samsung Health escriba los datos (pasos, entrenamientos, ritmo cardíaco, sueño, peso…). Tener activada la sincronización de Samsung Health con la cuenta Samsung.
 2. En nuestra app: **Ajustes → Health Connect** → activar y conceder permisos de lectura.
-3. Abrir la pantalla de estado de Health (cuando esté terminada) para ver que llegan datos "de Samsung Health" e importar el historial.
+3. Abrir Ajustes → Health Connect → estado para ver que llegan datos "de Samsung Health" e importar el historial.
 Para Xiaomi (Mi Fitness), Amazfit (Zepp) y Cubitt: activar Health Connect dentro de la app de cada reloj. Huawei no comparte con Health Connect (requiere la app Health Sync).
 
 ## 7. Seguir con Claude Code en la otra PC
 
-Abre la carpeta `C:\EntrenadorIA\fud-ai` en Claude Code y escribe:
+Abre la carpeta del repo en Claude Code y escribe:
 
-> Lee RETOMAR_EN_OTRA_PC.md y PLAN_ENTRENADOR_IA.md y continúa desde la sección 5.
+> Lee RETOMAR_EN_OTRA_PC.md y PLAN_ENTRENADOR_IA.md y continúa desde la sección 0.
 
 Notas: la clave de Gemini que se compartió en un chat debe rotarse; nunca subir claves a Git (`local.properties` y `keystore.properties` están ignorados).
