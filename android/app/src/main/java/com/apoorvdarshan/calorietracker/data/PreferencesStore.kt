@@ -432,6 +432,49 @@ class PreferencesStore(
     val sleepAdviceEnabled: Flow<Boolean> = ds.data.map { it[Keys.SLEEP_ADVICE_ENABLED] ?: true }
     suspend fun setSleepAdviceEnabled(v: Boolean) { ds.edit { it[Keys.SLEEP_ADVICE_ENABLED] = v } }
 
+    /** Daily step totals from a Samsung Health download, yyyy-MM-dd to steps. */
+    val samsungDailySteps: Flow<Map<String, Int>> = ds.data.map { prefs ->
+        prefs[Keys.SAMSUNG_DAILY_STEPS]?.let { runCatching { json.decodeFromString<Map<String, Int>>(it) }.getOrNull() }.orEmpty()
+    }
+    /** Adds days from a download; a day already held keeps the larger count. */
+    suspend fun mergeSamsungDailySteps(days: Map<java.time.LocalDate, Int>) {
+        if (days.isEmpty()) return
+        ds.edit { prefs ->
+            val current = prefs[Keys.SAMSUNG_DAILY_STEPS]?.let { runCatching { json.decodeFromString<Map<String, Int>>(it) }.getOrNull() }.orEmpty()
+            val merged = current.toMutableMap()
+            days.forEach { (day, steps) -> merged[day.toString()] = maxOf(merged[day.toString()] ?: 0, steps) }
+            prefs[Keys.SAMSUNG_DAILY_STEPS] = json.encodeToString(
+                kotlinx.serialization.builtins.MapSerializer(String.serializer(), Int.serializer()), merged
+            )
+        }
+    }
+
+    /** Sleep imported from a Samsung Health download (Health Connect sleep is read live). */
+    val importedSleep: Flow<List<SleepEntry>> = ds.data.map { prefs ->
+        prefs[Keys.IMPORTED_SLEEP]?.let { runCatching { json.decodeFromString<List<SleepEntry>>(it) }.getOrNull() }.orEmpty()
+    }
+    suspend fun addImportedSleep(entries: List<SleepEntry>) {
+        if (entries.isEmpty()) return
+        ds.edit { prefs ->
+            val current = prefs[Keys.IMPORTED_SLEEP]?.let { runCatching { json.decodeFromString<List<SleepEntry>>(it) }.getOrNull() }.orEmpty()
+            val merged = (current + entries).distinctBy { it.id }.sortedBy { it.start }
+            prefs[Keys.IMPORTED_SLEEP] = json.encodeToString(ListSerializer(SleepEntry.serializer()), merged)
+        }
+    }
+
+    /** Workouts imported from a Samsung Health download. */
+    val samsungWorkouts: Flow<List<ImportedHealthWorkout>> = ds.data.map { prefs ->
+        prefs[Keys.SAMSUNG_WORKOUTS]?.let { runCatching { json.decodeFromString<List<ImportedHealthWorkout>>(it) }.getOrNull() }.orEmpty()
+    }
+    suspend fun addSamsungWorkouts(workouts: List<ImportedHealthWorkout>) {
+        if (workouts.isEmpty()) return
+        ds.edit { prefs ->
+            val current = prefs[Keys.SAMSUNG_WORKOUTS]?.let { runCatching { json.decodeFromString<List<ImportedHealthWorkout>>(it) }.getOrNull() }.orEmpty()
+            val merged = (current + workouts).distinctBy { it.id }.sortedBy { it.startedAt }
+            prefs[Keys.SAMSUNG_WORKOUTS] = json.encodeToString(ListSerializer(ImportedHealthWorkout.serializer()), merged)
+        }
+    }
+
     /** Clock format for times shown and picked in the app: "system", "12" or "24". */
     val timeFormat: Flow<String> = ds.data.map { it[Keys.TIME_FORMAT] ?: "system" }
     suspend fun setTimeFormat(v: String) { ds.edit { it[Keys.TIME_FORMAT] = v } }
@@ -1722,6 +1765,9 @@ class PreferencesStore(
         val OVEREXERTION_ALERTED_KEYS = stringSetPreferencesKey("overexertionAlertedKeys")
         val SORENESS_REPORTS = stringPreferencesKey("sorenessReports")
         val TIME_FORMAT = stringPreferencesKey("timeFormat")
+        val SAMSUNG_DAILY_STEPS = stringPreferencesKey("samsungDailySteps")
+        val IMPORTED_SLEEP = stringPreferencesKey("importedSleep")
+        val SAMSUNG_WORKOUTS = stringPreferencesKey("samsungWorkouts")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")

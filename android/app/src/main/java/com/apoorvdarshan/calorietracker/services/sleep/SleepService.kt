@@ -19,14 +19,15 @@ class SleepService(private val container: AppContainer) {
         if (container.prefs.sleepAdviceEnabled.first()) advice() else null
 
     /** Nights of the last [days] days, newest first, from every source (one per morning). */
-    suspend fun history(days: Long = 30): List<SleepNight> {
+    suspend fun history(days: Long = 183): List<SleepNight> {
         val zone = ZoneId.systemDefault()
         val from = LocalDate.now().minusDays(days).atStartOfDay(zone).toInstant()
         val measured = if (container.prefs.healthConnectEnabled.first()) {
             container.health.readSleepSessions(from, Instant.now()).orEmpty()
         } else emptyList()
         val manual = container.prefs.sleepEntries.first().filter { it.end.isAfter(from) }
-        return SleepAdvisor.nights(measured + manual, zone).sortedByDescending { it.wakeDate }
+        val imported = container.prefs.importedSleep.first().filter { it.end.isAfter(from) }
+        return SleepAdvisor.nights(measured + imported + manual, zone).sortedByDescending { it.wakeDate }
     }
 
     /** The user's age-based nightly need, for the history bars. */
@@ -40,7 +41,8 @@ class SleepService(private val container: AppContainer) {
             container.health.readSleepSessions(from, now).orEmpty()
         } else emptyList()
         val manual = container.prefs.sleepEntries.first().filter { it.end.isAfter(from) }
-        val nights = SleepAdvisor.nights(measured + manual, zone)
+        val imported = container.prefs.importedSleep.first().filter { it.end.isAfter(from) }
+        val nights = SleepAdvisor.nights(measured + imported + manual, zone)
 
         val todayKey = today.toString()
         val sets = container.workoutRepository.completedSessions.first()

@@ -31,8 +31,16 @@ import java.util.concurrent.TimeUnit
  */
 class TrainingLoadService(private val container: AppContainer) {
 
-    private suspend fun cardio(): List<CardioBout> =
-        container.importedHealthWorkoutRepository.workouts.first().map { it.asCardioBout() }
+    /** Watch workouts from Health Connect plus a Samsung Health download, each session once. */
+    private suspend fun cardio(): List<CardioBout> = allWorkouts().map { it.asCardioBout() }
+
+    private suspend fun allWorkouts(): List<com.apoorvdarshan.calorietracker.models.ImportedHealthWorkout> {
+        val live = container.importedHealthWorkoutRepository.workouts.first()
+        val downloaded = container.prefs.samsungWorkouts.first().filter { saved ->
+            live.none { kotlin.math.abs(it.startedAt.epochSecond - saved.startedAt.epochSecond) < 180 }
+        }
+        return live + downloaded
+    }
 
     /** Every group's recovery, with the user's "still sore" reports applied. */
     suspend fun readiness(now: Instant = Instant.now()): List<MuscleReadiness> {
@@ -55,7 +63,7 @@ class TrainingLoadService(private val container: AppContainer) {
         val now = Instant.now()
         val today = LocalDate.now(zone)
         val state = container.workoutRepository.snapshot()
-        val imported = container.importedHealthWorkoutRepository.workouts.first()
+        val imported = allWorkouts()
         val minutesToday = state.completedSessions.filter { it.diaryDateKey == today.toString() }.sumOf { it.durationMinutes } +
             imported.filter { it.diaryDateKey == today.toString() }.sumOf { it.durationMinutes }
         val sent = prefs.overexertionAlertedKeys.first()

@@ -13,7 +13,7 @@
     <string name="sleep_settings_toggle">Sleep advice</string>
     <string name="sleep_settings_footer">Suggests how long to sleep and when to go to bed, from your training, late meals and recent sleep. Shown on Home and used by Coach.</string>
     <string name="sleep_history_open">See sleep history</string>
-    <string name="sleep_history_title">Sleep, last 30 nights</string>
+    <string name="sleep_history_title">Sleep, last 6 months</string>
     <string name="sleep_history_loading">Reading your sleep…</string>
     <string name="sleep_history_average">Average of the last %2$d nights: %1$s</string>
     <string name="sleep_history_manual">told to Coach</string>

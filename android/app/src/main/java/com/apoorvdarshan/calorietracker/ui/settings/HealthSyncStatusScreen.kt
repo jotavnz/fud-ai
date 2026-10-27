@@ -368,6 +368,34 @@ internal fun HealthSyncStatusScreen(container: AppContainer, onDismiss: () -> Un
         }
     }
 
+    // Samsung Health's "Download personal data" folder, picked with the system folder picker.
+    val samsungPicker = rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree()) { tree ->
+        if (tree == null) return@rememberLauncherForActivityResult
+        runMessage = null
+        runStep = HealthImportStep.SYNCING
+        scope.launch {
+            try {
+                val result = com.apoorvdarshan.calorietracker.services.samsung.SamsungHealthImporter(container).import(tree)
+                runMessage = if (result.files == 0) {
+                    resources.getString(R.string.samsung_import_nothing)
+                } else {
+                    resources.getString(
+                        R.string.samsung_import_done,
+                        result.stepDays, result.nights, result.workouts, result.weights,
+                        result.oldest?.toString() ?: "-"
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                runMessage = resources.getString(R.string.samsung_import_failed)
+            } finally {
+                runStep = null
+                reload()
+            }
+        }
+    }
+
     fun importFullHistory() {
         val s = state
         // Ask for history access (and anything else missing) first, where Health Connect supports it.
@@ -423,7 +451,8 @@ internal fun HealthSyncStatusScreen(container: AppContainer, onDismiss: () -> Un
                             runStep = runStep,
                             runMessage = runMessage,
                             onSyncNow = { runImport(fullHistory = false) },
-                            onImportHistory = ::importFullHistory
+                            onImportHistory = ::importFullHistory,
+                            onImportSamsung = { runCatching { samsungPicker.launch(null) } }
                         )
                         s.types.forEach { TypeCard(it, container) }
                         ActivityCard(s.activity, s.granted.orEmpty(), inspector, container)
@@ -575,7 +604,8 @@ private fun ActionsCard(
     runStep: HealthImportStep?,
     runMessage: String?,
     onSyncNow: () -> Unit,
-    onImportHistory: () -> Unit
+    onImportHistory: () -> Unit,
+    onImportSamsung: () -> Unit
 ) {
     SectionCard(stringResource(R.string.hs_section_actions)) {
         CardBody {
@@ -588,6 +618,11 @@ private fun ActionsCard(
                 Text(stringResource(R.string.hs_import_history))
             }
             Muted(stringResource(R.string.hs_import_history_hint))
+            // Works without Health Connect: it reads Samsung Health's own download.
+            OutlinedButton(onClick = onImportSamsung, enabled = runStep == null, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.samsung_import_action))
+            }
+            Muted(stringResource(R.string.samsung_import_hint))
             if (runStep != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)

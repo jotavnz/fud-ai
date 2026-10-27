@@ -919,8 +919,11 @@ class HealthConnectManager(
         val start = date.atStartOfDay(zone).toInstant()
         val end = minOf(date.plusDays(1).atStartOfDay(zone).toInstant(), Instant.now())
         if (!end.isAfter(start)) return null
-        return readDailySteps(start, end)
+        return readDailySteps(start, end, externalDailySteps(date, date)[date] ?: 0L)
     }
+
+    /** Daily steps imported from outside Health Connect (a Samsung Health download), by day. */
+    var externalDailySteps: suspend (LocalDate, LocalDate) -> Map<LocalDate, Long> = { _, _ -> emptyMap() }
 
     /**
      * Step totals for each local day from [start] through [end], oldest first, skipping
@@ -937,9 +940,12 @@ class HealthConnectManager(
             onFailure = { Log.w(TAG, "Health Connect daily steps read failed", it) }
         ) { chunkStart, chunkEnd ->
             val preference = stepSourcePreference()
-            c.dailyStepSourceTotals(chunkStart, chunkEnd, context.packageName)
-                .entries.sortedBy { it.key }
-                .map { (day, totals) -> day to totals.chosen(preference) }
+            val measured = c.dailyStepSourceTotals(chunkStart, chunkEnd, context.packageName)
+            val imported = externalDailySteps(chunkStart, chunkEnd)
+            (measured.keys + imported.keys).sorted().map { day ->
+                val totals = (measured[day] ?: StepSourceTotals(0, emptyMap())).withSource(SAMSUNG_HEALTH_PACKAGE, imported[day] ?: 0L)
+                day to totals.chosen(preference)
+            }
         }
     }
 
@@ -962,12 +968,13 @@ class HealthConnectManager(
             .getOrNull()
     }
 
-    private suspend fun readDailySteps(start: Instant, end: Instant): Int? {
+    private suspend fun readDailySteps(start: Instant, end: Instant, imported: Long = 0L): Int? {
         val c = client ?: return null
         val totals = runCatching { c.stepSourceTotals(start, end, context.packageName) }
             .onFailure { if (it is CancellationException) throw it }
             .getOrNull() ?: return null
-        return totals.chosen(stepSourcePreference()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt().takeIf { it >= 0 }
+        return totals.withSource(SAMSUNG_HEALTH_PACKAGE, imported)
+            .chosen(stepSourcePreference()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt().takeIf { it >= 0 }
     }
 
     private suspend fun readDailyEnergy(start: Instant, end: Instant): DailyEnergy? {
@@ -1156,6 +1163,7 @@ class HealthConnectManager(
          *  ExerciseSessionRecord read (imported workouts) is optional and deliberately does
          *  not bump this: Settings offers it on its own row instead of re-prompting everyone. */
         const val CURRENT_TYPES_VERSION = 8
+        const val SAMSUNG_HEALTH_PACKAGE = "com.sec.android.app.shealth"
     }
 }
 

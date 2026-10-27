@@ -260,6 +260,13 @@ class AppContainer(app: FudAIApp) {
     val health = HealthConnectManager(app).also { manager ->
         // Steps follow the source the user picked on the Health status screen (default: most complete).
         manager.stepSourcePreference = { prefs.stepSource.first() }
+        // Days imported from a Samsung Health download count as Samsung Health's total.
+        manager.externalDailySteps = { from, to ->
+            prefs.samsungDailySteps.first()
+                .mapNotNull { (day, steps) -> runCatching { java.time.LocalDate.parse(day) }.getOrNull()?.let { it to steps.toLong() } }
+                .filter { (day, _) -> !day.isBefore(from) && !day.isAfter(to) }
+                .toMap()
+        }
     }
 
     private val workoutHealthSync = object : WorkoutHealthSync {

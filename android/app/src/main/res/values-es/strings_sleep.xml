@@ -13,7 +13,7 @@
     <string name="sleep_settings_toggle">Recomendación de sueño</string>
     <string name="sleep_settings_footer">Sugiere cuánto dormir y a qué hora acostarte según tu entrenamiento, tus comidas tarde y tu sueño reciente. Se muestra en Inicio y la usa el coach.</string>
     <string name="sleep_history_open">Ver historial de sueño</string>
-    <string name="sleep_history_title">Sueño, últimas 30 noches</string>
+    <string name="sleep_history_title">Sueño, últimos 6 meses</string>
     <string name="sleep_history_loading">Leyendo tu sueño…</string>
     <string name="sleep_history_average">Promedio de las últimas %2$d noches: %1$s</string>
     <string name="sleep_history_manual">contado al coach</string>

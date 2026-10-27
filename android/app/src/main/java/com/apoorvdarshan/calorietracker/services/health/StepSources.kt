@@ -21,6 +21,10 @@ import java.time.Period
  */
 data class StepSourceTotals(val merged: Long, val bySource: Map<String, Long>) {
     fun chosen(preference: String): Long = StepSources.choose(merged, bySource, preference)
+
+    /** With an app's count from elsewhere (a Samsung Health download); the larger count of that app wins. */
+    fun withSource(pkg: String, steps: Long): StepSourceTotals =
+        if (steps <= 0) this else copy(bySource = bySource + (pkg to maxOf(bySource[pkg] ?: 0L, steps)))
 }
 
 object StepSources {

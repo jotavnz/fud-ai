@@ -105,4 +105,9 @@
     <string name="hs_apps_how_generic">Abre la app, busca Health Connect en sus ajustes y permite compartir todos los tipos de datos.</string>
     <string name="hs_apps_huawei">Huawei Salud no comparte con Health Connect. Usa la app Health Sync para pasar sus datos.</string>
     <string name="hs_apps_note">Las apps de los relojes suelen compartir solo desde que activas Health Connect, no todo su pasado. Para datos de hace más de 30 días, permite también el acceso al historial más abajo.</string>
+    <string name="samsung_import_action">Importar desde Samsung Health</string>
+    <string name="samsung_import_hint">Para todo tu historial de Samsung Health: en Samsung Health abre Ajustes → Descargar datos personales y luego elige la carpeta que crea (Download/Samsung Health/…). Se agregan pasos, sueño, entrenamientos y peso; si vuelves a importar solo se suma lo nuevo.</string>
+    <string name="samsung_import_done">Importado de Samsung Health: %1$d días de pasos, %2$d noches de sueño, %3$d entrenamientos y %4$d pesos, desde %5$s.</string>
+    <string name="samsung_import_nothing">No encontramos archivos de Samsung Health en esa carpeta. Elige la carpeta que creó Samsung Health con Descargar datos personales.</string>
+    <string name="samsung_import_failed">No se pudieron leer los archivos de Samsung Health.</string>
 </resources>
