@@ -45,6 +45,7 @@ import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Chair
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -65,6 +66,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import com.apoorvdarshan.calorietracker.ui.components.InfoIconButton
 import com.apoorvdarshan.calorietracker.ui.components.OptionPickerSheet
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
@@ -252,7 +254,12 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                     selected = ui.activity,
                     onSelect = vm::setActivity
                 )
-                OnboardingStep.GOAL -> GoalStep(selected = ui.goal, onSelect = vm::setGoal)
+                OnboardingStep.GOAL -> GoalStep(
+                    selected = ui.goal,
+                    explainToCoach = ui.explainGoalToCoach,
+                    onSelect = vm::setGoal,
+                    onExplainToCoach = vm::chooseExplainGoalToCoach
+                )
                 OnboardingStep.GOAL_WEIGHT -> GoalWeightStep(
                     current = ui.goalWeightKg,
                     goal = ui.goal,
@@ -774,7 +781,12 @@ private fun activityIcon(level: ActivityLevel): ImageVector = when (level) {
 }
 
 @Composable
-private fun GoalStep(selected: WeightGoal, onSelect: (WeightGoal) -> Unit) {
+private fun GoalStep(
+    selected: WeightGoal,
+    explainToCoach: Boolean,
+    onSelect: (WeightGoal) -> Unit,
+    onExplainToCoach: () -> Unit
+) {
     Column(Modifier.fillMaxSize()) {
         StepHeader(
             stringResource(R.string.onboarding_goal_title),
@@ -785,10 +797,19 @@ private fun GoalStep(selected: WeightGoal, onSelect: (WeightGoal) -> Unit) {
             SelectionCard(
                 icon = goalIcon(g),
                 title = stringResource(g.displayNameRes),
-                selected = g == selected
+                selected = g == selected && !explainToCoach,
+                infoText = stringResource(g.infoRes)
             ) { onSelect(g) }
             Spacer(Modifier.height(12.dp))
         }
+        // For goals the three options cannot hold: the app starts on Maintain and Coach builds the plan.
+        SelectionCard(
+            icon = Icons.Outlined.ChatBubbleOutline,
+            title = stringResource(R.string.cg_onboarding_option),
+            subtitle = stringResource(R.string.cg_onboarding_option_subtitle),
+            selected = explainToCoach,
+            infoText = stringResource(R.string.cg_info_option)
+        ) { onExplainToCoach() }
         Spacer(Modifier.weight(1f))
     }
 }
@@ -2195,6 +2216,8 @@ private fun SelectionCard(
     title: String,
     subtitle: String? = null,
     selected: Boolean,
+    /** Shown behind an ⓘ button next to the check; null shows no button. */
+    infoText: String? = null,
     onClick: () -> Unit
 ) {
     val accent = if (selected) AppColors.Calorie else MaterialTheme.colorScheme.onBackground
@@ -2228,6 +2251,10 @@ private fun SelectionCard(
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                     )
                 }
+            }
+            if (infoText != null) {
+                InfoIconButton(title = title, body = infoText, tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+                Spacer(Modifier.width(4.dp))
             }
             Icon(
                 imageVector = if (selected) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,

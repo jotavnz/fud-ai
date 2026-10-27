@@ -1655,6 +1655,12 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         }
     }
 
+    /** The goal plan agreed with Coach, shown in the goal sheet. */
+    val coachGoalPlan = container.prefs.coachGoalPlan
+
+    /** Opens Coach to explain (or adjust) the goal. */
+    fun explainGoalToCoach() = container.navigator.showCoachGoalInterview()
+
     fun updateProfile(update: (com.apoorvdarshan.calorietracker.models.UserProfile) -> com.apoorvdarshan.calorietracker.models.UserProfile) {
         viewModelScope.launch {
             val current = container.profileRepository.current() ?: return@launch

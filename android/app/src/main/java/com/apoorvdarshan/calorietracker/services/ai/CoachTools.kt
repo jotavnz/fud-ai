@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.services.ai
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.CoachGoalCollector
 import com.apoorvdarshan.calorietracker.models.CoachLogCollector
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.FoodEntry
@@ -56,64 +57,71 @@ class CoachTools(
      * Set only by Coach chat, which shows log cards (food, water, body, workouts) the user must
      * confirm. Without it `propose_log_entries` is not offered.
      */
-    private val logProposals: CoachLogCollector? = null
+    private val logProposals: CoachLogCollector? = null,
+    /** Set only by Coach chat, which shows the goal plan card. Without it `propose_goal_plan` is not offered. */
+    private val goalProposals: CoachGoalCollector? = null
 ) {
 
     /** The tools this instance offers: the data tools, plus the proposal tools for Coach chat. */
     val availableToolNames: List<String>
         get() = TOOL_NAMES + (if (proposals != null) PROPOSAL_TOOL_NAMES else emptyList()) +
-            (if (logProposals != null) listOf(CoachLogTool.TOOL_NAME) else emptyList())
+            (if (logProposals != null) listOf(CoachLogTool.TOOL_NAME) else emptyList()) +
+            (if (goalProposals != null) listOf(CoachGoalTool.TOOL_NAME) else emptyList())
 
     private fun proposeLog(args: Map<String, Any?>): String =
         CoachLogTool.propose(args, LocalDate.now(clock), logProposals)
 
     /** Android provider loops already deal in [JSONObject], so keep this adapter at the edge. */
-    fun execute(name: String, args: JSONObject): String = if (name == CoachLogTool.TOOL_NAME) {
-        proposeLog(CoachLogTool.plain(args))
-    } else execute(
-        name,
-        ToolArguments(
-            from = args.optString("from").takeIf { it.isNotBlank() },
-            to = args.optString("to").takeIf { it.isNotBlank() },
-            limit = (args.opt("limit") as? Number)?.toInt(),
-            exercise = args.optString("exercise").takeIf { it.isNotBlank() },
-            catalogId = args.optString("catalog_id").takeIf { it.isNotBlank() },
-            query = args.optString("query").takeIf { it.isNotBlank() },
-            muscle = args.optString("muscle").takeIf { it.isNotBlank() },
-            equipment = args.optString("equipment").takeIf { it.isNotBlank() },
-            // Proposal arguments stay raw (strings, numbers, lists) and are validated per tool.
-            proposal = PROPOSAL_ARGUMENT_KEYS.associateWith { key ->
-                val value: Any? = args.opt(key)
-                when {
-                    value == null || value == JSONObject.NULL -> null
-                    value is JSONArray -> List(value.length()) { value.opt(it) }
-                    else -> value
+    fun execute(name: String, args: JSONObject): String = when (name) {
+        CoachLogTool.TOOL_NAME -> proposeLog(CoachLogTool.plain(args))
+        CoachGoalTool.TOOL_NAME -> CoachGoalTool.propose(CoachLogTool.plain(args), goalProposals)
+        else -> execute(
+            name,
+            ToolArguments(
+                from = args.optString("from").takeIf { it.isNotBlank() },
+                to = args.optString("to").takeIf { it.isNotBlank() },
+                limit = (args.opt("limit") as? Number)?.toInt(),
+                exercise = args.optString("exercise").takeIf { it.isNotBlank() },
+                catalogId = args.optString("catalog_id").takeIf { it.isNotBlank() },
+                query = args.optString("query").takeIf { it.isNotBlank() },
+                muscle = args.optString("muscle").takeIf { it.isNotBlank() },
+                equipment = args.optString("equipment").takeIf { it.isNotBlank() },
+                // Proposal arguments stay raw (strings, numbers, lists) and are validated per tool.
+                proposal = PROPOSAL_ARGUMENT_KEYS.associateWith { key ->
+                    val value: Any? = args.opt(key)
+                    when {
+                        value == null || value == JSONObject.NULL -> null
+                        value is JSONArray -> List(value.length()) { value.opt(it) }
+                        else -> value
+                    }
                 }
-            }
+            )
         )
-    )
+    }
 
     /** JVM-friendly entry point used by focused unit tests and non-Android callers. */
-    fun execute(name: String, args: Map<String, Any?> = emptyMap()): String = if (name == CoachLogTool.TOOL_NAME) {
-        proposeLog(args)
-    } else execute(
-        name,
-        ToolArguments(
-            from = args["from"] as? String,
-            to = args["to"] as? String,
-            limit = when (val value = args["limit"]) {
-                is Number -> value.toInt()
-                is String -> value.toIntOrNull()
-                else -> null
-            },
-            exercise = args["exercise"] as? String,
-            catalogId = args["catalog_id"] as? String,
-            query = args["query"] as? String,
-            muscle = args["muscle"] as? String,
-            equipment = args["equipment"] as? String,
-            proposal = PROPOSAL_ARGUMENT_KEYS.associateWith { args[it] }
+    fun execute(name: String, args: Map<String, Any?> = emptyMap()): String = when (name) {
+        CoachLogTool.TOOL_NAME -> proposeLog(args)
+        CoachGoalTool.TOOL_NAME -> CoachGoalTool.propose(args, goalProposals)
+        else -> execute(
+            name,
+            ToolArguments(
+                from = args["from"] as? String,
+                to = args["to"] as? String,
+                limit = when (val value = args["limit"]) {
+                    is Number -> value.toInt()
+                    is String -> value.toIntOrNull()
+                    else -> null
+                },
+                exercise = args["exercise"] as? String,
+                catalogId = args["catalog_id"] as? String,
+                query = args["query"] as? String,
+                muscle = args["muscle"] as? String,
+                equipment = args["equipment"] as? String,
+                proposal = PROPOSAL_ARGUMENT_KEYS.associateWith { args[it] }
+            )
         )
-    )
+    }
 
     private fun execute(name: String, args: ToolArguments): String = when (name) {
         "get_data_summary" -> getDataSummary()
@@ -130,6 +138,7 @@ class CoachTools(
         "search_exercise_library" -> searchExerciseLibrary(args)
         "propose_custom_exercise", "propose_add_exercise_to_day" -> propose(name, args.proposal)
         CoachLogTool.TOOL_NAME -> proposeLog(emptyMap())
+        CoachGoalTool.TOOL_NAME -> CoachGoalTool.propose(emptyMap(), goalProposals)
         else -> jsonError("Unknown tool: $name. Available tools: ${availableToolNames.joinToString(", ")}")
     }
 
@@ -1004,6 +1013,7 @@ class CoachTools(
             "search_exercise_library" to "Search the exercise library (built-in catalog plus the user's own custom exercises) by name or keywords. Returns matching exercises with catalog_id, name, category, equipment, primary and secondary muscles, and is_custom. Optional muscle and equipment filters narrow the results. When the user shares a photo of a gym machine or exercise, identify it first, then search with its likely names. Read-only: it cannot add, edit, or create exercises.",
             "propose_custom_exercise" to "Propose creating a custom exercise in the user's exercise library, for example from a photo of a gym machine that search_exercise_library did not find. This does NOT save anything: the user sees a card with the details and must tap Add to create it, or Dismiss. Search the library first and propose only exercises that are not already there, using the library's category, equipment and muscle names. Returns a proposal_id. Afterwards tell the user to review the card; never say the exercise was created.",
             CoachLogTool.TOOL_NAME to CoachLogTool.DESCRIPTION,
+            CoachGoalTool.TOOL_NAME to CoachGoalTool.DESCRIPTION,
             "propose_add_exercise_to_day" to "Propose adding one library exercise to the user's workout diary on a date (default today). Use a catalog_id from search_exercise_library, built-in or custom. Optional sets, reps and duration_minutes prefill the entry; reps and duration record performed work, so a future date takes sets only. This does NOT save anything: the user sees a card and must tap Add, or Dismiss. A custom exercise proposed with propose_custom_exercise can be added only after the user has added it and it shows up in search_exercise_library. Returns a proposal_id. Afterwards tell the user to review the card; never say it was added."
         )
 
@@ -1029,6 +1039,7 @@ class CoachTools(
         /** One schema source is wrapped for Gemini, Anthropic, and OpenAI by [ChatService]. */
         fun parameterSchemaFor(toolName: String): Map<String, Any> {
             if (toolName == CoachLogTool.TOOL_NAME) return CoachLogTool.parameterSchema()
+            if (toolName == CoachGoalTool.TOOL_NAME) return CoachGoalTool.parameterSchema()
             if (toolName == "get_data_summary" || toolName == "get_workout_preferences") {
                 return linkedMapOf("type" to "object", "properties" to emptyMap<String, Any>())
             }

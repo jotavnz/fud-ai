@@ -51,6 +51,9 @@ class AppNavigator {
     /** An estimated food waiting for Home's review sheet (Coach's log card Edit). */
     val pendingFoodReview = MutableStateFlow<FoodAnalysis?>(null)
 
+    /** Coach should start the goal conversation when it next shows. */
+    val pendingCoachGoalInterview = MutableStateFlow(false)
+
     private val _requests = MutableSharedFlow<NavRequest>(extraBufferCapacity = 8)
     val requests: SharedFlow<NavRequest> = _requests.asSharedFlow()
 
@@ -66,6 +69,12 @@ class AppNavigator {
     fun showHomeDate(date: LocalDate) {
         homeDiaryDate.value = date
         showTab(FudAIRoutes.HOME)
+    }
+
+    /** Opens Coach and starts the conversation where the user explains their goal. */
+    fun showCoachGoalInterview() {
+        pendingCoachGoalInterview.value = true
+        showTab(FudAIRoutes.COACH)
     }
 
     /** Opens Home's Describe food dialog with [text] already typed. */

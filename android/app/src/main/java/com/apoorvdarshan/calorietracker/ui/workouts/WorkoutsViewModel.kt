@@ -107,8 +107,18 @@ data class WorkoutDiaryUiState(
  * Persisted to SharedPreferences (the analog of iOS's ExerciseFilterStateStore) so
  * it survives process death, not just tab switches.
  */
+/** Where the machine coach keeps its training goal, so a Coach goal plan can set it too. */
+object TrainingGoalPrefs {
+    const val FILE = "fudai_workouts"
+    const val KEY = "machine_coach.goal"
+
+    fun write(context: Context, goal: TrainingGoal) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putString(KEY, goal.name).apply()
+    }
+}
+
 class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
-    private val prefs = app.getSharedPreferences("fudai_workouts", Context.MODE_PRIVATE)
+    private val prefs = app.getSharedPreferences(TrainingGoalPrefs.FILE, Context.MODE_PRIVATE)
     /** Peek only in the ctor — never call [ExerciseRepository.get] on the main thread. */
     private var exerciseRepository: ExerciseRepository? = ExerciseRepository.peek()
     private var workoutRepository: WorkoutRepository? = null
@@ -299,6 +309,18 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
     private val _trainingGoal = mutableStateOf(
         prefs.getString(K_TRAINING_GOAL, null)?.let { runCatching { TrainingGoal.valueOf(it) }.getOrNull() }
     )
+
+    /** A goal plan applied from Coach writes the same key; follow it while this screen is alive. */
+    private val trainingGoalListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+        if (key == K_TRAINING_GOAL) {
+            _trainingGoal.value = p.getString(K_TRAINING_GOAL, null)?.let { runCatching { TrainingGoal.valueOf(it) }.getOrNull() }
+        }
+    }.also { prefs.registerOnSharedPreferenceChangeListener(it) }
+
+    override fun onCleared() {
+        prefs.unregisterOnSharedPreferenceChangeListener(trainingGoalListener)
+        super.onCleared()
+    }
 
     /** The user's chosen goal, or null until they pick one (callers default from the profile). */
     var trainingGoal: TrainingGoal?
@@ -855,7 +877,7 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         const val K_CATEGORIES = "categories"
         const val K_ONLY_USER_EXERCISES = "only_user_exercises"
         const val K_SORT = "sort"
-        const val K_TRAINING_GOAL = "machine_coach.goal"
+        const val K_TRAINING_GOAL = TrainingGoalPrefs.KEY
         const val K_DISMISSED_INSIGHTS = "insights.dismissed"
         const val K_PICKER_SOURCE = "picker.source"
         const val K_PICKER_FILTER_PREFIX = "picker.filter."

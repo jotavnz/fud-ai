@@ -17,7 +17,9 @@ data class ChatMessage(
     /** Workout changes Coach proposed in this reply, shown as Add / Dismiss cards. */
     val proposals: List<CoachExerciseProposal> = emptyList(),
     /** Food, water, body and workout logs Coach proposed in this reply, shown as Log / Cancel cards. */
-    val logProposals: List<CoachLogProposal> = emptyList()
+    val logProposals: List<CoachLogProposal> = emptyList(),
+    /** A goal plan Coach proposed in this reply, shown as an Apply / Dismiss card. */
+    val goalProposals: List<CoachGoalProposal> = emptyList()
 ) {
     @Serializable
     enum class Role {
@@ -27,6 +29,7 @@ data class ChatMessage(
 
     /** The text sent back to the model as history: the reply plus what became of each proposal. */
     val contextContent: String
-        get() = if (proposals.isEmpty() && logProposals.isEmpty()) content
-        else (listOf(content) + proposals.map { it.contextLine } + logProposals.map { it.contextLine }).joinToString("\n")
+        get() = if (proposals.isEmpty() && logProposals.isEmpty() && goalProposals.isEmpty()) content
+        else (listOf(content) + proposals.map { it.contextLine } + logProposals.map { it.contextLine } +
+            goalProposals.map { it.contextLine }).joinToString("\n")
 }

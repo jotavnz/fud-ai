@@ -2,7 +2,9 @@ package com.apoorvdarshan.calorietracker.data
 
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.CoachGoalProposal
 import com.apoorvdarshan.calorietracker.models.CoachLogProposal
+import com.apoorvdarshan.calorietracker.models.updatingGoalProposal
 import com.apoorvdarshan.calorietracker.models.updatingLogProposal
 import com.apoorvdarshan.calorietracker.models.resolvingProposal
 import kotlinx.coroutines.flow.Flow
@@ -68,6 +70,21 @@ class ChatRepository(private val prefs: PreferencesStore) {
             ?: return@withLock null
         val next = transform(current) ?: return@withLock null
         val updated = history.updatingLogProposal(messageId, proposalId) { next } ?: return@withLock null
+        prefs.setChatHistory(updated)
+        next
+    }
+
+    /** Rewrites one Coach goal card under the lock; same contract as [updateLogProposal]. */
+    suspend fun updateGoalProposal(
+        messageId: UUID,
+        proposalId: String,
+        transform: suspend (CoachGoalProposal) -> CoachGoalProposal?
+    ): CoachGoalProposal? = mutex.withLock {
+        val history = prefs.chatHistory.first()
+        val current = history.firstOrNull { it.id == messageId }?.goalProposals?.firstOrNull { it.id == proposalId }
+            ?: return@withLock null
+        val next = transform(current) ?: return@withLock null
+        val updated = history.updatingGoalProposal(messageId, proposalId) { next } ?: return@withLock null
         prefs.setChatHistory(updated)
         next
     }

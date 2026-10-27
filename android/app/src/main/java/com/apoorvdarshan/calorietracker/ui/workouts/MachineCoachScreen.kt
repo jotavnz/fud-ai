@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.ui.components.InfoIconButton
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseLocalization
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
@@ -320,12 +321,19 @@ internal fun MachineCoachScreen(
 private fun GoalSelector(selected: TrainingGoal, onSelect: (TrainingGoal) -> Unit) {
     val colors = workoutsColors()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            stringResource(R.string.machine_coach_goal_label).uppercase(),
-            color = colors.mutedText,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.machine_coach_goal_label).uppercase(),
+                color = colors.mutedText,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+            InfoIconButton(
+                title = stringResource(R.string.machine_coach_goal_label),
+                body = stringResource(R.string.training_goal_info),
+                tint = colors.mutedText
+            )
+        }
         Row(
             Modifier
                 .fillMaxWidth()

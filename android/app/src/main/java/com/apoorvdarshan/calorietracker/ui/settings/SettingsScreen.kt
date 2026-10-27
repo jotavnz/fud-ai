@@ -218,6 +218,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import com.apoorvdarshan.calorietracker.ui.components.DecimalWheelPicker
+import com.apoorvdarshan.calorietracker.ui.components.InfoIconButton
 import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import com.apoorvdarshan.calorietracker.ui.components.energyText
 import com.apoorvdarshan.calorietracker.ui.components.energyUnitLabel
@@ -3285,6 +3286,18 @@ private fun SettingsSheets(
                     label = { stringResource(it.displayNameRes) },
                     selected = { it == ui.profile?.goal },
                     icon = { goalIcon(it) },
+                    info = { stringResource(it.infoRes) },
+                    extraContent = {
+                        val plan by vm.coachGoalPlan.collectAsState(initial = null)
+                        CoachGoalSettingsSection(
+                            plan = plan,
+                            weightMetric = ui.weightMetric,
+                            onTalk = {
+                                onDismiss()
+                                vm.explainGoalToCoach()
+                            }
+                        )
+                    },
                     onSelect = { g ->
                         // Mirrors iOS ContentView.swift profile.goal onChange:
                         //   - Switching to MAINTAIN clears weeklyChangeKg + goalWeightKg.
@@ -3660,7 +3673,11 @@ private fun <T> ListSheet(
     leadingContent: (@Composable (T) -> Unit)? = null,
     subtitle: (@Composable (T) -> String?)? = null,
     footer: String? = null,
-    customField: ((String) -> Unit)? = null
+    customField: ((String) -> Unit)? = null,
+    /** Explanation behind an ⓘ button on each row; null or a null result shows no button. */
+    info: (@Composable (T) -> String?)? = null,
+    /** Shown under the list, e.g. the goal sheet's "Explain it to Coach". */
+    extraContent: (@Composable () -> Unit)? = null
 ) {
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -3727,6 +3744,9 @@ private fun <T> ListSheet(
                         )
                     }
                 }
+                info?.invoke(item)?.let { body ->
+                    InfoIconButton(title = label(item), body = body)
+                }
                 if (isSel) {
                     Icon(
                         Icons.Filled.Check,
@@ -3757,6 +3777,10 @@ private fun <T> ListSheet(
             onClick = { if (custom.isNotBlank()) customField(custom.trim()) },
             modifier = Modifier.fillMaxWidth()
         )
+    }
+    extraContent?.let {
+        Spacer(Modifier.height(12.dp))
+        it()
     }
 }
 

@@ -9,10 +9,14 @@ Solo inglés y español; el idioma elegido aplica a todo.
 - Cambiar una sola sugerencia ("Cambiar esta") y volver a la anterior ("Ver anterior").
 - Sugerencias inteligentes (Ajustes): recuperación, fatiga cruzada, sobreuso, estancamiento, equilibrio empuje/tirón, músculo olvidado, cuánto peso subir.
 - Resumen anual estilo Wrapped en Progreso: bloqueado hasta 1 año de uso ("Vuelve en X"), con interruptores en Ajustes (mostrar / ver antes de tiempo).
+- Coach: registrar comidas, agua, peso y entrenamientos desde el chat (con confirmación), copiar mensajes y "enviar a registro de comida" (compila; falta probar en el teléfono).
+- Pantalla de estado de Health Connect (compila; falta probar en el teléfono).
+- Objetivo libre con el coach: para objetivos que no caben en bajar/mantener/subir (p. ej. bajar grasa abdominal y ganar músculo). Entrevista corta → tarjeta de plan → al aplicar fija calorías y entrenamiento; el coach lo recuerda siempre.
+- Botón ⓘ con explicación en cada opción de objetivo y de entrenamiento.
 
 ## En curso
-- Coach: registrar comidas, agua, peso y entrenamientos desde el chat (con confirmación), copiar mensajes y "enviar a registro de comida".
-- Pantalla de estado de Health Connect: qué se importa, de qué reloj/app, última sincronización, importar historial.
+- Pasos y datos del reloj incompletos (Galaxy Watch 6 Classic: app 5.720 vs reloj 11.499) → sincronización completa y continua; luego otros relojes.
+- Tutorial guiado omitible por las partes importantes de la app.
 
 ## Siguiente
 1. Base propia: nombre, ícono, paquete; quitar RevenueCat/"Hosted"/enlaces de Fud AI; alojar las ilustraciones de ejercicios en servidor propio (hoy se descargan de assets.fud-ai.app).

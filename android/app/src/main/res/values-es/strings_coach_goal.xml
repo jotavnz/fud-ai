@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plan de objetivo acordado con el coach y explicaciones ⓘ de cada opción de objetivo. -->
+<resources>
+    <!-- Botones ⓘ -->
+    <string name="info_button_a11y">Qué significa \"%1$s\"</string>
+    <string name="info_button_ok">Entendido</string>
+
+    <string name="goal_info_lose">Comes un poco menos de lo que gastas para bajar grasa al ritmo que elijas (0,25 a 1 kg por semana). La proteína sube para cuidar tu músculo. Elígelo si tu prioridad es bajar de peso.</string>
+    <string name="goal_info_maintain">Comes más o menos lo que gastas, así tu peso se mantiene. Con entrenamiento de fuerza también es la opción de recomposición: bajar grasa y ganar músculo a la vez mientras la báscula casi no se mueve. Mide tu cintura y tus fotos más que el peso.</string>
+    <string name="goal_info_gain">Comes un poco más de lo que gastas para subir de peso, idealmente músculo, junto con entrenamiento de fuerza (hasta 0,5 kg por semana). Elígelo si quieres crecer o estás bajo de peso.</string>
+    <string name="training_goal_info">Músculo: ganar tamaño con 3–4 series de 8–15 repeticiones y 60–90 s de descanso.\n\nFuerza: levantar más peso con menos repeticiones (4–10) y descansos más largos (hasta 3 min).\n\nTonificar: pesos más ligeros, 15–20 repeticiones y descansos cortos (45 s), para resistencia y definición. Bajar grasa sigue dependiendo de tus calorías, no de las repeticiones.</string>
+
+    <!-- Inicio de la app y Ajustes -->
+    <string name="cg_onboarding_option">Mi objetivo es más complejo</string>
+    <string name="cg_onboarding_option_subtitle">Explícaselo al coach</string>
+    <string name="cg_info_option">Para objetivos que no encajan en las opciones de arriba, como bajar la grasa del abdomen y a la vez ganar músculo, entrenar para un deporte o adaptarte a una lesión. Le cuentas al coach lo que quieres, te hace unas preguntas y te propone un plan; al aplicarlo, el plan ajusta tus calorías y tu entrenamiento. Mientras tanto la app usa Mantener.</string>
+    <string name="cg_settings_plan_title">Tu plan con el coach</string>
+    <string name="cg_settings_explain">Explicarle mi objetivo al coach</string>
+    <string name="cg_settings_adjust">Ajustar mi plan con el coach</string>
+
+    <!-- Inicio -->
+    <string name="cg_home_title">Cuéntale al coach qué quieres lograr</string>
+    <string name="cg_home_body">Si tu objetivo no encaja en bajar, mantener o subir, explícalo con tus palabras y el coach planificará tus calorías y tu entrenamiento en base a eso.</string>
+    <string name="cg_home_action">Hablar con el coach</string>
+    <string name="cg_home_close_a11y">Ocultar</string>
+
+    <!-- Chat del coach -->
+    <string name="cg_chip_explain_goal">Quiero explicarte mi objetivo</string>
+    <string name="cg_interview_opener">Quiero explicarte mi objetivo para que planifiques mi entrenamiento y mi alimentación en base a eso.</string>
+    <string name="cg_reply_review_card">Aquí está tu plan. Revísalo y toca Aplicar si te funciona.</string>
+    <string name="cg_card_title">Tu plan de objetivo</string>
+    <string name="cg_action_apply">Aplicar</string>
+    <string name="cg_action_dismiss">Descartar</string>
+    <string name="cg_status_applied">Aplicado: tus calorías y tu entrenamiento ahora siguen este plan.</string>
+    <string name="cg_status_dismissed">Descartado. No se cambió nada.</string>
+    <string name="cg_error_apply">No se pudo aplicar el plan. Inténtalo de nuevo.</string>
+    <string name="cg_label_weight_goal">Peso</string>
+    <string name="cg_label_training_goal">Entrenamiento</string>
+    <string name="cg_label_focus">Enfoque</string>
+    <string name="cg_label_days">Días</string>
+    <string name="cg_days_format">%1$d días por semana</string>
+    <string name="cg_label_notes">A tener en cuenta</string>
+    <string name="cg_pace_kg">%1$s kg/semana</string>
+    <string name="cg_pace_lb">%1$s lb/semana</string>
+</resources>

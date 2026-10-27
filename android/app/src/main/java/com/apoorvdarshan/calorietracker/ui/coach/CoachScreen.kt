@@ -137,6 +137,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.CoachGoalProposal
 import com.apoorvdarshan.calorietracker.models.CoachLogItem
 import com.apoorvdarshan.calorietracker.models.CoachLogProposal
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
@@ -178,6 +179,15 @@ fun CoachScreen(container: AppContainer) {
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+
+    // "Explain your goal to Coach" (onboarding, Home, Settings) opens here and starts the talk.
+    val goalInterviewRequested by container.navigator.pendingCoachGoalInterview.collectAsState()
+    LaunchedEffect(goalInterviewRequested) {
+        if (goalInterviewRequested) {
+            container.navigator.pendingCoachGoalInterview.value = false
+            vm.startGoalInterview()
+        }
+    }
 
     // Dismiss the keyboard when the USER drags the chat (DragInteraction only —
     // the auto-scroll after sending a message must not steal focus).
@@ -363,6 +373,11 @@ fun CoachScreen(container: AppContainer) {
                         ),
                         onCopy = copyMessage,
                         onSendToFoodLog = { message -> vm.sendToFoodLog(message) },
+                        goalActions = GoalCardActions(
+                            busyIds = ui.busyGoalProposalIds,
+                            onApply = { message, proposal -> vm.applyGoalProposal(message.id, proposal.id) },
+                            onDismiss = { message, proposal -> vm.dismissGoalProposal(message.id, proposal.id) }
+                        ),
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -566,6 +581,7 @@ private fun MessageList(
     logActions: LogCardActions,
     onCopy: (ChatMessage) -> Unit,
     onSendToFoodLog: (ChatMessage) -> Unit,
+    goalActions: GoalCardActions,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -584,7 +600,8 @@ private fun MessageList(
                 weightMetric = weightMetric,
                 logActions = logActions,
                 onCopy = { onCopy(message) },
-                onSendToFoodLog = { onSendToFoodLog(message) }
+                onSendToFoodLog = { onSendToFoodLog(message) },
+                goalActions = goalActions
             )
         }
 
@@ -690,6 +707,13 @@ internal class LogCardActions(
     val onOpenLogged: (CoachLogItem) -> Unit
 )
 
+/** What a goal card's buttons do, and which cards are saving. */
+internal class GoalCardActions(
+    val busyIds: Set<String>,
+    val onApply: (ChatMessage, CoachGoalProposal) -> Unit,
+    val onDismiss: (ChatMessage, CoachGoalProposal) -> Unit
+)
+
 @Composable
 private fun MessageBubble(
     msg: ChatMessage,
@@ -700,7 +724,8 @@ private fun MessageBubble(
     weightMetric: Boolean = true,
     logActions: LogCardActions? = null,
     onCopy: () -> Unit = {},
-    onSendToFoodLog: () -> Unit = {}
+    onSendToFoodLog: () -> Unit = {},
+    goalActions: GoalCardActions? = null
 ) {
     val isUser = msg.role == ChatMessage.Role.USER
     var menuOpen by remember { mutableStateOf(false) }
@@ -771,6 +796,17 @@ private fun MessageBubble(
                             onToggle = { logActions.onToggle(msg, proposal, it) },
                             onEdit = { logActions.onEdit(msg, proposal, it) },
                             onOpenLogged = logActions.onOpenLogged
+                        )
+                    }
+                }
+                if (goalActions != null) {
+                    msg.goalProposals.forEach { proposal ->
+                        CoachGoalCard(
+                            proposal = proposal,
+                            busy = proposal.id in goalActions.busyIds,
+                            weightMetric = weightMetric,
+                            onApply = { goalActions.onApply(msg, proposal) },
+                            onDismiss = { goalActions.onDismiss(msg, proposal) }
                         )
                     }
                 }

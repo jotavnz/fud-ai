@@ -56,6 +56,8 @@ data class OnboardingState(
     val goalBodyFatPercentage: Double? = null,
     val activity: ActivityLevel = ActivityLevel.MODERATE,
     val goal: WeightGoal = WeightGoal.MAINTAIN,
+    /** "Explain it to Coach": the profile starts on Maintain and Coach opens after onboarding. */
+    val explainGoalToCoach: Boolean = false,
     val goalWeightKg: Double = 70.0,
     /** 0.25 (slow), 0.5 (moderate), 1.0 (fast) kg/week */
     val weeklyChangeKg: Double = 0.5,
@@ -179,7 +181,13 @@ class OnboardingViewModel(private val container: AppContainer) : ViewModel() {
             WeightGoal.GAIN -> _ui.value.weightKg + 5
             WeightGoal.MAINTAIN -> _ui.value.weightKg
         }
-        _ui.value = _ui.value.copy(goal = v, goalWeightKg = defaultGoalWeight)
+        _ui.value = _ui.value.copy(goal = v, goalWeightKg = defaultGoalWeight, explainGoalToCoach = false)
+    }
+
+    /** The goal does not fit the three options: start on Maintain and let Coach build the plan. */
+    fun chooseExplainGoalToCoach() {
+        setGoal(WeightGoal.MAINTAIN)
+        _ui.value = _ui.value.copy(explainGoalToCoach = true)
     }
     fun setGoalWeight(v: Double) { _ui.value = _ui.value.copy(goalWeightKg = v) }
     fun setWeeklyChange(v: Double) { _ui.value = _ui.value.copy(weeklyChangeKg = v) }
@@ -609,6 +617,7 @@ class OnboardingViewModel(private val container: AppContainer) : ViewModel() {
             container.prefs.setAdaptiveGoalsEnabled(!planEdited)
             container.prefs.setHealthEnergyGoalsEnabled(true)
             container.prefs.setAdaptiveGoalsLastCheckDay(LocalDate.now().toString())
+            if (state.explainGoalToCoach) container.prefs.setCoachGoalInterviewPending(true)
             container.prefs.setOnboardingCompleted(true)
             onDone()
         }

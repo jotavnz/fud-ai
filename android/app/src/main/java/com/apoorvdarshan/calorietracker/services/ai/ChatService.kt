@@ -8,6 +8,7 @@ import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
 import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.CoachGoalCollector
 import com.apoorvdarshan.calorietracker.models.CoachLogCollector
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.FoodEntry
@@ -73,6 +74,8 @@ class ChatService(
         proposals: CoachProposalCollector? = null,
         /** Coach chat's log cards; enables `propose_log_entries` (or the fallback block for tool-less models). */
         logProposals: CoachLogCollector? = null,
+        /** Coach chat's goal plan card; enables `propose_goal_plan`. */
+        goalProposals: CoachGoalCollector? = null,
         /** The app language's English name ("Spanish"), so replies match the app. */
         appLanguage: String? = null,
         /** The card's Log button as the user sees it ("Registrar"), so the reply can point at it. */
@@ -80,6 +83,7 @@ class ChatService(
     ): String {
         val energyUnit = prefs.energyUnit.first()
         val userContext = prefs.userContext.first()
+        val goalPlan = prefs.coachGoalPlan.first()
         fun systemPromptFor(proposalCards: Boolean, logMode: LogMode): String {
             val baseSystemPrompt = buildSystemPrompt(
                 profile = profile,
@@ -98,9 +102,13 @@ class ChatService(
                 appLanguage = appLanguage,
                 logButtonLabel = logButtonLabel
             )
+            // The goal card needs a tool call, so a tool-less model only reads the saved plan.
+            val goalLines = CoachGoalTool.promptLines(goalPlan, canPropose = proposalCards && goalProposals != null)
+            val withGoal = if (goalLines.isEmpty()) baseSystemPrompt
+            else "$baseSystemPrompt\n\n${goalLines.joinToString("\n").trimEnd()}"
             return if (userContext.isNotBlank())
-                "$baseSystemPrompt\n\n## User-provided context\n$userContext"
-            else baseSystemPrompt
+                "$withGoal\n\n## User-provided context\n$userContext"
+            else withGoal
         }
         val systemPrompt = systemPromptFor(
             proposalCards = proposals != null,
@@ -110,7 +118,7 @@ class ChatService(
         // cannot make (the reply would point the user at a card that never appears). Logging still
         // works there: it is taught a <fudai-log> block the app turns into the same card.
         val toolFreeSystemPrompt = {
-            if (proposals == null && logProposals == null) systemPrompt
+            if (proposals == null && logProposals == null && goalProposals == null) systemPrompt
             else systemPromptFor(
                 proposalCards = false,
                 logMode = if (logProposals != null) LogMode.BLOCK else LogMode.NONE
@@ -127,7 +135,8 @@ class ChatService(
             workoutPlanWeightUnit = workoutPlanWeightUnit,
             exerciseLibrary = exerciseLibrary,
             proposals = proposals,
-            logProposals = logProposals
+            logProposals = logProposals,
+            goalProposals = goalProposals
         )
 
         if (hosted != null && prefs.aiAccessMode.first() == AiAccessMode.HOSTED) {
@@ -136,6 +145,7 @@ class ChatService(
             hosted.requireEntitlement()
             proposals?.reset()
             logProposals?.reset()
+            goalProposals?.reset()
             val hostedReply = runGeminiToolLoop(
                 systemPrompt, history, newUserMessage, tools, imageBytes,
                 maxToolResultChars = HostedAiConstants.MAX_TOOL_RESULT_CHARS
@@ -164,6 +174,7 @@ class ChatService(
         val reply = try {
             proposals?.reset()
             logProposals?.reset()
+            goalProposals?.reset()
             runProvider(
                 provider, model, baseUrl, apiKey, systemPrompt, history, newUserMessage,
                 tools, imageBytes, maxTokens, requestTimeoutSeconds, toolFreeSystemPrompt
@@ -179,6 +190,7 @@ class ChatService(
             // The fallback answers from scratch, so cards from the failed attempt are dropped.
             proposals?.reset()
             logProposals?.reset()
+            goalProposals?.reset()
             runProvider(
                 fallback.provider, fallback.model, fallback.baseUrl, fallback.apiKey,
                 systemPrompt, history, newUserMessage, tools, imageBytes, maxTokens,

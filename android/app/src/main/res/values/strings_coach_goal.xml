@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Goal plan agreed with Coach, and the ⓘ explanations of each goal option. -->
+<resources>
+    <!-- ⓘ buttons -->
+    <string name="info_button_a11y">What \"%1$s\" means</string>
+    <string name="info_button_ok">Got it</string>
+
+    <string name="goal_info_lose">Eat a little less than you burn, so you lose fat at the pace you choose (0.25 to 1 kg a week). Protein goes up to protect your muscle. Pick it when dropping weight is your main goal.</string>
+    <string name="goal_info_maintain">Eat about what you burn, so your weight stays steady. With strength training it is also the recomposition option: losing fat and gaining muscle at the same time while the scale barely moves. Track your waist and photos rather than the scale.</string>
+    <string name="goal_info_gain">Eat a little more than you burn to gain weight, ideally muscle, together with strength training (up to 0.5 kg a week). Pick it when you want to grow or are underweight.</string>
+    <string name="training_goal_info">Muscle: build size with 3–4 sets of 8–15 reps and 60–90 s rest.\n\nStrength: lift heavier with fewer reps (4–10) and longer rest (up to 3 min).\n\nTone: lighter weights, 15–20 reps and short rest (45 s), for endurance and definition. Losing fat still comes from your calories, not from the rep range.</string>
+
+    <!-- Onboarding and Settings -->
+    <string name="cg_onboarding_option">My goal is more complex</string>
+    <string name="cg_onboarding_option_subtitle">Explain it to Coach</string>
+    <string name="cg_info_option">For goals that do not fit the options above, like losing belly fat while building muscle, training for a sport or working around an injury. You tell Coach what you want, it asks a few questions and proposes a plan; when you apply it, the plan sets your calories and your training. Until then the app uses Maintain.</string>
+    <string name="cg_settings_plan_title">Your plan with Coach</string>
+    <string name="cg_settings_explain">Explain my goal to Coach</string>
+    <string name="cg_settings_adjust">Adjust my plan with Coach</string>
+
+    <!-- Home -->
+    <string name="cg_home_title">Tell Coach what you want to achieve</string>
+    <string name="cg_home_body">If your goal does not fit lose, maintain or gain, explain it in your own words and Coach will plan your calories and training around it.</string>
+    <string name="cg_home_action">Talk to Coach</string>
+    <string name="cg_home_close_a11y">Hide</string>
+
+    <!-- Coach chat -->
+    <string name="cg_chip_explain_goal">I want to explain my goal</string>
+    <string name="cg_interview_opener">I want to explain my goal so you can plan my training and nutrition around it.</string>
+    <string name="cg_reply_review_card">Here is your plan. Review it and tap Apply if it fits you.</string>
+    <string name="cg_card_title">Your goal plan</string>
+    <string name="cg_action_apply">Apply</string>
+    <string name="cg_action_dismiss">Dismiss</string>
+    <string name="cg_status_applied">Applied: your calories and training now follow this plan.</string>
+    <string name="cg_status_dismissed">Dismissed. Nothing changed.</string>
+    <string name="cg_error_apply">The plan could not be applied. Try again.</string>
+    <string name="cg_label_weight_goal">Weight</string>
+    <string name="cg_label_training_goal">Training</string>
+    <string name="cg_label_focus">Focus</string>
+    <string name="cg_label_days">Days</string>
+    <string name="cg_days_format">%1$d days a week</string>
+    <string name="cg_label_notes">To keep in mind</string>
+    <string name="cg_pace_kg">%1$s kg/week</string>
+    <string name="cg_pace_lb">%1$s lb/week</string>
+</resources>

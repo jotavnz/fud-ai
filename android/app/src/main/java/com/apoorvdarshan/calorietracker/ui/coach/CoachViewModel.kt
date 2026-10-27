@@ -9,6 +9,8 @@ import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.CoachGoalCollector
+import com.apoorvdarshan.calorietracker.models.CoachGoalProposal
 import com.apoorvdarshan.calorietracker.models.CoachLogCollector
 import com.apoorvdarshan.calorietracker.models.CoachLogItem
 import com.apoorvdarshan.calorietracker.models.CoachLogProposal
@@ -16,6 +18,7 @@ import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.CurrentMealSchedule
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
+import com.apoorvdarshan.calorietracker.models.withGoalPlan
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.CoachLogService
 import com.apoorvdarshan.calorietracker.services.ai.CoachProposalApplier
@@ -26,6 +29,7 @@ import com.apoorvdarshan.calorietracker.services.voice.PhotoOutcome
 import com.apoorvdarshan.calorietracker.services.voice.PickOutcome
 import com.apoorvdarshan.calorietracker.services.voice.VoiceCameraMode
 import com.apoorvdarshan.calorietracker.services.voice.VoiceUiBridge
+import com.apoorvdarshan.calorietracker.ui.workouts.TrainingGoalPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,7 +64,9 @@ data class CoachUiState(
     /** Proposal cards whose Add or Dismiss is being saved; their buttons are disabled meanwhile. */
     val resolvingProposalIds: Set<String> = emptySet(),
     /** Log cards being estimated or saved; their buttons are disabled meanwhile. */
-    val busyLogProposalIds: Set<String> = emptySet()
+    val busyLogProposalIds: Set<String> = emptySet(),
+    /** Goal cards whose Apply or Dismiss is being saved. */
+    val busyGoalProposalIds: Set<String> = emptySet()
 )
 
 class CoachViewModel(private val container: AppContainer) : ViewModel() {
@@ -91,9 +97,12 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         // Keep chips current when either the user's goal or their workout history changes.
         combine(
             container.profileRepository.profile,
-            container.workoutRepository.completedSessions
-        ) { profile, sessions ->
-            chipsFor(profile?.goal, hasWorkoutSessions = sessions.isNotEmpty())
+            container.workoutRepository.completedSessions,
+            container.prefs.coachGoalPlan
+        ) { profile, sessions, plan ->
+            // Until a goal plan exists, the first chip starts the goal conversation.
+            val chips = chipsFor(profile?.goal, hasWorkoutSessions = sessions.isNotEmpty())
+            if (plan == null) listOf(R.string.cg_chip_explain_goal) + chips else chips
         }
             .onEach { suggestions -> _ui.value = _ui.value.copy(suggestions = suggestions) }
             .launchIn(viewModelScope)
@@ -160,6 +169,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 val exerciseLibrary = currentExerciseLibrary()
                 val proposals = CoachProposalCollector()
                 val logProposals = CoachLogCollector()
+                val goalProposals = CoachGoalCollector()
                 val appContext = container.appContext
 
                 val reply = container.chatService.sendMessage(
@@ -181,19 +191,26 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     exerciseLibrary = exerciseLibrary,
                     proposals = proposals,
                     logProposals = logProposals,
+                    goalProposals = goalProposals,
                     appLanguage = appContext.getString(R.string.cl_prompt_language),
                     logButtonLabel = appContext.getString(R.string.cl_action_log)
                 )
                 val logCards = logProposals.proposals
+                val goalCards = goalProposals.proposals
                 val content = reply.trim().ifEmpty {
-                    if (logCards.isNotEmpty()) appContext.getString(R.string.cl_reply_review_card) else reply.trim()
+                    when {
+                        logCards.isNotEmpty() -> appContext.getString(R.string.cl_reply_review_card)
+                        goalCards.isNotEmpty() -> appContext.getString(R.string.cg_reply_review_card)
+                        else -> reply.trim()
+                    }
                 }
                 container.chatRepository.append(
                     ChatMessage(
                         role = ChatMessage.Role.ASSISTANT,
                         content = content,
                         proposals = proposals.proposals,
-                        logProposals = logCards
+                        logProposals = logCards,
+                        goalProposals = goalCards
                     )
                 )
                 _ui.value = _ui.value.copy(sending = false)
@@ -257,6 +274,52 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 _ui.value = _ui.value.copy(error = null, errorRes = R.string.coach_proposal_save_failed)
             } finally {
                 _ui.value = _ui.value.copy(resolvingProposalIds = _ui.value.resolvingProposalIds - proposalId)
+            }
+        }
+    }
+
+    // MARK: - Goal cards
+
+    /**
+     * Apply on a goal card: sets the profile's weight goal (as Settings' goal picker would), the
+     * machine coach's training goal, and saves the plan Coach reads in every later conversation.
+     */
+    fun applyGoalProposal(messageId: UUID, proposalId: String) = runGoalAction(proposalId) {
+        val applied = container.chatRepository.updateGoalProposal(messageId, proposalId) { current ->
+            if (current.status != CoachGoalProposal.Status.PENDING) return@updateGoalProposal null
+            current.copy(status = CoachGoalProposal.Status.APPLIED)
+        } ?: return@runGoalAction
+        val plan = applied.plan
+        container.profileRepository.current()?.let { container.profileRepository.save(it.withGoalPlan(plan)) }
+        TrainingGoalPrefs.write(container.appContext, plan.training)
+        container.prefs.setCoachGoalPlan(plan)
+        container.prefs.setCoachGoalPromptDismissed(true)
+    }
+
+    fun dismissGoalProposal(messageId: UUID, proposalId: String) = runGoalAction(proposalId) {
+        container.chatRepository.updateGoalProposal(messageId, proposalId) { current ->
+            if (current.status == CoachGoalProposal.Status.PENDING) current.copy(status = CoachGoalProposal.Status.DISMISSED) else null
+        }
+    }
+
+    /** Opens the goal conversation: the user's first message asks Coach to understand their goal. */
+    fun startGoalInterview() {
+        if (_ui.value.sending) return
+        send(container.appContext.getString(R.string.cg_interview_opener))
+    }
+
+    private fun runGoalAction(proposalId: String, work: suspend () -> Unit) {
+        if (proposalId in _ui.value.busyGoalProposalIds) return
+        _ui.value = _ui.value.copy(busyGoalProposalIds = _ui.value.busyGoalProposalIds + proposalId, error = null, errorRes = null)
+        viewModelScope.launch {
+            try {
+                work()
+            } catch (e: Throwable) {
+                ensureActive()
+                logFailure(e)
+                _ui.value = _ui.value.copy(error = null, errorRes = R.string.cg_error_apply)
+            } finally {
+                _ui.value = _ui.value.copy(busyGoalProposalIds = _ui.value.busyGoalProposalIds - proposalId)
             }
         }
     }

@@ -446,6 +446,17 @@ DisposableEffect(lifecycleOwner, vm) {
         showText = true
         container.navigator.pendingFoodText.value = null
     }
+    // Onboarding's "Explain it to Coach" opens the goal conversation once Home first shows.
+    val goalInterviewPending by container.prefs.coachGoalInterviewPending.collectAsState(initial = false)
+    LaunchedEffect(goalInterviewPending) {
+        if (goalInterviewPending) {
+            container.prefs.setCoachGoalInterviewPending(false)
+            container.navigator.showCoachGoalInterview()
+        }
+    }
+    val coachGoalPlan by container.prefs.coachGoalPlan.collectAsState(initial = null)
+    val coachGoalPromptDismissed by container.prefs.coachGoalPromptDismissed.collectAsState(initial = true)
+    val homeScope = rememberCoroutineScope()
     val pendingCoachReview by container.navigator.pendingFoodReview.collectAsState()
     LaunchedEffect(pendingCoachReview, ui.analyzing, ui.pendingAnalysis) {
         val analysis = pendingCoachReview ?: return@LaunchedEffect
@@ -636,6 +647,15 @@ CalorieHero(
                             ViewMoreButton()
                         }
                     }
+                }
+            }
+
+            if (isToday && coachGoalPlan == null && !coachGoalPromptDismissed) {
+                item(key = "coach-goal-prompt") {
+                    CoachGoalPromptCard(
+                        onTalk = { container.navigator.showCoachGoalInterview() },
+                        onClose = { homeScope.launch { container.prefs.setCoachGoalPromptDismissed(true) } }
+                    )
                 }
             }
 

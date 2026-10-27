@@ -56,6 +56,20 @@ sugerencias inteligentes (Ajustes), resumen anual (Progreso).
 2. **Pantalla de estado de Health Connect** — `ui/settings/HealthSyncStatusScreen.kt`, `services/health/HealthSyncStatus.kt`, `HealthImportRunner.kt`, cambios en `FudAIApp.kt`, `ImportedHealthWorkoutRepository.kt`, una fila en `SettingsScreen.kt`; textos en `strings_health_status.xml`.
    Objetivo: ver permisos, por tipo de dato (peso, grasa, entrenamientos…) última sincronización, cantidad, rango de fechas y **de qué app/reloj vienen** (Samsung Health, Mi Fitness, Zepp, Cubitt…), botones "Sincronizar ahora" e "Importar historial completo", últimos registros importados. Su último error conocido: `HealthSyncStatusScreen.kt:689` — *"@Composable invocations can only happen from the context of a @Composable function"* (puede que ya lo haya arreglado; verificar).
 
+### Actualización 2026-10-26 (noche, PC de casa)
+
+- Lo "a medias" y el WIP ya **compilan juntos**; pruebas OK salvo 3 fallos solo de Windows
+  (los 2 de abajo + `FoodImageStoreRestoreTest.stagingRefusesANameThatIsASymbolicLink…`, que necesita
+  permiso de enlaces simbólicos). APK instalado en el teléfono (hubo que desinstalar: otra clave debug).
+- Nuevo: **objetivo libre con el coach** — 4.ª opción en el onboarding "Mi objetivo es más complejo",
+  aviso en Inicio, botón en Ajustes → Objetivo, atajo en el chat; el coach entrevista (máx. 4 preguntas)
+  y propone una tarjeta de plan (`propose_goal_plan`) que al aplicarse fija objetivo de peso, ritmo y
+  objetivo de entrenamiento, y queda en el prompt del coach (`CoachGoalPlan`, `CoachGoalTool`).
+- Nuevo: **botón ⓘ** con explicación en cada opción de objetivo (onboarding, Ajustes) y en
+  "Tu objetivo" de Training.
+- Pendiente de probar en el teléfono: coach-registro, Health Connect, máquinas, resumen anual y el
+  objetivo libre. Siguiente: pasos del Galaxy Watch incompletos (app 5.720 vs reloj 11.499) y tutorial guiado.
+
 ## 5. Próximos pasos para cerrar esta tanda
 
 1. `.\gradlew.bat compileDebugKotlin` y arreglar errores (empezar por `HealthSyncStatusScreen.kt:689`).

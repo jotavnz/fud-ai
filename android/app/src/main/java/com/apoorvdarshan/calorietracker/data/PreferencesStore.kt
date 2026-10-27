@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.apoorvdarshan.calorietracker.models.AddMenuConfig
+import com.apoorvdarshan.calorietracker.models.CoachGoalPlan
 import com.apoorvdarshan.calorietracker.models.ImportedHealthWorkout
 import com.apoorvdarshan.calorietracker.models.TabBarSettings
 import com.apoorvdarshan.calorietracker.models.AIProvider
@@ -399,6 +400,24 @@ class PreferencesStore(
     /** Opens the Year in review before the first year of use is complete. Off by default. */
     val yearReviewEarlyUnlock: Flow<Boolean> = ds.data.map { it[Keys.YEAR_REVIEW_EARLY_UNLOCK] ?: false }
     suspend fun setYearReviewEarlyUnlock(v: Boolean) { ds.edit { it[Keys.YEAR_REVIEW_EARLY_UNLOCK] = v } }
+
+    /** The goal plan the user agreed with Coach; null until they apply one. */
+    val coachGoalPlan: Flow<CoachGoalPlan?> = ds.data.map { prefs ->
+        prefs[Keys.COACH_GOAL_PLAN]?.let { runCatching { json.decodeFromString<CoachGoalPlan>(it) }.getOrNull() }
+    }
+    suspend fun setCoachGoalPlan(plan: CoachGoalPlan?) {
+        ds.edit {
+            if (plan == null) it.remove(Keys.COACH_GOAL_PLAN) else it[Keys.COACH_GOAL_PLAN] = json.encodeToString(CoachGoalPlan.serializer(), plan)
+        }
+    }
+
+    /** Home's "Tell Coach what you want" card was closed by the user. */
+    val coachGoalPromptDismissed: Flow<Boolean> = ds.data.map { it[Keys.COACH_GOAL_PROMPT_DISMISSED] ?: false }
+    suspend fun setCoachGoalPromptDismissed(v: Boolean) { ds.edit { it[Keys.COACH_GOAL_PROMPT_DISMISSED] = v } }
+
+    /** Onboarding chose "explain it to Coach": Home opens the goal interview once on first launch. */
+    val coachGoalInterviewPending: Flow<Boolean> = ds.data.map { it[Keys.COACH_GOAL_INTERVIEW_PENDING] ?: false }
+    suspend fun setCoachGoalInterviewPending(v: Boolean) { ds.edit { it[Keys.COACH_GOAL_INTERVIEW_PENDING] = v } }
 
     val fastingDefaultGoalMinutes: Flow<Int> = ds.data.map {
         (it[Keys.FASTING_DEFAULT_GOAL_MINUTES] ?: 16 * 60).coerceIn(60, 7 * 24 * 60)
@@ -1625,6 +1644,9 @@ class PreferencesStore(
         val SMART_SUGGESTIONS_ENABLED = booleanPreferencesKey("smartSuggestionsEnabled")
         val YEAR_REVIEW_ENABLED = booleanPreferencesKey("yearReviewEnabled")
         val YEAR_REVIEW_EARLY_UNLOCK = booleanPreferencesKey("yearReviewEarlyUnlock")
+        val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
+        val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
+        val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")
         val FASTING_DEFAULT_GOAL_MINUTES = intPreferencesKey("fastingDefaultGoalMinutes")
         val FASTING_GOAL_NOTIFICATION_ENABLED = booleanPreferencesKey("fastingGoalNotificationEnabled")
         val FASTING_SESSIONS = stringPreferencesKey("fastingSessions")
