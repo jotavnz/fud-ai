@@ -20,6 +20,11 @@ Solo inglés y español; el idioma elegido aplica a todo.
 - Mapa de recuperación muscular en Training (por grupo: % y "listo en X h", con consejos de recuperación activa), con series y cardio del reloj; el coach lo recibe.
 - Alertas de sobreesfuerzo (notificación, desactivable): cardio del reloj sobre piernas cansadas, día de 150+ min, más de 25 series/semana en un grupo, 7 días sin descanso. Revisa cada 2 h y al abrir la app.
 - Modo casa/gimnasio: en Training (Gimnasio | Casa) y desde el coach (tarjeta de plan con lugar y equipo); en casa sugiere mancuernas, bandas, pesa rusa o peso corporal. El coach pregunta cada ~14 días si sigue igual.
+- Fatiga cruzada en los 10 grupos: ejercicios que cargan un músculo cansado (principal o secundario) bajan, se etiquetan ("También trabaja Bíceps (30 %)") y piden confirmación; "Mejor hoy" sugiere grupos descansados. El cardio del reloj carga los grupos que trabaja (remo → espalda/bíceps, natación → hombros, etc.).
+- Mi cuerpo (Progreso, 3.ª pestaña): mapa de calor del cuerpo (musclemap, MIT) en modo Recuperación o Esta semana, resumen semanal, músculos descansando, historial de sueño; "Sigo adolorido" (+24 h) desde el mapa o el coach. Avisos de "listo para entrenar" y "hoy descansa X".
+- Formato de hora 12/24 h en Ajustes; la hora de la comida se elige con rueda (con a. m./p. m.).
+- La IA de comida responde en el idioma de la app (antes "¿Y si…?" daba la sugerencia en inglés); el botón ahora se llama "Ver impacto".
+- Historial de sueño (30 noches, con fuente) y "sincronizar todo" deslizando Inicio hacia abajo.
 
 ## En curso
 - Probar todo lo anterior en el teléfono (Galaxy Watch 6 Classic + Honor) y con los amigos de la beta.

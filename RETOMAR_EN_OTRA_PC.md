@@ -78,6 +78,16 @@ sobreesfuerzo y modo casa/gimnasio. Health Connect pide ahora también sueño y 
 la app vuelve a pedir permisos. Para las alertas con cardio del reloj, activar en Ajustes el acceso a
 los entrenamientos de otras apps (ExerciseSession).
 
+Después (madrugada del 27): fatiga cruzada en todos los músculos, pantalla Mi cuerpo (mapa de calor con
+musclemap, MIT, copiado en `android/app/src/main/java/com/fittribe/musclemap`), "sigo adolorido", formato
+de hora 12/24 h con rueda, IA de comida en español, historial de sueño y sincronizar todo (deslizar Inicio).
+
+**APK de prueba para amigos:** carpeta de Drive "EntrenarIA" (dueño jotavnz@gmail.com):
+`EntrenadorIA-beta-2026-10-27.apk` (de esta PC). La anterior `EntrenadorIA-debug.apk` (26-oct, PC de la
+oficina) está firmada con otra clave: quien la tenga debe desinstalarla antes de instalar la nueva.
+**Firma:** las APK de prueba se firman con `C:\Users\Job\.android\debug.keystore`. Copiar ese archivo a
+la otra PC (misma ruta) para que las próximas versiones se instalen encima sin perder datos.
+
 En esta PC: JDK 17 y Android SDK en `C:\Users\Job\dev` (`local.properties` apunta ahí). El repo está en
 `C:\Users\Job\Documents\Proyectos OnGoing\Entrenador IA\fud-ai`.
 
