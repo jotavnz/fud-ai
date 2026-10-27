@@ -432,6 +432,10 @@ class PreferencesStore(
     val sleepAdviceEnabled: Flow<Boolean> = ds.data.map { it[Keys.SLEEP_ADVICE_ENABLED] ?: true }
     suspend fun setSleepAdviceEnabled(v: Boolean) { ds.edit { it[Keys.SLEEP_ADVICE_ENABLED] = v } }
 
+    /** Clock format for times shown and picked in the app: "system", "12" or "24". */
+    val timeFormat: Flow<String> = ds.data.map { it[Keys.TIME_FORMAT] ?: "system" }
+    suspend fun setTimeFormat(v: String) { ds.edit { it[Keys.TIME_FORMAT] = v } }
+
     /** "Still sore" reports that keep a muscle group locked a while longer. */
     val sorenessReports: Flow<List<SorenessReport>> = ds.data.map { prefs ->
         prefs[Keys.SORENESS_REPORTS]?.let { runCatching { json.decodeFromString<List<SorenessReport>>(it) }.getOrNull() }.orEmpty()
@@ -1717,6 +1721,7 @@ class PreferencesStore(
         val OVEREXERTION_ALERTS_ENABLED = booleanPreferencesKey("overexertionAlertsEnabled")
         val OVEREXERTION_ALERTED_KEYS = stringSetPreferencesKey("overexertionAlertedKeys")
         val SORENESS_REPORTS = stringPreferencesKey("sorenessReports")
+        val TIME_FORMAT = stringPreferencesKey("timeFormat")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")

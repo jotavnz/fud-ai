@@ -124,6 +124,10 @@ open class FudAIApp : Application() {
             .launchIn(appScope)
         container.notifications.createChannels()
         WidgetRefreshScheduler.onAppStarted(this)
+        // Times follow the 12/24-hour choice in Settings.
+        container.prefs.timeFormat
+            .onEach { com.apoorvdarshan.calorietracker.ui.util.AppTimeFormat.preference = it }
+            .launchIn(appScope)
         // Overreaching alerts (watch cardio on tired muscles, very long days, no rest day).
         com.apoorvdarshan.calorietracker.services.training.TrainingAlertsWorker.schedule(this)
         container.widgetSnapshotWriter.observe().launchIn(appScope)
@@ -308,6 +312,24 @@ class AppContainer(app: FudAIApp) {
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
     /** Read-only workouts other apps (Garmin Connect, Strava, …) shared with Health Connect. */
     val sleepService by lazy { com.apoorvdarshan.calorietracker.services.sleep.SleepService(this) }
+
+    /** Bumped after a manual sync so screens that read Health Connect live (steps, sleep) read again. */
+    val healthRefreshTick = kotlinx.coroutines.flow.MutableStateFlow(0)
+
+    /**
+     * Everything from Health Connect now: weigh-ins, body fat, meals and other apps' workouts are
+     * imported, then steps and sleep are read again and the training checks run. Home's pull to
+     * refresh and the Health status screen's Sync now both use it. False when a read failed.
+     */
+    suspend fun syncAllNow(): Boolean {
+        val complete = runCatching { syncHealthConnectReadsAndWait() }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            .getOrDefault(false)
+        healthRefreshTick.value += 1
+        runCatching { trainingLoad.checkAndNotify() }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+        return complete
+    }
     val trainingLoad by lazy { com.apoorvdarshan.calorietracker.services.training.TrainingLoadService(this) }
     val importedHealthWorkoutRepository = ImportedHealthWorkoutRepository(
         store = prefs,

@@ -105,6 +105,7 @@ data class SettingsUiState(
     val apiKeyMasked: String = "",
     val speechApiKeyMasked: String = "",
     val appearanceMode: String = "system",
+    val timeFormat: String = "system",
     val appThemeColor: AppThemeColor = AppThemeColor.FUD_PINK,
     val weekStartsOnMonday: Boolean = true,
     val energyUnit: EnergyUnit = EnergyUnit.Default,
@@ -279,6 +280,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val smartSuggestions = container.prefs.smartSuggestionsEnabled.first()
             val yearReview = container.prefs.yearReviewEnabled.first()
             val sleepAdvice = container.prefs.sleepAdviceEnabled.first()
+            val timeFormat = container.prefs.timeFormat.first()
             val overexertionAlerts = container.prefs.overexertionAlertsEnabled.first()
             val yearReviewEarly = container.prefs.yearReviewEarlyUnlock.first()
             val fastingGoal = container.prefs.fastingDefaultGoalMinutes.first()
@@ -372,6 +374,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     smartSuggestionsEnabled = smartSuggestions,
                     yearReviewEnabled = yearReview,
                     sleepAdviceEnabled = sleepAdvice,
+                    timeFormat = timeFormat,
                     overexertionAlertsEnabled = overexertionAlerts,
                     yearReviewEarlyUnlock = yearReviewEarly,
                     fastingDefaultGoalMinutes = fastingGoal,
@@ -677,6 +680,14 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 textApiKeyMasked = if (provider == _ui.value.selectedTextAI) masked else _ui.value.textApiKeyMasked,
                 fallbackApiKeyMasked = if (provider == _ui.value.fallbackProvider) masked else _ui.value.fallbackApiKeyMasked
             )
+        }
+    }
+
+    fun setTimeFormat(value: String) {
+        com.apoorvdarshan.calorietracker.ui.util.AppTimeFormat.preference = value
+        viewModelScope.launch {
+            container.prefs.setTimeFormat(value)
+            _ui.value = _ui.value.copy(timeFormat = value)
         }
     }
 

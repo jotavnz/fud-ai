@@ -92,7 +92,10 @@ internal fun ImportedHealthWorkoutRow(
     showDate: Boolean = false
 ) {
     val zone = remember { ZoneId.systemDefault() }
-    val timeFormatter = remember { DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault()) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val timeFormatter = remember(context) {
+        DateTimeFormatter.ofPattern(com.apoorvdarshan.calorietracker.ui.util.clockTimePattern(context), Locale.getDefault())
+    }
     val dateFormatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault()) }
     val duration = stringResource(R.string.outdoor_activity_minutes, workout.durationMinutes)
     val timeRange = "${timeFormatter.format(workout.startedAt.atZone(zone))} – " +

@@ -30,4 +30,10 @@
 
     <string name="cl_soreness">Still sore</string>
     <string name="cl_soreness_details">Still sore: rest %1$d h more before training it</string>
+
+    <!-- Settings: clock format -->
+    <string name="settings_time_format">Time format</string>
+    <string name="settings_time_format_system">Same as the phone</string>
+    <string name="settings_time_format_12">12-hour (a.m./p.m.)</string>
+    <string name="settings_time_format_24">24-hour</string>
 </resources>

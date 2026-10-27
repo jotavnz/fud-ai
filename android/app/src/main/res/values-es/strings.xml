@@ -41,7 +41,7 @@
     <string name="action_continue">Continuar</string>
     <string name="action_get_started">Comenzar</string>
     <string name="action_log">Registro</string>
-    <string name="action_what_if">¿Y si…?</string>
+    <string name="action_what_if">Ver impacto</string>
     <string name="action_analyze">Analizar</string>
     <string name="action_discard">Descartar</string>
     <string name="action_reset">Restablecer</string>
@@ -488,7 +488,7 @@
     <string name="sheet_meal_type">Tipo de comida</string>
     <string name="sheet_review_food">Revisar alimento</string>
     <string name="sheet_edit_food">Editar alimento</string>
-    <string name="what_if_title">¿Y si…?</string>
+    <string name="what_if_title">Cómo queda tu día con esto</string>
     <string name="what_if_subtitle">Previsualiza cómo cambia tu día con esta comida antes de registrarla.</string>
     <string name="what_if_ai_suggestion">Sugerencia de IA</string>
     <string name="what_if_loading">Comprobando el impacto…</string>

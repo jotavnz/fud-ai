@@ -30,4 +30,10 @@
 
     <string name="cl_soreness">Sigue adolorido</string>
     <string name="cl_soreness_details">Sigue adolorido: descansar %1$d h más antes de entrenarlo</string>
+
+    <!-- Ajustes: formato de hora -->
+    <string name="settings_time_format">Formato de hora</string>
+    <string name="settings_time_format_system">Igual que el teléfono</string>
+    <string name="settings_time_format_12">12 horas (a. m./p. m.)</string>
+    <string name="settings_time_format_24">24 horas</string>
 </resources>

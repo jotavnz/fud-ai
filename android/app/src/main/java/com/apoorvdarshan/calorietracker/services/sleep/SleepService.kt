@@ -18,6 +18,20 @@ class SleepService(private val container: AppContainer) {
     suspend fun adviceIfEnabled(): SleepAdvice? =
         if (container.prefs.sleepAdviceEnabled.first()) advice() else null
 
+    /** Nights of the last [days] days, newest first, from every source (one per morning). */
+    suspend fun history(days: Long = 30): List<SleepNight> {
+        val zone = ZoneId.systemDefault()
+        val from = LocalDate.now().minusDays(days).atStartOfDay(zone).toInstant()
+        val measured = if (container.prefs.healthConnectEnabled.first()) {
+            container.health.readSleepSessions(from, Instant.now()).orEmpty()
+        } else emptyList()
+        val manual = container.prefs.sleepEntries.first().filter { it.end.isAfter(from) }
+        return SleepAdvisor.nights(measured + manual, zone).sortedByDescending { it.wakeDate }
+    }
+
+    /** The user's age-based nightly need, for the history bars. */
+    suspend fun needMinutes(): Long = SleepAdvisor.baseNeedMinutes(container.profileRepository.current()?.age ?: 30)
+
     suspend fun advice(today: LocalDate = LocalDate.now()): SleepAdvice {
         val zone = ZoneId.systemDefault()
         val from = today.minusDays(HISTORY_DAYS).atStartOfDay(zone).toInstant()

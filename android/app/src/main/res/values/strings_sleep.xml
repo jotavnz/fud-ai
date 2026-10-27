@@ -7,9 +7,15 @@
     <string name="sleep_reason_hard_training">Hard training day: a little more sleep helps you recover.</string>
     <string name="sleep_reason_moderate_training">You trained today: some extra rest helps.</string>
     <string name="sleep_reason_debt">You averaged %1$s a night this week: catch up gradually.</string>
-    <string name="sleep_reason_late_meal">Heavy late dinner: better not to lie down before %1$s.</string>
+    <string name="sleep_reason_late_meal">Heavy dinner at %1$s: give digestion about 2.5 hours before lying down (from %2$s on).</string>
     <string name="sleep_info_title">How this is worked out</string>
     <string name="sleep_info_body">Adults usually need 7 to 9 hours. The app starts from what fits your age and adds time after a hard training day or a short week of sleep, then counts back from your usual wake-up time. Sleep comes from any watch, ring or app that shares it with Health Connect, or from what you tell Coach. It is advice, not a medical assessment.</string>
     <string name="sleep_settings_toggle">Sleep advice</string>
     <string name="sleep_settings_footer">Suggests how long to sleep and when to go to bed, from your training, late meals and recent sleep. Shown on Home and used by Coach.</string>
+    <string name="sleep_history_open">See sleep history</string>
+    <string name="sleep_history_title">Sleep, last 30 nights</string>
+    <string name="sleep_history_loading">Reading your sleep…</string>
+    <string name="sleep_history_average">Average of the last %2$d nights: %1$s</string>
+    <string name="sleep_history_manual">told to Coach</string>
+    <string name="sleep_history_detail">%1$s – %2$s · %3$s</string>
 </resources>

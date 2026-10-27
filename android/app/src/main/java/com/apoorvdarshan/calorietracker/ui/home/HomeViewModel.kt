@@ -344,6 +344,13 @@ viewModelScope.launch {
             .launchIn(viewModelScope)
     }
 
+    init {
+        // A manual sync (pull to refresh, Health status) re-reads steps and sleep.
+        container.healthRefreshTick
+            .onEach { refreshDailySteps() }
+            .launchIn(viewModelScope)
+    }
+
     /** Overreaching alerts as soon as the app opens, not only on the two-hourly check. */
     fun checkTrainingAlerts() {
         viewModelScope.launch {

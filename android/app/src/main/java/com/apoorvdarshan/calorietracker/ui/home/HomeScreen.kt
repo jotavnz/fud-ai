@@ -471,6 +471,9 @@ DisposableEffect(lifecycleOwner, vm) {
     val coachGoalPlan by container.prefs.coachGoalPlan.collectAsState(initial = null)
     val coachGoalPromptDismissed by container.prefs.coachGoalPromptDismissed.collectAsState(initial = true)
     val homeScope = rememberCoroutineScope()
+    var healthSyncing by remember { mutableStateOf(false) }
+    var showSleepHistory by remember { mutableStateOf(false) }
+    if (showSleepHistory) SleepHistoryDialog(container) { showSleepHistory = false }
     val pendingCoachReview by container.navigator.pendingFoodReview.collectAsState()
     LaunchedEffect(pendingCoachReview, ui.analyzing, ui.pendingAnalysis) {
         val analysis = pendingCoachReview ?: return@LaunchedEffect
@@ -570,7 +573,21 @@ DisposableEffect(lifecycleOwner, vm) {
             }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
+        // Pull down to sync everything from Health Connect now (weigh-ins, workouts, steps, sleep).
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = healthSyncing,
+            onRefresh = {
+                healthSyncing = true
+                homeScope.launch {
+                    try {
+                        container.syncAllNow()
+                    } finally {
+                        healthSyncing = false
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize().padding(padding)
+        ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize().testTag("home.diary"),
@@ -677,7 +694,7 @@ DisposableEffect(lifecycleOwner, vm) {
             }
 
             ui.sleepAdvice?.let { advice ->
-                if (isToday) item(key = "sleep-advice") { SleepAdviceCard(advice) }
+                if (isToday) item(key = "sleep-advice") { SleepAdviceCard(advice, onOpenHistory = { showSleepHistory = true }) }
             }
 
             // Unified diary. Water and fasting remain excluded from nutrition totals and sharing.
@@ -1585,7 +1602,7 @@ private fun showInstantPicker(context: android.content.Context, initial: Instant
                 },
                 value.hour,
                 value.minute,
-                android.text.format.DateFormat.is24HourFormat(context)
+                com.apoorvdarshan.calorietracker.ui.util.AppTimeFormat.is24(context)
             ).show()
         },
         value.year,

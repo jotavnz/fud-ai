@@ -556,7 +556,9 @@ class FoodAnalysisService(
             }
             settingsDeferred.await() to imagesDeferred.await()
         }
+        // Text the user reads comes back in the app's language (the "What if" tip was English).
         val requestPrompt = AminoAcidEstimates.prompt(prompt, aminoAcidInstruction, settings.aminoAcidEstimates)
+            .let { base -> AiLanguage.instruction()?.let { "$base\n\n$it" } ?: base }
         if (settings.accessMode == AiAccessMode.HOSTED && hosted != null) {
             // Hosted AI (Plus/Pro): the Worker picks the model and meters the call.
             // No BYOK key, fallback chain, or on-device model is involved.

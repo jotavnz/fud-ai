@@ -36,6 +36,8 @@ object HealthImportRunner {
 
         onStep(HealthImportStep.SYNCING)
         var complete = container.syncHealthConnectReadsAndWait()
+        // Steps and sleep are read live; tell their screens to read again too.
+        container.healthRefreshTick.value += 1
 
         if (fullHistory && prefs.healthConnectEnabled.first() && container.health.isAvailable()) {
             val caps = container.health.capabilities()

@@ -10,4 +10,20 @@ import android.text.format.DateFormat
  * site (adding `.withZone(...)` when formatting an Instant).
  */
 fun clockTimePattern(context: Context): String =
-    if (DateFormat.is24HourFormat(context)) "H:mm" else "h:mm a"
+    if (AppTimeFormat.is24(context)) "H:mm" else "h:mm a"
+
+/**
+ * The app's clock format from Settings (12 h with a.m./p.m., 24 h, or the phone's setting).
+ * Kept in memory so formatting stays synchronous; the app container keeps it in step with the
+ * stored preference.
+ */
+object AppTimeFormat {
+    @Volatile
+    var preference: String = "system"
+
+    fun is24(context: Context): Boolean = when (preference) {
+        "24" -> true
+        "12" -> false
+        else -> DateFormat.is24HourFormat(context)
+    }
+}

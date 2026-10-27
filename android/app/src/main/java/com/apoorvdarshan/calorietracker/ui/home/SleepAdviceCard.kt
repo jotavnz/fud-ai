@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,10 +28,15 @@ import java.time.format.FormatStyle
 
 /** Home's sleep card: last night, and how long and when to sleep tonight, with the reasons. */
 @Composable
-internal fun SleepAdviceCard(advice: SleepAdvice) {
-    val clock = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+internal fun SleepAdviceCard(advice: SleepAdvice, onOpenHistory: () -> Unit = {}) {
+    val clock = DateTimeFormatter.ofPattern(
+        com.apoorvdarshan.calorietracker.ui.util.clockTimePattern(androidx.compose.ui.platform.LocalContext.current)
+    )
     FudGlassSurface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clickable(onClick = onOpenHistory),
         cornerRadius = 20.dp,
         padding = 14.dp
     ) {
@@ -51,6 +57,12 @@ internal fun SleepAdviceCard(advice: SleepAdvice) {
                 reasonLines(advice, clock).forEach {
                     Text("• $it", style = MaterialTheme.typography.bodySmall, color = muted)
                 }
+                Text(
+                    stringResource(R.string.sleep_history_open),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
             InfoIconButton(title = stringResource(R.string.sleep_info_title), body = stringResource(R.string.sleep_info_body))
         }
@@ -64,8 +76,11 @@ private fun reasonLines(advice: SleepAdvice, clock: DateTimeFormatter): List<Str
         SleepAdvice.Reason.MODERATE_TRAINING -> stringResource(R.string.sleep_reason_moderate_training)
         SleepAdvice.Reason.SLEEP_DEBT, SleepAdvice.Reason.SMALL_SLEEP_DEBT ->
             advice.weekAverageMinutes?.let { stringResource(R.string.sleep_reason_debt, hm(it)) }
-        SleepAdvice.Reason.LATE_HEAVY_MEAL ->
-            advice.digestUntil?.let { stringResource(R.string.sleep_reason_late_meal, it.format(clock)) }
+        SleepAdvice.Reason.LATE_HEAVY_MEAL -> {
+            val ate = advice.lateMealAt
+            val from = advice.digestUntil
+            if (ate != null && from != null) stringResource(R.string.sleep_reason_late_meal, ate.format(clock), from.format(clock)) else null
+        }
         SleepAdvice.Reason.NO_HISTORY -> null
     }
 }

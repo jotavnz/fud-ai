@@ -234,6 +234,12 @@ internal fun BodyMapScreen(container: AppContainer) {
             }
         }
 
+        item(key = "sleep") {
+            FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 14.dp) {
+                com.apoorvdarshan.calorietracker.ui.home.SleepHistorySection(container)
+            }
+        }
+
         val locked = readiness.filter { it.lockedUntil != null || it.percent < 50 }
         if (locked.isNotEmpty()) {
             item(key = "locked") {

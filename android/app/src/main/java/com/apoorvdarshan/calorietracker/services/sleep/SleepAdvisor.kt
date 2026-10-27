@@ -37,7 +37,9 @@ data class SleepAdvice(
     /** Average of the last seven nights with data, when there are at least three. */
     val weekAverageMinutes: Long?,
     /** When a late heavy meal was logged, the earliest comfortable bedtime after it. */
-    val digestUntil: LocalTime?
+    val digestUntil: LocalTime?,
+    /** When that late heavy meal was eaten. */
+    val lateMealAt: LocalTime? = null
 ) {
     enum class Reason { HARD_TRAINING, MODERATE_TRAINING, SLEEP_DEBT, SMALL_SLEEP_DEBT, LATE_HEAVY_MEAL, NO_HISTORY }
 }
@@ -129,7 +131,8 @@ object SleepAdvisor {
             reasons = reasons,
             lastNight = nights.lastOrNull { it.wakeDate == today } ?: nights.lastOrNull { it.wakeDate == today.minusDays(1) },
             weekAverageMinutes = average,
-            digestUntil = digestUntil
+            digestUntil = digestUntil,
+            lateMealAt = lateHeavy?.first?.atZone(zone)?.toLocalTime()
         )
     }
 

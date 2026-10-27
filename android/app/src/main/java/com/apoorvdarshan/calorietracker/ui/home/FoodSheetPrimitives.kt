@@ -799,34 +799,20 @@ internal fun SheetTimePickerDialog(
     onConfirm: (LocalTime) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var hourText by remember(initialTime) { mutableStateOf(initialTime.hour.toString().padStart(2, '0')) }
-    var minuteText by remember(initialTime) { mutableStateOf(initialTime.minute.toString().padStart(2, '0')) }
+    var time by remember(initialTime) { mutableStateOf(initialTime.withSecond(0).withNano(0)) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     FudGlassDialog(onDismissRequest = onDismiss) {
         Text(stringResource(R.string.label_time), fontSize = 21.sp, fontWeight = FontWeight.Bold)
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FudGlassTextField(
-                value = hourText,
-                onValueChange = { hourText = it.filter(Char::isDigit).take(2) },
-                placeholder = stringResource(R.string.placeholder_hour),
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            FudGlassTextField(
-                value = minuteText,
-                onValueChange = { minuteText = it.filter(Char::isDigit).take(2) },
-                placeholder = stringResource(R.string.placeholder_minute),
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        // Wheels instead of typed digits; 12 h with a.m./p.m. or 24 h as chosen in Settings.
+        com.apoorvdarshan.calorietracker.ui.components.TimeWheelPicker(
+            selected = time,
+            onSelect = { time = it },
+            use24Hour = com.apoorvdarshan.calorietracker.ui.util.AppTimeFormat.is24(context)
+        )
         FudGlassDialogActions(
             primaryText = stringResource(R.string.action_done),
-            onPrimary = {
-                val hour = hourText.toIntOrNull()?.coerceIn(0, 23) ?: initialTime.hour
-                val minute = minuteText.toIntOrNull()?.coerceIn(0, 59) ?: initialTime.minute
-                onConfirm(LocalTime.of(hour, minute))
-            },
+            onPrimary = { onConfirm(time) },
             dismissText = stringResource(R.string.action_cancel),
             onDismiss = onDismiss
         )

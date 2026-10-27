@@ -383,7 +383,9 @@ private fun itemDetails(item: CoachLogItem, today: LocalDate, weightMetric: Bool
             val end = item.sleepEnd?.let { runCatching { java.time.LocalDateTime.parse(it) }.getOrNull() }
             if (start != null && end != null) {
                 val minutes = java.time.Duration.between(start, end).toMinutes()
-                val clock = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+                val clock = DateTimeFormatter.ofPattern(
+                    com.apoorvdarshan.calorietracker.ui.util.clockTimePattern(androidx.compose.ui.platform.LocalContext.current)
+                )
                 lines += stringResource(
                     R.string.cl_sleep_details,
                     minutes / 60, minutes % 60, start.format(clock), end.format(clock)

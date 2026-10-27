@@ -206,6 +206,71 @@ fun DateWheelPicker(
     }
 }
 
+/**
+ * Hour and minute wheels for a time of day, with an a.m./p.m. wheel when [use24Hour] is false.
+ * Same shared capsule as [DateWheelPicker].
+ */
+@Composable
+fun TimeWheelPicker(
+    selected: java.time.LocalTime,
+    onSelect: (java.time.LocalTime) -> Unit,
+    use24Hour: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val minutes = remember { (0..59).toList() }
+    val amPm = remember { java.text.DateFormatSymbols.getInstance(java.util.Locale.getDefault()).amPmStrings }
+    val isPm = selected.hour >= 12
+    Box(
+        modifier = modifier.fillMaxWidth().height(ROW_HEIGHT),
+        contentAlignment = Alignment.Center
+    ) {
+        WheelSelectionHighlight(Modifier.align(Alignment.Center))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (use24Hour) {
+                WheelPicker(
+                    items = remember { (0..23).toList() },
+                    selected = selected.hour,
+                    onSelect = { h -> onSelect(selected.withHour(h)) },
+                    label = { it.toString().padStart(2, '0') },
+                    modifier = Modifier.weight(1f),
+                    showSelectionHighlight = false
+                )
+            } else {
+                val hour12 = (selected.hour % 12).let { if (it == 0) 12 else it }
+                WheelPicker(
+                    items = remember { (1..12).toList() },
+                    selected = hour12,
+                    onSelect = { h -> onSelect(selected.withHour(h % 12 + if (isPm) 12 else 0)) },
+                    modifier = Modifier.weight(1f),
+                    showSelectionHighlight = false
+                )
+            }
+            Text(":", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            WheelPicker(
+                items = minutes,
+                selected = selected.minute,
+                onSelect = { m -> onSelect(selected.withMinute(m)) },
+                label = { it.toString().padStart(2, '0') },
+                modifier = Modifier.weight(1f),
+                showSelectionHighlight = false
+            )
+            if (!use24Hour) {
+                WheelPicker(
+                    items = listOf(false, true),
+                    selected = isPm,
+                    onSelect = { pm -> onSelect(selected.withHour(selected.hour % 12 + if (pm) 12 else 0)) },
+                    label = { if (it) amPm[1] else amPm[0] },
+                    modifier = Modifier.weight(1f),
+                    showSelectionHighlight = false
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun WheelSelectionHighlight(modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(14.dp)

@@ -265,7 +265,13 @@ private enum class SettingsSheet {
     SPEECH_FALLBACK_PROVIDER, SPEECH_FALLBACK_LANGUAGE, SPEECH_FALLBACK_KEY,
     GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, GOAL_BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
     CALORIES, PROTEIN, CARBS, FAT, OPTIONAL_NUTRIENTS,
-    APPEARANCE, APP_LANGUAGE, WEEK_START, ENERGY_UNIT, SHARE_LINKS, MEAL_TIMES, WATER_GOAL, WATER_UNIT, WATER_QUICK_ADD, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE, WORKOUT_REST
+    APPEARANCE, APP_LANGUAGE, TIME_FORMAT, WEEK_START, ENERGY_UNIT, SHARE_LINKS, MEAL_TIMES, WATER_GOAL, WATER_UNIT, WATER_QUICK_ADD, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE, WORKOUT_REST
+}
+
+private fun timeFormatLabel(value: String): Int = when (value) {
+    "12" -> R.string.settings_time_format_12
+    "24" -> R.string.settings_time_format_24
+    else -> R.string.settings_time_format_system
 }
 
 private fun energyUnitTitleRes(unit: EnergyUnit): Int =
@@ -1003,6 +1009,12 @@ fun SettingsScreen(
                         ?: stringResource(R.string.settings_app_language_system),
                     icon = Icons.Outlined.Translate
                 ) { sheet = SettingsSheet.APP_LANGUAGE }
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.settings_time_format),
+                    stringResource(timeFormatLabel(ui.timeFormat)),
+                    icon = Icons.Outlined.Schedule
+                ) { sheet = SettingsSheet.TIME_FORMAT }
                 HorizontalDivider()
                 var themeMenuExpanded by remember { mutableStateOf(false) }
                 Box {
@@ -3416,6 +3428,13 @@ private fun SettingsSheets(
                     selected = { it.first == ui.appearanceMode },
                     onSelect = { vm.setAppearanceMode(it.first); onDismiss() },
                     icon = { appearanceIcon(it.first) }
+                )
+                SettingsSheet.TIME_FORMAT -> ListSheet(
+                    title = stringResource(R.string.settings_time_format),
+                    items = listOf("system", "12", "24"),
+                    label = { stringResource(timeFormatLabel(it)) },
+                    selected = { it == ui.timeFormat },
+                    onSelect = { vm.setTimeFormat(it); onDismiss() }
                 )
                 SettingsSheet.APP_LANGUAGE -> {
                     val selectedTag = currentAppLanguageTag()
