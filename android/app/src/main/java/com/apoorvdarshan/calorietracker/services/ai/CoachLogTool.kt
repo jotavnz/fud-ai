@@ -39,7 +39,9 @@ object CoachLogTool {
     const val DESCRIPTION = "Propose logging things the user says they ate, drank, weighed or trained into the app's diary: " +
         "foods and drinks with your calorie/macro estimate, plain water, body weight, body-fat percent, strength workouts, and timed cardio. " +
         "Use it whenever the user asks you to log, record, add, track or save something (\"regístralo\", \"anótalo\", \"log this\"), " +
-        "or clearly reports a meal and wants it in the diary. Put every item in ONE call: one food item per distinct dish or drink " +
+        "or clearly reports a meal and wants it in the diary. Steps they walked that the phone or watch did not count go in a steps item " +
+        "(a walk with minutes and steps: a cardio item plus a steps item); sleep (bed and wake time, or hours) goes in a sleep item. " +
+        "Never say you cannot update steps or sleep. Put every item in ONE call: one food item per distinct dish or drink " +
         "(keep quantities in description, e.g. \"2 ham and cheese sandwiches\"), with meal = breakfast, lunch, dinner or snack when the user says it. " +
         "Plain water goes in a water item, never as food; other drinks (mate, coffee, juice) are food items. " +
         "This does NOT save anything: the app re-estimates foods with its food analyzer and shows the user a card with Log, Edit and Cancel; " +
@@ -50,12 +52,13 @@ object CoachLogTool {
     private const val MAX_FOOD_KCAL = 10_000
     private const val MAX_MACRO_G = 1_000.0
     private const val MAX_PAST_DAYS = 30L
+    private const val MAX_STEPS = 100_000
 
     fun parameterSchema(): Map<String, Any> {
         val item = linkedMapOf(
             "type" to "object",
             "properties" to linkedMapOf(
-                "type" to prop("string", "One of: food, water, weight, body_fat, workout, cardio"),
+                "type" to prop("string", "One of: food, water, weight, body_fat, workout, cardio, steps, sleep"),
                 "description" to prop("string", "food/workout: what the user said with quantities, e.g. \"2 ham and cheese sandwiches\" or \"3x10 bench press 60 kg\""),
                 "name" to prop("string", "Short display name in the user's language, e.g. \"Sándwich de jamón y queso\" or \"Caminata\" (cardio activity)"),
                 "serving" to prop("string", "food: portion, e.g. \"2 sandwiches\" or \"1.5 L\""),
@@ -70,7 +73,11 @@ object CoachLogTool {
                 "unit" to prop("string", "water: ml, l, oz, cup or glass; weight: kg or lb"),
                 "value" to prop("number", "weight: body weight in unit"),
                 "percent" to prop("number", "body_fat: percent, e.g. 18.5"),
-                "minutes" to prop("number", "cardio: duration in minutes")
+                "minutes" to prop("number", "cardio: duration in minutes"),
+                "steps" to prop("number", "steps: how many steps to add to that day (a walk the phone or watch missed)"),
+                "bed_time" to prop("string", "sleep: when they went to bed, HH:mm"),
+                "wake_time" to prop("string", "sleep: when they woke up, HH:mm; date is the morning they woke up"),
+                "hours" to prop("number", "sleep: hours slept, when they did not give the times")
             ),
             "required" to listOf("type")
         )
@@ -121,7 +128,7 @@ object CoachLogTool {
 
     private fun parseItem(map: Map<String, Any?>, today: LocalDate): CoachLogItem {
         val kind = CoachLogItem.Kind.fromWire(text(map["type"]))
-            ?: throw IllegalArgumentException("type must be food, water, weight, body_fat, workout or cardio.")
+            ?: throw IllegalArgumentException("type must be food, water, weight, body_fat, workout, cardio, steps or sleep.")
         val date = date(map["date"], today)
         val time = text(map["time"]).takeIf { it.isNotEmpty() }?.let {
             VoiceArguments.parseTime(it)?.let(VoiceArguments::formatTime)
@@ -190,7 +197,43 @@ object CoachLogTool {
                 }
                 base.copy(name = activity, minutes = minutes, caloriesBurned = burned)
             }
+            CoachLogItem.Kind.STEPS -> {
+                val steps = (number(map["steps"]) ?: number(map["value"]) ?: number(map["amount"]))?.let { Math.round(it).toInt() }
+                    ?: throw IllegalArgumentException("steps needs the number of steps.")
+                if (steps !in 1..MAX_STEPS) throw IllegalArgumentException("steps must be 1 to $MAX_STEPS.")
+                base.copy(steps = steps)
+            }
+            CoachLogItem.Kind.SLEEP -> {
+                val (start, end) = sleepWindow(map, date)
+                base.copy(sleepStart = start.toString(), sleepEnd = end.toString())
+            }
         }
+    }
+
+    /**
+     * A night of sleep from bed_time / wake_time (HH:mm) or hours. [wakeDay] is the morning it
+     * ended; a bed time later than the wake time was the evening before. Hours alone end at the
+     * wake time given, else 07:00.
+     */
+    fun sleepWindow(map: Map<String, Any?>, wakeDay: LocalDate): Pair<java.time.LocalDateTime, java.time.LocalDateTime> {
+        fun clock(key: String): LocalTime? = text(map[key]).takeIf { it.isNotEmpty() }?.let {
+            VoiceArguments.parseTime(it) ?: throw IllegalArgumentException("$key must be HH:mm.")
+        }
+        val bed = clock("bed_time")
+        val wake = clock("wake_time")
+        val hours = number(map["hours"])
+        val end = wakeDay.atTime(wake ?: LocalTime.of(7, 0))
+        val start = when {
+            bed != null -> {
+                val sameDay = wakeDay.atTime(bed)
+                if (sameDay.isBefore(end)) sameDay else wakeDay.minusDays(1).atTime(bed)
+            }
+            hours != null -> end.minusMinutes(Math.round(hours * 60))
+            else -> throw IllegalArgumentException("sleep needs bed_time and wake_time, or hours.")
+        }
+        val minutes = java.time.Duration.between(start, end).toMinutes()
+        if (minutes !in 15..(18 * 60)) throw IllegalArgumentException("sleep must last between 15 minutes and 18 hours.")
+        return start to end
     }
 
     /** Spanish meal words too, in case the model echoes the user's language. */

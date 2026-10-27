@@ -18,6 +18,7 @@ import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.PendingFoodAnalysisDraft
 import com.apoorvdarshan.calorietracker.models.toReviewAnalysis
 import com.apoorvdarshan.calorietracker.models.UserProfile
+import com.apoorvdarshan.calorietracker.models.stepsByDay
 import com.apoorvdarshan.calorietracker.models.WaterEntry
 import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
 import com.apoorvdarshan.calorietracker.models.WaterUnit
@@ -119,6 +120,8 @@ data class HomeUiState(
     val errorOffersScanLabel: Boolean = false,
 /** Daily step total from Health Connect for [date]; null when health is off, unreadable, or loading. */
     val dailySteps: Int? = null,
+    /** Tonight's sleep advice (today only, when enabled in Settings). */
+    val sleepAdvice: com.apoorvdarshan.calorietracker.services.sleep.SleepAdvice? = null,
     val homeBurnSummary: HomeBurnSummary? = null,
     val addMenuConfig: AddMenuConfig = AddMenuConfig.Default
 ) {
@@ -309,15 +312,14 @@ viewModelScope.launch {
                 _selectedDate,
                 _stepsRefreshEpoch,
                 // A new step source (Health status screen) re-reads the day.
-                container.prefs.stepSource
-            ) { enabled, date, epoch, _ -> Triple(enabled, date, epoch) }
+                container.prefs.stepSource,
+                // Steps the user added through Coach count on top of Health Connect's.
+                container.prefs.manualSteps
+            ) { enabled, date, epoch, _, manual -> StepsInputs(enabled, date, epoch, manual.stepsByDay()[date] ?: 0) }
                 .distinctUntilChanged()
-                .collect { (enabled, date, _) ->
-                    if (!enabled || !container.health.hasStepsRead()) {
-                        _ui.value = _ui.value.copy(dailySteps = null)
-                        return@collect
-                    }
-                    val steps = container.health.readStepsForDay(date)
+                .collect { (enabled, date, _, manual) ->
+                    val measured = if (enabled && container.health.hasStepsRead()) container.health.readStepsForDay(date) else null
+                    val steps = if (measured == null && manual == 0) null else (measured ?: 0) + manual
                     if (_selectedDate.value == date) {
                         _ui.value = _ui.value.copy(dailySteps = steps)
                     }
@@ -345,6 +347,28 @@ viewModelScope.launch {
     fun refreshDailySteps() {
         _stepsRefreshEpoch.value += 1
     }
+
+    init {
+        // Sleep advice follows today's meals, training, steps and logged sleep.
+        combine(
+            container.prefs.sleepAdviceEnabled,
+            _selectedDate,
+            _stepsRefreshEpoch,
+            container.foodRepository.entries,
+            container.prefs.sleepEntries
+        ) { enabled, date, epoch, _, _ -> Triple(enabled, date, epoch) }
+            .onEach { (enabled, date, _) ->
+                val advice = if (enabled && date == LocalDate.now()) {
+                    runCatching { container.sleepService.advice() }
+                        .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+                        .getOrNull()
+                } else null
+                _ui.value = _ui.value.copy(sleepAdvice = advice)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private data class StepsInputs(val enabled: Boolean, val date: LocalDate, val epoch: Int, val manual: Int)
 
     private data class BurnRefreshInputs(
         val healthEnabled: Boolean,

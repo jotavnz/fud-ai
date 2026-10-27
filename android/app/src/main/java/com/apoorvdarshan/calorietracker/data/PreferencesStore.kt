@@ -13,6 +13,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.apoorvdarshan.calorietracker.models.AddMenuConfig
 import com.apoorvdarshan.calorietracker.models.CoachGoalPlan
+import com.apoorvdarshan.calorietracker.models.ManualStepEntry
+import com.apoorvdarshan.calorietracker.models.SleepEntry
 import com.apoorvdarshan.calorietracker.models.ImportedHealthWorkout
 import com.apoorvdarshan.calorietracker.models.TabBarSettings
 import com.apoorvdarshan.calorietracker.models.AIProvider
@@ -400,6 +402,34 @@ class PreferencesStore(
     /** Opens the Year in review before the first year of use is complete. Off by default. */
     val yearReviewEarlyUnlock: Flow<Boolean> = ds.data.map { it[Keys.YEAR_REVIEW_EARLY_UNLOCK] ?: false }
     suspend fun setYearReviewEarlyUnlock(v: Boolean) { ds.edit { it[Keys.YEAR_REVIEW_EARLY_UNLOCK] = v } }
+
+    /** Steps added by hand through Coach, on top of Health Connect's. */
+    val manualSteps: Flow<List<ManualStepEntry>> = ds.data.map { prefs ->
+        prefs[Keys.MANUAL_STEPS]?.let { runCatching { json.decodeFromString<List<ManualStepEntry>>(it) }.getOrNull() }.orEmpty()
+    }
+    /** Adds (or, for a repeated id, keeps) one manual step entry. */
+    suspend fun addManualSteps(entry: ManualStepEntry) {
+        ds.edit { prefs ->
+            val current = prefs[Keys.MANUAL_STEPS]?.let { runCatching { json.decodeFromString<List<ManualStepEntry>>(it) }.getOrNull() }.orEmpty()
+            if (current.none { it.id == entry.id }) prefs[Keys.MANUAL_STEPS] = json.encodeToString(ListSerializer(ManualStepEntry.serializer()), current + entry)
+        }
+    }
+
+    /** Sleep logged by hand through Coach (Health Connect sleep is read live, not stored here). */
+    val sleepEntries: Flow<List<SleepEntry>> = ds.data.map { prefs ->
+        prefs[Keys.SLEEP_ENTRIES]?.let { runCatching { json.decodeFromString<List<SleepEntry>>(it) }.getOrNull() }.orEmpty()
+    }
+    suspend fun addSleepEntry(entry: SleepEntry) {
+        ds.edit { prefs ->
+            val current = prefs[Keys.SLEEP_ENTRIES]?.let { runCatching { json.decodeFromString<List<SleepEntry>>(it) }.getOrNull() }.orEmpty()
+            // Keep about a year; the recommendation only looks at recent weeks.
+            if (current.none { it.id == entry.id }) prefs[Keys.SLEEP_ENTRIES] = json.encodeToString(ListSerializer(SleepEntry.serializer()), (current + entry).takeLast(400))
+        }
+    }
+
+    /** Sleep advice on Home and in Coach (hours and bedtime for tonight). On by default. */
+    val sleepAdviceEnabled: Flow<Boolean> = ds.data.map { it[Keys.SLEEP_ADVICE_ENABLED] ?: true }
+    suspend fun setSleepAdviceEnabled(v: Boolean) { ds.edit { it[Keys.SLEEP_ADVICE_ENABLED] = v } }
 
     /** The first-use app tour was finished or skipped. */
     val appTourCompleted: Flow<Boolean> = ds.data.map { it[Keys.APP_TOUR_COMPLETED] ?: false }
@@ -1654,6 +1684,9 @@ class PreferencesStore(
         val YEAR_REVIEW_EARLY_UNLOCK = booleanPreferencesKey("yearReviewEarlyUnlock")
         val STEP_SOURCE = stringPreferencesKey("stepSource")
         val APP_TOUR_COMPLETED = booleanPreferencesKey("appTourCompleted")
+        val MANUAL_STEPS = stringPreferencesKey("manualSteps")
+        val SLEEP_ENTRIES = stringPreferencesKey("sleepEntries")
+        val SLEEP_ADVICE_ENABLED = booleanPreferencesKey("sleepAdviceEnabled")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")

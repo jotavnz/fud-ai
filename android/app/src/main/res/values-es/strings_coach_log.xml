@@ -52,4 +52,8 @@
     <string name="cl_msg_send_to_log">Enviar a registro de comida</string>
     <string name="cl_msg_copy_description">Copiar mensaje</string>
     <string name="cl_msg_send_to_log_description">Enviar mensaje al registro de comida</string>
+    <string name="cl_steps">Pasos</string>
+    <string name="cl_steps_amount">+%1$s pasos</string>
+    <string name="cl_sleep">Sueño</string>
+    <string name="cl_sleep_details">%1$d h %2$02d min (%3$s–%4$s)</string>
 </resources>

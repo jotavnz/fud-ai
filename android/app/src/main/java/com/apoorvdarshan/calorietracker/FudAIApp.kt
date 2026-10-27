@@ -305,6 +305,7 @@ class AppContainer(app: FudAIApp) {
     val fastingRepository = FastingRepository(prefs)
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
     /** Read-only workouts other apps (Garmin Connect, Strava, …) shared with Health Connect. */
+    val sleepService by lazy { com.apoorvdarshan.calorietracker.services.sleep.SleepService(this) }
     val importedHealthWorkoutRepository = ImportedHealthWorkoutRepository(
         store = prefs,
         source = object : ExerciseSessionSource {

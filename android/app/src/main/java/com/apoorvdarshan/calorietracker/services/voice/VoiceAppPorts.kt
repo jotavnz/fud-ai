@@ -222,6 +222,12 @@ interface VoiceAppPorts {
     suspend fun saveWorkout(draft: WorkoutTextDraft): WorkoutWrite
     suspend fun logCardio(activity: String, minutes: Int, calories: Int?, date: LocalDate): WorkoutWrite
 
+    // Steps and sleep logged by hand (Coach chat). Ports without storage refuse them.
+    suspend fun addManualSteps(entry: com.apoorvdarshan.calorietracker.models.ManualStepEntry): Unit =
+        error("Manual steps are not supported here.")
+    suspend fun addSleep(entry: com.apoorvdarshan.calorietracker.models.SleepEntry): Unit =
+        error("Sleep logging is not supported here.")
+
     // Settings
     suspend fun settings(provider: LiveProvider): VoiceSettingsSnapshot
     suspend fun applySetting(key: VoiceSettingKey, value: SettingValue, provider: LiveProvider): SettingApplied

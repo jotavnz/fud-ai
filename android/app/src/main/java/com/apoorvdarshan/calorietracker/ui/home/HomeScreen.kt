@@ -675,6 +675,10 @@ DisposableEffect(lifecycleOwner, vm) {
                 }
             }
 
+            ui.sleepAdvice?.let { advice ->
+                if (isToday) item(key = "sleep-advice") { SleepAdviceCard(advice) }
+            }
+
             // Unified diary. Water and fasting remain excluded from nutrition totals and sharing.
             item { Spacer(Modifier.height(8.dp)) }
             if (diaryMealGroups.isEmpty()) {

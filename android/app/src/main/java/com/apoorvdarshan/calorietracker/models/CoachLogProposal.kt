@@ -80,6 +80,11 @@ data class CoachLogItem(
     val minutes: Int? = null,
     /** Cardio: kcal burned the user stated. */
     val caloriesBurned: Int? = null,
+    /** Steps: how many to add to the day. */
+    val steps: Int? = null,
+    /** Sleep: local bed and wake times, yyyy-MM-ddTHH:mm (the zone is applied when saving). */
+    val sleepStart: String? = null,
+    val sleepEnd: String? = null,
     val included: Boolean = true,
     val state: State = State.PENDING,
     /** Short reason shown under a failed row. */
@@ -92,7 +97,9 @@ data class CoachLogItem(
         @SerialName("weight") WEIGHT("weight"),
         @SerialName("body_fat") BODY_FAT("body_fat"),
         @SerialName("workout") WORKOUT("workout"),
-        @SerialName("cardio") CARDIO("cardio");
+        @SerialName("cardio") CARDIO("cardio"),
+        @SerialName("steps") STEPS("steps"),
+        @SerialName("sleep") SLEEP("sleep");
 
         companion object {
             fun fromWire(raw: String?): Kind? {
@@ -104,6 +111,8 @@ data class CoachLogItem(
                     "body_fat", "bodyfat", "body_fat_percent" -> BODY_FAT
                     "workout", "exercise", "strength", "training" -> WORKOUT
                     "cardio", "activity" -> CARDIO
+                    "steps", "step_count", "pasos" -> STEPS
+                    "sleep", "nap", "sueño", "sueno", "siesta" -> SLEEP
                     else -> null
                 }
             }

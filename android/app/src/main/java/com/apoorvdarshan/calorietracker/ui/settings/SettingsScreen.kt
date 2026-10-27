@@ -74,6 +74,7 @@ import androidx.compose.material.icons.outlined.Male
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingFlat
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Brightness6
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Bolt
@@ -1270,6 +1271,20 @@ fun SettingsScreen(
                 }
                 Text(
                     stringResource(R.string.settings_year_review_footer),
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+                HorizontalDivider()
+                ToggleRow(
+                    stringResource(R.string.sleep_settings_toggle),
+                    ui.sleepAdviceEnabled,
+                    icon = Icons.Outlined.Bedtime,
+                    onChange = vm::setSleepAdviceEnabled
+                )
+                Text(
+                    stringResource(R.string.sleep_settings_footer),
                     fontSize = 12.sp,
                     lineHeight = 18.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),

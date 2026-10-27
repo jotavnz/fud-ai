@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sueño: tarjeta de Inicio, interruptor de Ajustes y las razones de la recomendación. -->
+<resources>
+    <string name="sleep_card_title">Esta noche: duerme %1$s · acuéstate a las %2$s</string>
+    <string name="sleep_card_last_night">Anoche dormiste %1$s.</string>
+    <string name="sleep_card_no_data">Aún no hay datos de sueño: duerme con tu reloj o anillo, o cuéntale al coach cómo dormiste.</string>
+    <string name="sleep_reason_hard_training">Día de entrenamiento fuerte: dormir un poco más te ayuda a recuperarte.</string>
+    <string name="sleep_reason_moderate_training">Entrenaste hoy: un poco más de descanso ayuda.</string>
+    <string name="sleep_reason_debt">Esta semana dormiste en promedio %1$s por noche: recupéralo de a poco.</string>
+    <string name="sleep_reason_late_meal">Cena pesada y tarde: mejor no acostarte antes de las %1$s.</string>
+    <string name="sleep_info_title">Cómo se calcula</string>
+    <string name="sleep_info_body">Un adulto suele necesitar entre 7 y 9 horas. La app parte de lo que corresponde a tu edad y suma tiempo después de un día de entrenamiento fuerte o de una semana con poco sueño; luego cuenta hacia atrás desde tu hora habitual de despertar. El sueño viene de cualquier reloj, anillo o app que lo comparta con Health Connect, o de lo que le cuentes al coach. Es una recomendación, no una evaluación médica.</string>
+    <string name="sleep_settings_toggle">Recomendación de sueño</string>
+    <string name="sleep_settings_footer">Sugiere cuánto dormir y a qué hora acostarte según tu entrenamiento, tus comidas tarde y tu sueño reciente. Se muestra en Inicio y la usa el coach.</string>
+</resources>

@@ -313,6 +313,8 @@ private fun itemTitle(item: CoachLogItem): String = when (item.kind) {
     CoachLogItem.Kind.WEIGHT -> stringResource(R.string.cl_weight)
     CoachLogItem.Kind.BODY_FAT -> stringResource(R.string.cl_body_fat)
     CoachLogItem.Kind.WORKOUT -> item.name.ifBlank { stringResource(R.string.cl_workout) }
+    CoachLogItem.Kind.STEPS -> stringResource(R.string.cl_steps)
+    CoachLogItem.Kind.SLEEP -> stringResource(R.string.cl_sleep)
 }
 
 @Composable
@@ -367,6 +369,23 @@ private fun itemDetails(item: CoachLogItem, today: LocalDate, weightMetric: Bool
             val minutes = item.minutes ?: 0
             lines += (item.caloriesBurned?.let { stringResource(R.string.cl_cardio_minutes_burn, minutes, energyText(it)) }
                 ?: stringResource(R.string.cl_cardio_minutes, minutes)) + " · $date"
+        }
+        CoachLogItem.Kind.STEPS -> {
+            val steps = java.text.NumberFormat.getIntegerInstance().format(item.steps ?: 0)
+            lines += stringResource(R.string.cl_steps_amount, steps) + " · $date"
+        }
+        CoachLogItem.Kind.SLEEP -> {
+            val start = item.sleepStart?.let { runCatching { java.time.LocalDateTime.parse(it) }.getOrNull() }
+            val end = item.sleepEnd?.let { runCatching { java.time.LocalDateTime.parse(it) }.getOrNull() }
+            if (start != null && end != null) {
+                val minutes = java.time.Duration.between(start, end).toMinutes()
+                val clock = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+                lines += stringResource(
+                    R.string.cl_sleep_details,
+                    minutes / 60, minutes % 60, start.format(clock), end.format(clock)
+                )
+            }
+            lines += date
         }
     }
     return lines

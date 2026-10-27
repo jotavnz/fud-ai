@@ -76,6 +76,8 @@ class ChatService(
         logProposals: CoachLogCollector? = null,
         /** Coach chat's goal plan card; enables `propose_goal_plan`. */
         goalProposals: CoachGoalCollector? = null,
+        /** Extra prompt sections the caller builds (sleep, recovery), already in English. */
+        extraContext: List<String> = emptyList(),
         /** The app language's English name ("Spanish"), so replies match the app. */
         appLanguage: String? = null,
         /** The card's Log button as the user sees it ("Registrar"), so the reply can point at it. */
@@ -103,7 +105,8 @@ class ChatService(
                 logButtonLabel = logButtonLabel
             )
             // The goal card needs a tool call, so a tool-less model only reads the saved plan.
-            val goalLines = CoachGoalTool.promptLines(goalPlan, canPropose = proposalCards && goalProposals != null)
+            val goalLines = CoachGoalTool.promptLines(goalPlan, canPropose = proposalCards && goalProposals != null) +
+                (if (extraContext.isEmpty()) emptyList() else listOf("") + extraContext)
             val withGoal = if (goalLines.isEmpty()) baseSystemPrompt
             else "$baseSystemPrompt\n\n${goalLines.joinToString("\n").trimEnd()}"
             return if (userContext.isNotBlank())
@@ -354,7 +357,7 @@ class ChatService(
             LogMode.TOOL -> {
                 val button = logButtonLabel?.let { "\"$it\"" } ?: "Log"
                 lines.add("## Logging to the diary")
-                lines.add("You CAN log for the user. When they ask you to log, record, add or save what they ate or drank, their water, weight, body fat or a workout (\"regístralo\", \"anótalo\", \"registrarlos porfa\", \"log this\"), call ${CoachLogTool.TOOL_NAME} ONCE with every item: one food item per dish or drink with its quantity, meal (breakfast/lunch/dinner/snack) when they said it, and your calorie and macro estimate; plain water as a water item (glasses, liters); weight, body_fat, workout or cardio items as described. Never reply that you cannot log or that they must log it themselves.")
+                lines.add("You CAN log for the user. When they ask you to log, record, add or save what they ate or drank, their water, weight, body fat or a workout (\"regístralo\", \"anótalo\", \"registrarlos porfa\", \"log this\"), call ${CoachLogTool.TOOL_NAME} ONCE with every item: one food item per dish or drink with its quantity, meal (breakfast/lunch/dinner/snack) when they said it, and your calorie and macro estimate; plain water as a water item (glasses, liters); weight, body_fat, workout or cardio items as described; steps they walked that the phone or watch missed as a steps item, and sleep (bed and wake time, or hours) as a sleep item. Never reply that you cannot log or update steps or sleep, or that they must log it themselves.")
                 lines.add("The app re-estimates foods with its food analyzer and shows a confirmation card with $button, Edit and Cancel under your reply; nothing is saved until the user taps $button. In your reply, summarize what you put on the card in one or two sentences and ask them to review it. Never say it was already logged.")
                 lines.add("When the user only describes a meal without asking to log it, answer normally and you may offer to log it.")
                 lines.add("")

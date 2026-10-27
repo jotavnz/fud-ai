@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.services.ai
 
+import com.apoorvdarshan.calorietracker.models.ManualStepEntry
+import com.apoorvdarshan.calorietracker.models.SleepEntry
+import java.time.LocalDateTime
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.CoachLogItem
 import com.apoorvdarshan.calorietracker.models.CoachLogProposal
@@ -134,6 +137,15 @@ class CoachLogService(
             CoachLogItem.Kind.WORKOUT -> ports.saveWorkout(item.workoutDraft ?: error(ERROR_WORKOUT))
             CoachLogItem.Kind.CARDIO ->
                 ports.logCardio(item.displayName, item.minutes ?: error(ERROR_SAVE), item.caloriesBurned, date)
+            CoachLogItem.Kind.STEPS ->
+                ports.addManualSteps(
+                    ManualStepEntry(id = item.id, date = item.date, steps = item.steps ?: error(ERROR_SAVE), note = item.description.ifBlank { null })
+                )
+            CoachLogItem.Kind.SLEEP -> {
+                val start = LocalDateTime.parse(item.sleepStart ?: error(ERROR_SAVE)).atZone(ports.zone()).toInstant()
+                val end = LocalDateTime.parse(item.sleepEnd ?: error(ERROR_SAVE)).atZone(ports.zone()).toInstant()
+                ports.addSleep(SleepEntry(id = item.id, start = start, end = end))
+            }
         }
         return WriteResult.OK
     }

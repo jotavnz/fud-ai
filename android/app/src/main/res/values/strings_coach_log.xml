@@ -54,4 +54,8 @@
     <string name="cl_msg_send_to_log">Send to food log</string>
     <string name="cl_msg_copy_description">Copy message</string>
     <string name="cl_msg_send_to_log_description">Send message to food log</string>
+    <string name="cl_steps">Steps</string>
+    <string name="cl_steps_amount">+%1$s steps</string>
+    <string name="cl_sleep">Sleep</string>
+    <string name="cl_sleep_details">%1$d h %2$02d min (%3$s–%4$s)</string>
 </resources>

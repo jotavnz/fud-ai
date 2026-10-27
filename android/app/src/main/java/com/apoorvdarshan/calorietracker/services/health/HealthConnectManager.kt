@@ -16,6 +16,9 @@ import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.MealType as HCMealType
 import androidx.health.connect.client.records.NutritionRecord
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import com.apoorvdarshan.calorietracker.models.SleepEntry
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
@@ -211,6 +214,8 @@ class HealthConnectManager(
     private val activeEnergyWrite = HealthPermission.getWritePermission(ActiveCaloriesBurnedRecord::class)
     private val totalEnergyRead = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
     private val stepsRead = HealthPermission.getReadPermission(StepsRecord::class)
+    private val sleepRead = HealthPermission.getReadPermission(SleepSessionRecord::class)
+    private val heartRateRead = HealthPermission.getReadPermission(HeartRateRecord::class)
     /** Optional: imports other apps' workouts (Garmin Connect, Strava, …) read-only. */
     private val exerciseRead = HealthPermission.getReadPermission(ExerciseSessionRecord::class)
     private val backgroundRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
@@ -219,7 +224,7 @@ class HealthConnectManager(
     val permissions: Set<String> = setOf(
         weightRead, weightWrite, nutritionRead, nutritionWrite,
         bodyFatRead, bodyFatWrite, activeEnergyRead, activeEnergyWrite, totalEnergyRead,
-        stepsRead, exerciseRead
+        stepsRead, exerciseRead, sleepRead, heartRateRead
     )
 
     /** What the connect flows request: [permissions] plus history access where supported.
@@ -306,6 +311,40 @@ class HealthConnectManager(
     suspend fun hasActiveEnergyWrite(): Boolean = activeEnergyWrite in granted()
     suspend fun hasEnergyRead(): Boolean = granted().let { activeEnergyRead in it && totalEnergyRead in it }
     suspend fun hasStepsRead(): Boolean = stepsRead in granted()
+    suspend fun hasSleepRead(): Boolean = sleepRead in granted()
+
+    /**
+     * Sleep sessions from every app that shares them (watches, rings, phone apps) between
+     * [from] and [to], tagged with the app that recorded them. Null when they cannot be read.
+     */
+    suspend fun readSleepSessions(from: Instant, to: Instant): List<SleepEntry>? {
+        if (!hasSleepRead()) return null
+        val c = client ?: return null
+        return try {
+            readAllPages { pageToken ->
+                val response = c.readRecords(
+                    ReadRecordsRequest(
+                        recordType = SleepSessionRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(from, to),
+                        pageToken = pageToken
+                    )
+                )
+                response.records.map { record ->
+                    SleepEntry(
+                        id = record.metadata.id,
+                        start = record.startTime,
+                        end = record.endTime,
+                        source = record.metadata.dataOrigin.packageName
+                    )
+                } to response.pageToken
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Health Connect sleep read failed", e)
+            null
+        }
+    }
     suspend fun hasExerciseRead(): Boolean = exerciseRead in granted()
 
     /** Exercise read access, or null when the permission probe itself failed — so a transient
@@ -1111,9 +1150,10 @@ class HealthConnectManager(
          *  v4 = added NutritionRecord read permission (food-log restore).
          *  v5 = added ActiveCaloriesBurnedRecord write permission (workout burn sync).
          *  v6 = added StepsRecord read permission (daily steps on Home).
+         *  v7 = added SleepSessionRecord and HeartRateRecord read (sleep advice, fatigue).
          *  ExerciseSessionRecord read (imported workouts) is optional and deliberately does
          *  not bump this: Settings offers it on its own row instead of re-prompting everyone. */
-        const val CURRENT_TYPES_VERSION = 6
+        const val CURRENT_TYPES_VERSION = 7
     }
 }
 

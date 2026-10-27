@@ -82,6 +82,7 @@ data class SettingsUiState(
     val walkRunQuickLogEnabled: Boolean = false,
     val smartSuggestionsEnabled: Boolean = true,
     val yearReviewEnabled: Boolean = true,
+    val sleepAdviceEnabled: Boolean = true,
     val yearReviewEarlyUnlock: Boolean = false,
     val fastingDefaultGoalMinutes: Int = 16 * 60,
     val fastingGoalNotificationEnabled: Boolean = true,
@@ -276,6 +277,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val walkRunQuickLog = container.prefs.walkRunQuickLogEnabled.first()
             val smartSuggestions = container.prefs.smartSuggestionsEnabled.first()
             val yearReview = container.prefs.yearReviewEnabled.first()
+            val sleepAdvice = container.prefs.sleepAdviceEnabled.first()
             val yearReviewEarly = container.prefs.yearReviewEarlyUnlock.first()
             val fastingGoal = container.prefs.fastingDefaultGoalMinutes.first()
             val fastingNotification = container.prefs.fastingGoalNotificationEnabled.first()
@@ -367,6 +369,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     walkRunQuickLogEnabled = walkRunQuickLog,
                     smartSuggestionsEnabled = smartSuggestions,
                     yearReviewEnabled = yearReview,
+                    sleepAdviceEnabled = sleepAdvice,
                     yearReviewEarlyUnlock = yearReviewEarly,
                     fastingDefaultGoalMinutes = fastingGoal,
                     fastingGoalNotificationEnabled = fastingNotification,
@@ -1177,6 +1180,13 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.prefs.setSmartSuggestionsEnabled(v)
             _ui.value = _ui.value.copy(smartSuggestionsEnabled = v)
+        }
+    }
+
+    fun setSleepAdviceEnabled(v: Boolean) {
+        viewModelScope.launch {
+            container.prefs.setSleepAdviceEnabled(v)
+            _ui.value = _ui.value.copy(sleepAdviceEnabled = v)
         }
     }
 

@@ -107,6 +107,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.Role
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
 import com.apoorvdarshan.calorietracker.models.Gender
+import com.apoorvdarshan.calorietracker.models.stepsByDay
+import kotlinx.coroutines.flow.first
 import com.apoorvdarshan.calorietracker.ui.components.DecimalWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import com.apoorvdarshan.calorietracker.ui.components.energyText
@@ -364,7 +366,11 @@ private fun MyProgressContent(container: AppContainer) {
             today = LocalDate.now(),
             hasHistoryAccess = container.health.hasHealthDataHistory()
         )
-        val days = container.health.readDailyStepTotals(rangeStartDate, rangeEndDate)
+        val measured = container.health.readDailyStepTotals(rangeStartDate, rangeEndDate).toMap()
+        // Steps added through Coach count on top of the measured days.
+        val manual = container.prefs.manualSteps.first().stepsByDay()
+            .filterKeys { !it.isBefore(rangeStartDate) && !it.isAfter(rangeEndDate) }
+        val days = (measured.keys + manual.keys).sorted().map { day -> day to (measured[day] ?: 0) + (manual[day] ?: 0) }
         // Never publish a superseded window's totals over the current one.
         ensureActive()
         stepsHistoryLimited = historyLimited

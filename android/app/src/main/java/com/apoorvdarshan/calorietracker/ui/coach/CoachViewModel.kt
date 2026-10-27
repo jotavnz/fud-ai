@@ -192,6 +192,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     proposals = proposals,
                     logProposals = logProposals,
                     goalProposals = goalProposals,
+                    extraContext = coachExtraContext(),
                     appLanguage = appContext.getString(R.string.cl_prompt_language),
                     logButtonLabel = appContext.getString(R.string.cl_action_log)
                 )
@@ -277,6 +278,14 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
             }
         }
     }
+
+    /** Sleep (when its advice is on) for Coach's prompt; a failed read leaves it out. */
+    private suspend fun coachExtraContext(): List<String> =
+        runCatching { container.sleepService.adviceIfEnabled() }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            .getOrNull()
+            ?.let { com.apoorvdarshan.calorietracker.services.sleep.SleepAdvisor.promptLines(it) }
+            .orEmpty()
 
     // MARK: - Goal cards
 
