@@ -70,6 +70,17 @@ sugerencias inteligentes (Ajustes), resumen anual (Progreso).
 - Pendiente de probar en el teléfono: coach-registro, Health Connect, máquinas, resumen anual y el
   objetivo libre. Siguiente: pasos del Galaxy Watch incompletos (app 5.720 vs reloj 11.499) y tutorial guiado.
 
+### Actualización 2026-10-27 (madrugada, PC de casa)
+
+Hecho, compilado e instalado (ver `PLAN_ENTRENADOR_IA.md` → Hecho): pasos por fuente, tutorial, pasos y
+sueño desde el coach, sueño de relojes/anillos y recomendación de sueño, mapa de recuperación, alertas de
+sobreesfuerzo y modo casa/gimnasio. Health Connect pide ahora también sueño y ritmo cardíaco (tipos v7):
+la app vuelve a pedir permisos. Para las alertas con cardio del reloj, activar en Ajustes el acceso a
+los entrenamientos de otras apps (ExerciseSession).
+
+En esta PC: JDK 17 y Android SDK en `C:\Users\Job\dev` (`local.properties` apunta ahí). El repo está en
+`C:\Users\Job\Documents\Proyectos OnGoing\Entrenador IA\fud-ai`.
+
 ## 5. Próximos pasos para cerrar esta tanda
 
 1. `.\gradlew.bat compileDebugKotlin` y arreglar errores (empezar por `HealthSyncStatusScreen.kt:689`).

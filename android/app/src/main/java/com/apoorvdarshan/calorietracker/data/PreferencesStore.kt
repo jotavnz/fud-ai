@@ -431,6 +431,19 @@ class PreferencesStore(
     val sleepAdviceEnabled: Flow<Boolean> = ds.data.map { it[Keys.SLEEP_ADVICE_ENABLED] ?: true }
     suspend fun setSleepAdviceEnabled(v: Boolean) { ds.edit { it[Keys.SLEEP_ADVICE_ENABLED] = v } }
 
+    /** Notifications when the user may be overreaching. On by default. */
+    val overexertionAlertsEnabled: Flow<Boolean> = ds.data.map { it[Keys.OVEREXERTION_ALERTS_ENABLED] ?: true }
+    suspend fun setOverexertionAlertsEnabled(v: Boolean) { ds.edit { it[Keys.OVEREXERTION_ALERTS_ENABLED] = v } }
+
+    /** Overreaching alerts already sent, so each fires once. */
+    val overexertionAlertedKeys: Flow<Set<String>> = ds.data.map { it[Keys.OVEREXERTION_ALERTED_KEYS].orEmpty() }
+    suspend fun addOverexertionAlertedKeys(keys: Collection<String>) {
+        ds.edit { prefs ->
+            val current = prefs[Keys.OVEREXERTION_ALERTED_KEYS].orEmpty()
+            prefs[Keys.OVEREXERTION_ALERTED_KEYS] = (current + keys).toList().takeLast(200).toSet()
+        }
+    }
+
     /** The first-use app tour was finished or skipped. */
     val appTourCompleted: Flow<Boolean> = ds.data.map { it[Keys.APP_TOUR_COMPLETED] ?: false }
     suspend fun setAppTourCompleted(v: Boolean) { ds.edit { it[Keys.APP_TOUR_COMPLETED] = v } }
@@ -1687,6 +1700,8 @@ class PreferencesStore(
         val MANUAL_STEPS = stringPreferencesKey("manualSteps")
         val SLEEP_ENTRIES = stringPreferencesKey("sleepEntries")
         val SLEEP_ADVICE_ENABLED = booleanPreferencesKey("sleepAdviceEnabled")
+        val OVEREXERTION_ALERTS_ENABLED = booleanPreferencesKey("overexertionAlertsEnabled")
+        val OVEREXERTION_ALERTED_KEYS = stringSetPreferencesKey("overexertionAlertedKeys")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")

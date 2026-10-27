@@ -344,6 +344,14 @@ viewModelScope.launch {
             .launchIn(viewModelScope)
     }
 
+    /** Overreaching alerts as soon as the app opens, not only on the two-hourly check. */
+    fun checkTrainingAlerts() {
+        viewModelScope.launch {
+            runCatching { container.trainingLoad.checkAndNotify() }
+                .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+        }
+    }
+
     fun refreshDailySteps() {
         _stepsRefreshEpoch.value += 1
     }

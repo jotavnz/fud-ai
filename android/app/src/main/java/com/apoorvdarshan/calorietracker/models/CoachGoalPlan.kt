@@ -26,11 +26,22 @@ data class CoachGoalPlan(
     val trainingDaysPerWeek: Int? = null,
     /** Constraints and preferences worth remembering: schedule, equipment, injuries, food. */
     val notes: List<String> = emptyList(),
+    /** "gym" or "home" when the user said where they train; null leaves it unchanged. */
+    val trainingPlace: String? = null,
+    /** Home equipment in the library's names (dumbbell, bands, kettlebells...). */
+    val homeEquipment: List<String> = emptyList(),
     @Serializable(with = InstantSerializer::class)
     val updatedAt: Instant = Instant.now()
 ) {
     val training: TrainingGoal
         get() = runCatching { TrainingGoal.valueOf(trainingGoal) }.getOrDefault(TrainingGoal.HYPERTROPHY)
+
+    val place: TrainingPlace?
+        get() = when (trainingPlace?.lowercase()) {
+            "gym" -> TrainingPlace.GYM
+            "home" -> TrainingPlace.HOME
+            else -> null
+        }
 
     /** What Coach's system prompt carries about the plan. Model input, so it is not localized. */
     fun promptLines(): List<String> = buildList {
@@ -41,6 +52,7 @@ data class CoachGoalPlan(
         if (focusAreas.isNotEmpty()) add("- Focus areas: ${focusAreas.joinToString(", ")}")
         trainingDaysPerWeek?.let { add("- Training days per week: $it") }
         notes.forEach { add("- Note: $it") }
+        place?.let { add("- Trains at: ${it.name.lowercase()}${if (homeEquipment.isNotEmpty()) " with ${homeEquipment.joinToString(", ")}" else ""}") }
     }
 }
 

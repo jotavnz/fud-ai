@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mapa de recuperación muscular, alertas de sobreesfuerzo y entrenamiento en casa o gimnasio. -->
+<resources>
+    <string name="recovery_title">Recuperación muscular</string>
+    <string name="recovery_info">Cada grupo muestra cuánto se ha recuperado según las series que registras y los entrenamientos que comparte tu reloj (carreras, bici, caminatas). Los músculos grandes (piernas, espalda) tardan unos 3 días después de una sesión fuerte, el pecho unos 2,5, los hombros 2 y los brazos, pantorrillas y abdomen alrededor de 1,5; las sesiones ligeras se recuperan antes. Es una estimación: cómo te sientes también cuenta.</string>
+    <string name="recovery_ready">Listo</string>
+    <string name="recovery_hours">%1$d h</string>
+    <string name="recovery_percent">%1$d%% recuperado</string>
+    <string name="recovery_ready_long">Listo para entrenar.</string>
+    <string name="recovery_ready_in">Listo otra vez en unas %1$d horas.</string>
+    <string name="recovery_weekly_sets">%1$d series esta semana (entre 10 y 20 es el rango que construye músculo).</string>
+    <string name="recovery_tip_legs">Mientras se recuperan: camina suave 20–30 minutos, moviliza caderas y tobillos y estira cuádriceps e isquios. Evita correr fuerte o saltar hasta que estén listas.</string>
+    <string name="recovery_tip_upper">Mientras se recupera: movilidad de hombros, estiramientos suaves y cardio ligero. Puedes entrenar piernas o core mientras tanto.</string>
+    <string name="recovery_tip_small">Brazos y pantorrillas se recuperan rápido: trabajo ligero o estiramientos ahora, y en uno o dos días puedes volver a cargarlos.</string>
+    <string name="recovery_tip_core">El abdomen tolera entrenar seguido, pero dale un día después de trabajarlo fuerte. Respiración, planchas suaves y caminar ayudan.</string>
+    <string name="recovery_tip_general">Dormir bien y comer suficiente proteína acelera la recuperación.</string>
+
+    <string name="notif_channel_training_alerts">Alertas de entrenamiento</string>
+    <string name="notif_channel_training_alerts_desc">Avisos cuando puede que te estés sobreexigiendo</string>
+    <string name="alert_activity_generic">un entrenamiento</string>
+    <string name="alert_tired_legs_title">Cuida tus piernas</string>
+    <string name="alert_tired_legs_text">Hiciste %1$s durante %2$d min con las piernas al %3$d%% de recuperación. Hoy prioriza descanso, estiramientos y una cena con suficiente proteína.</string>
+    <string name="alert_long_day_title">Mucho ejercicio hoy</string>
+    <string name="alert_long_day_text">Llevas %1$d minutos de ejercicio hoy. Más ahora suma fatiga, no progreso: toma agua, come bien y descansa.</string>
+    <string name="alert_overuse_title">%1$s: demasiado volumen</string>
+    <string name="alert_overuse_text">%1$d series esta semana. Pasando de unas 20 tu cuerpo no alcanza a recuperarse: baja el volumen o cambia de grupo muscular.</string>
+    <string name="alert_no_rest_title">Siete días seguidos</string>
+    <string name="alert_no_rest_text">Tu cuerpo progresa mientras descansa. Toma un día libre o haz recuperación activa suave.</string>
+    <string name="settings_overexertion_alerts">Alertas de sobreesfuerzo</string>
+    <string name="settings_overexertion_alerts_footer">Te avisa cuando tu reloj registra cardio sobre músculos que aún se recuperan, después de un día con muchísimo ejercicio, con demasiado volumen semanal en un músculo o tras una semana sin descanso. Sirve para gimnasio y para entrenar en casa.</string>
+
+    <string name="place_gym">Gimnasio</string>
+    <string name="place_home">Casa</string>
+    <string name="place_label">Dónde entrenas</string>
+    <string name="place_info">En el gimnasio te salen primero las máquinas. En casa te salen ejercicios con lo que tengas (mancuernas, bandas, pesa rusa) o con tu peso corporal. El coach lo cambia cuando le cuentas dónde estás entrenando.</string>
+    <string name="place_home_empty">No hay ejercicios para este músculo con tu equipo de casa. Prueba con peso corporal o agrega equipo hablando con el coach.</string>
+</resources>

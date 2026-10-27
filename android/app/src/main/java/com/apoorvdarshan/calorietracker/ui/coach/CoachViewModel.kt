@@ -279,13 +279,21 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    /** Sleep (when its advice is on) for Coach's prompt; a failed read leaves it out. */
-    private suspend fun coachExtraContext(): List<String> =
-        runCatching { container.sleepService.adviceIfEnabled() }
+    /** Sleep (when its advice is on), muscle recovery and where the user trains, for Coach's prompt. */
+    private suspend fun coachExtraContext(): List<String> {
+        val sleep = runCatching { container.sleepService.adviceIfEnabled() }
             .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
             .getOrNull()
             ?.let { com.apoorvdarshan.calorietracker.services.sleep.SleepAdvisor.promptLines(it) }
             .orEmpty()
+        val recovery = runCatching { container.trainingLoad.readiness() }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            .getOrNull()
+            ?.let { com.apoorvdarshan.calorietracker.models.MuscleRecovery.promptLines(it) }
+            .orEmpty()
+        val place = TrainingGoalPrefs.setup(container.appContext).promptLines(java.time.Instant.now())
+        return listOf(sleep, recovery, place).filter { it.isNotEmpty() }.flatMap { it + "" }
+    }
 
     // MARK: - Goal cards
 
@@ -301,6 +309,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         val plan = applied.plan
         container.profileRepository.current()?.let { container.profileRepository.save(it.withGoalPlan(plan)) }
         TrainingGoalPrefs.write(container.appContext, plan.training)
+        plan.place?.let { TrainingGoalPrefs.writeSetup(container.appContext, it, plan.homeEquipment.toSet()) }
         container.prefs.setCoachGoalPlan(plan)
         container.prefs.setCoachGoalPromptDismissed(true)
     }

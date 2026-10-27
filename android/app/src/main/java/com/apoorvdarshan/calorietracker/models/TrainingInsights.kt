@@ -91,7 +91,7 @@ object TrainingInsights {
     }
 
     /** Diary days with at least one performed set, newest first, up to [today]. */
-    private fun trainedDays(state: WorkoutPersistedState, today: LocalDate): List<Pair<LocalDate, WorkoutDayPlan>> =
+    internal fun trainedDays(state: WorkoutPersistedState, today: LocalDate): List<Pair<LocalDate, WorkoutDayPlan>> =
         state.dayPlans.mapNotNull { (key, plan) ->
             val date = WorkoutDate.parse(key) ?: return@mapNotNull null
             if (date.isAfter(today)) return@mapNotNull null
@@ -100,7 +100,7 @@ object TrainingInsights {
         }.sortedByDescending { it.first }
 
     /** Effective sets per group for one day (primary = 1, secondary = 0.5). */
-    private fun groupSets(plan: WorkoutDayPlan): Map<MachineMuscleGroup, Double> {
+    internal fun groupSets(plan: WorkoutDayPlan): Map<MachineMuscleGroup, Double> {
         val totals = mutableMapOf<MachineMuscleGroup, Double>()
         for (exercise in plan.exercises) {
             if (exercise.isCardio) continue

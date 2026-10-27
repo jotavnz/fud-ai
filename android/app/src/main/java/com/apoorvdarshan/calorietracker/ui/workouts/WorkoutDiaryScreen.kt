@@ -178,6 +178,16 @@ internal fun WorkoutDiaryScreen(
     onEditUserExercise: (String) -> Unit = {}
 ) {
     var pickerRequest by remember { mutableStateOf<WorkoutPickerRequest?>(null) }
+    // Muscle recovery from the diary and the watch's workouts; refreshed as the diary changes.
+    val recovery by androidx.compose.runtime.produceState(
+        initialValue = emptyList<com.apoorvdarshan.calorietracker.models.MuscleReadiness>(),
+        state.workoutCounts,
+        state.selectedDate
+    ) {
+        value = runCatching { container.trainingLoad.readiness() }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            .getOrDefault(emptyList())
+    }
     var textSheetVisible by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var workoutTextInputVisible by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var workoutStartsWithVoice by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
@@ -296,6 +306,15 @@ internal fun WorkoutDiaryScreen(
                     },
                     recovering = if (smartSuggestions) state.fatigue.keys else emptySet()
                 )
+            }
+
+            if (smartSuggestions && recovery.isNotEmpty()) {
+                item(key = "workout-recovery") {
+                    MuscleRecoveryCard(recovery) {
+                        dismissKeyboard()
+                        viewModel.openMachineCoach(it)
+                    }
+                }
             }
 
             // Smart suggestions: at most two tips at a time, each hidden until tomorrow on dismiss.

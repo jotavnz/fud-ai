@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Muscle recovery map, overreaching alerts and home/gym training. -->
+<resources>
+    <string name="recovery_title">Muscle recovery</string>
+    <string name="recovery_info">Each group shows how recovered it is from your logged sets and the workouts your watch shares (runs, rides, hikes). Big muscles (legs, back) take about 3 days after a hard session, chest about 2.5, shoulders 2 and arms, calves and abs about 1.5; lighter sessions recover sooner. It is an estimate: how you feel counts too.</string>
+    <string name="recovery_ready">Ready</string>
+    <string name="recovery_hours">%1$d h</string>
+    <string name="recovery_percent">%1$d%% recovered</string>
+    <string name="recovery_ready_long">Ready to train.</string>
+    <string name="recovery_ready_in">Ready again in about %1$d hours.</string>
+    <string name="recovery_weekly_sets">%1$d sets this week (10–20 is the range that builds muscle).</string>
+    <string name="recovery_tip_legs">While they recover: an easy 20–30 minute walk, hip and ankle mobility, and stretching for quads and hamstrings. Skip hard runs and jumps until they are ready.</string>
+    <string name="recovery_tip_upper">While it recovers: shoulder mobility, gentle stretching and light cardio. You can train legs or core meanwhile.</string>
+    <string name="recovery_tip_small">Arms and calves recover fast: light work or stretching now, and you can load them again in a day or two.</string>
+    <string name="recovery_tip_core">Abs handle frequent training, but give them a day after hard work. Breathing work, gentle planks and walking help.</string>
+    <string name="recovery_tip_general">Sleeping well and eating enough protein speed up recovery.</string>
+
+    <string name="notif_channel_training_alerts">Training alerts</string>
+    <string name="notif_channel_training_alerts_desc">Warnings when you may be pushing too hard</string>
+    <string name="alert_activity_generic">a workout</string>
+    <string name="alert_tired_legs_title">Easy on your legs</string>
+    <string name="alert_tired_legs_text">You did %1$s for %2$d min with your legs at %3$d%% recovery. Today favor rest, stretching and a dinner with enough protein.</string>
+    <string name="alert_long_day_title">A lot of exercise today</string>
+    <string name="alert_long_day_text">You have %1$d minutes of exercise today. More now adds fatigue rather than progress: drink water, eat well and rest.</string>
+    <string name="alert_overuse_title">%1$s: too much volume</string>
+    <string name="alert_overuse_text">%1$d sets this week. Beyond about 20 your body cannot recover from it: train less or switch muscle groups.</string>
+    <string name="alert_no_rest_title">Seven days in a row</string>
+    <string name="alert_no_rest_text">Your body improves while it rests. Take a day off or do some easy active recovery.</string>
+    <string name="settings_overexertion_alerts">Overreaching alerts</string>
+    <string name="settings_overexertion_alerts_footer">Notifies you when your watch records cardio on muscles that are still recovering, after a very long day of exercise, with too much weekly volume on a muscle, or after a week without rest. Works for gym and home training.</string>
+
+    <string name="place_gym">Gym</string>
+    <string name="place_home">Home</string>
+    <string name="place_label">Where you train</string>
+    <string name="place_info">At the gym you get machines first. At home you get exercises with the equipment you have (dumbbells, bands, kettlebells) or your body weight. Coach can change this when you tell it where you are training.</string>
+    <string name="place_home_empty">No exercises for this muscle with your home equipment. Try body weight or add equipment in Coach.</string>
+</resources>

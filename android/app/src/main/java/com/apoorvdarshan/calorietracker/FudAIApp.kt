@@ -124,6 +124,8 @@ open class FudAIApp : Application() {
             .launchIn(appScope)
         container.notifications.createChannels()
         WidgetRefreshScheduler.onAppStarted(this)
+        // Overreaching alerts (watch cardio on tired muscles, very long days, no rest day).
+        com.apoorvdarshan.calorietracker.services.training.TrainingAlertsWorker.schedule(this)
         container.widgetSnapshotWriter.observe().launchIn(appScope)
         // Warm exercise catalog off the main thread before the first Workouts tab open.
         ExerciseRepository.warm(this)
@@ -306,6 +308,7 @@ class AppContainer(app: FudAIApp) {
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
     /** Read-only workouts other apps (Garmin Connect, Strava, …) shared with Health Connect. */
     val sleepService by lazy { com.apoorvdarshan.calorietracker.services.sleep.SleepService(this) }
+    val trainingLoad by lazy { com.apoorvdarshan.calorietracker.services.training.TrainingLoadService(this) }
     val importedHealthWorkoutRepository = ImportedHealthWorkoutRepository(
         store = prefs,
         source = object : ExerciseSessionSource {

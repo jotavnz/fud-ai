@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.CoachGoalPlan
 import com.apoorvdarshan.calorietracker.models.CoachGoalProposal
+import com.apoorvdarshan.calorietracker.models.TrainingPlace
 import java.util.Locale
 
 /**
@@ -101,6 +102,10 @@ internal fun GoalPlanDetails(plan: CoachGoalPlan, weightMetric: Boolean) {
         if (plan.focusAreas.isNotEmpty()) DetailRow(stringResource(R.string.cg_label_focus), plan.focusAreas.joinToString(", "))
         plan.trainingDaysPerWeek?.let { DetailRow(stringResource(R.string.cg_label_days), stringResource(R.string.cg_days_format, it)) }
         if (plan.notes.isNotEmpty()) DetailRow(stringResource(R.string.cg_label_notes), plan.notes.joinToString("\n") { "• $it" })
+        plan.place?.let { place ->
+            val where = stringResource(if (place == TrainingPlace.GYM) R.string.place_gym else R.string.place_home)
+            DetailRow(stringResource(R.string.place_label), if (plan.homeEquipment.isEmpty()) where else "$where (${plan.homeEquipment.joinToString(", ")})")
+        }
     }
 }
 

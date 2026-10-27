@@ -113,8 +113,14 @@ class NotificationService(private val context: Context) {
             enableVibration(true)
         }
 
+        val trainingAlerts = NotificationChannel(
+            CHANNEL_TRAINING_ALERTS,
+            context.getString(R.string.notif_channel_training_alerts),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = context.getString(R.string.notif_channel_training_alerts_desc) }
+
         mgr.createNotificationChannels(
-            listOf(streak, daily, goal, weight, bodyFat, appUpdate, water, announcements, workoutRest)
+            listOf(streak, daily, goal, weight, bodyFat, appUpdate, water, announcements, workoutRest, trainingAlerts)
         )
     }
 
@@ -230,6 +236,20 @@ class NotificationService(private val context: Context) {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
         NotificationManagerCompat.from(context).notifySafely(context, WORKOUT_REST_NOTIFICATION_ID, notif)
+    }
+
+    /** An overreaching warning (tired legs, a very long day, too much weekly volume, no rest day). */
+    fun showTrainingAlert(index: Int, title: String, text: String) {
+        val content = activityPendingIntent(0, MainActivity::class.java)
+        val notif = NotificationCompat.Builder(context, CHANNEL_TRAINING_ALERTS)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(content)
+            .setAutoCancel(true)
+            .build()
+        NotificationManagerCompat.from(context).notifySafely(context, TRAINING_ALERT_NOTIFICATION_ID + index, notif)
     }
 
     fun showGoalReached() {
@@ -496,6 +516,7 @@ class NotificationService(private val context: Context) {
         const val CHANNEL_FASTING = "fasting_goal"
         const val CHANNEL_ANNOUNCEMENTS = "announcements"
         const val CHANNEL_WORKOUT_REST = "workout_rest"
+        const val CHANNEL_TRAINING_ALERTS = "training_alerts"
         const val EXTRA_REST_EXERCISE_NAME = "rest_exercise_name"
         const val EXTRA_REST_ENDS_AT = "rest_ends_at"
         const val EXTRA_CHANNEL = "channel"
@@ -508,6 +529,7 @@ class NotificationService(private val context: Context) {
         private const val PRODUCT_HUNT_NOTIFICATION_ID = 6666
         private const val WORKOUT_REST_NOTIFICATION_ID = 7777
         private const val WHATS_NEW_NOTIFICATION_ID = 8888
+        private const val TRAINING_ALERT_NOTIFICATION_ID = 9100
         private const val REQUEST_STREAK = 1001
         private const val REQUEST_DAILY = 1002
         private const val REQUEST_WEIGHT = 1003

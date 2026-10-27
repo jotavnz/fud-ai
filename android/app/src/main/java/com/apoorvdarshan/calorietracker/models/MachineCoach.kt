@@ -19,6 +19,33 @@ enum class TrainingGoal(@StringRes val titleRes: Int, @StringRes val description
     }
 }
 
+/** Where the user trains: the gym (machines first) or home (their own equipment). */
+enum class TrainingPlace { GYM, HOME }
+
+/** Training place and home equipment (library names: dumbbell, bands, kettlebells...). */
+data class TrainingSetup(
+    val place: TrainingPlace = TrainingPlace.GYM,
+    val homeEquipment: Set<String> = emptySet(),
+    /** When the user last told Coach where they train; null = never. */
+    val confirmedAtMs: Long? = null
+) {
+    /** The equipment filter for the machine coach: null at the gym. */
+    val homeFilter: Set<String>? get() = if (place == TrainingPlace.HOME) homeEquipment else null
+
+    /** Lines for Coach's prompt. Model input, so it is not localized. */
+    fun promptLines(now: java.time.Instant): List<String> = buildList {
+        add("## Where the user trains")
+        val equipment = if (homeEquipment.isEmpty()) "body weight only" else (homeEquipment + "body weight").joinToString(", ")
+        add(if (place == TrainingPlace.HOME) "- At home with: $equipment. Recommend exercises without machines." else "- At the gym (machines available).")
+        val days = confirmedAtMs?.let { java.time.Duration.between(java.time.Instant.ofEpochMilli(it), now).toDays() }
+        add("- Confirmed by the user: ${days?.let { "$it days ago" } ?: "never"}")
+        if (days == null || days > 14) {
+            add("At a natural moment (not in the middle of logging), ask once whether they still train at the gym or at home and with what equipment, then call propose_goal_plan with training_place and home_equipment (keep the rest of their plan).")
+        }
+        add("When the user says they stopped going to the gym, train at home now, or are back at the gym, call propose_goal_plan with the updated training_place.")
+    }
+}
+
 /** A planned dose for one exercise: working sets, rep range, and rest between sets. */
 data class SetPrescription(
     val sets: Int,
@@ -123,15 +150,45 @@ object MachineCoach {
     fun candidates(
         group: MachineMuscleGroup,
         catalog: Map<String, ExerciseItem>,
-        fatiguedMuscles: Set<String> = emptySet()
+        fatiguedMuscles: Set<String> = emptySet(),
+        /** Training at home: only exercises this equipment (plus body weight) allows. Null = gym. */
+        homeEquipment: Set<String>? = null
     ): List<ExerciseItem> {
-        val ranked = rankedCandidates(group, catalog)
+        val ranked = if (homeEquipment != null) homeCandidates(group, catalog, homeEquipment) else rankedCandidates(group, catalog)
         val target = group.muscles.mapTo(mutableSetOf()) { it.lowercase() }
         val tired = fatiguedMuscles.map { it.lowercase() }.toSet() - target
         if (tired.isEmpty()) return ranked
         return ranked.sortedBy { item ->
             if ((item.primaryMuscles + item.secondaryMuscles).any { it.lowercase() in tired }) 1 else 0
         }
+    }
+
+    /** Home training: the group's strength exercises the user's equipment allows, free weights first. */
+    private fun homeCandidates(group: MachineMuscleGroup, catalog: Map<String, ExerciseItem>, equipment: Set<String>): List<ExerciseItem> {
+        val allowed = (equipment.map { it.lowercase() } + "body only").toSet()
+        val wanted = group.muscles.mapTo(mutableSetOf()) { it.lowercase() }
+        return catalog.values
+            .asSequence()
+            .filter { it.category.lowercase() in strengthCategories }
+            .filter { it.equipment.lowercase() in allowed }
+            .filter { item -> item.primaryMuscles.any { it.lowercase() in wanted } }
+            .sortedWith(
+                compareBy<ExerciseItem>(
+                    { homeEquipmentRank(it.equipment) },
+                    { levelRank(it.level) },
+                    { if (it.mechanic.equals("Compound", ignoreCase = true)) 0 else 1 },
+                    { it.name.lowercase() }
+                )
+            )
+            .toList()
+    }
+
+    private fun homeEquipmentRank(equipment: String): Int = when (equipment.lowercase()) {
+        "dumbbell" -> 0
+        "kettlebells" -> 1
+        "bands" -> 2
+        "body only" -> 3
+        else -> 4
     }
 
     private fun rankedCandidates(group: MachineMuscleGroup, catalog: Map<String, ExerciseItem>): List<ExerciseItem> {

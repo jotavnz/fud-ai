@@ -25,6 +25,8 @@ import com.apoorvdarshan.calorietracker.models.PlannedSet
 import com.apoorvdarshan.calorietracker.models.ProgressionHint
 import com.apoorvdarshan.calorietracker.models.SetPrescription
 import com.apoorvdarshan.calorietracker.models.TrainingGoal
+import com.apoorvdarshan.calorietracker.models.TrainingPlace
+import com.apoorvdarshan.calorietracker.models.TrainingSetup
 import com.apoorvdarshan.calorietracker.models.TrainingInsight
 import com.apoorvdarshan.calorietracker.models.TrainingInsights
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
@@ -107,13 +109,33 @@ data class WorkoutDiaryUiState(
  * Persisted to SharedPreferences (the analog of iOS's ExerciseFilterStateStore) so
  * it survives process death, not just tab switches.
  */
-/** Where the machine coach keeps its training goal, so a Coach goal plan can set it too. */
+/** Where the machine coach keeps its training goal and place, so a Coach goal plan can set them too. */
 object TrainingGoalPrefs {
     const val FILE = "fudai_workouts"
     const val KEY = "machine_coach.goal"
+    const val KEY_PLACE = "machine_coach.place"
+    const val KEY_HOME_EQUIPMENT = "machine_coach.home_equipment"
+    const val KEY_PLACE_CONFIRMED = "machine_coach.place_confirmed"
 
     fun write(context: Context, goal: TrainingGoal) {
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putString(KEY, goal.name).apply()
+    }
+
+    fun setup(context: Context): TrainingSetup = read(context.getSharedPreferences(FILE, Context.MODE_PRIVATE))
+
+    internal fun read(prefs: android.content.SharedPreferences): TrainingSetup = TrainingSetup(
+        place = prefs.getString(KEY_PLACE, null)?.let { runCatching { TrainingPlace.valueOf(it) }.getOrNull() } ?: TrainingPlace.GYM,
+        homeEquipment = prefs.getStringSet(KEY_HOME_EQUIPMENT, null)?.toSet().orEmpty(),
+        confirmedAtMs = prefs.getLong(KEY_PLACE_CONFIRMED, 0L).takeIf { it > 0 }
+    )
+
+    /** Saves where the user trains; [confirmed] marks it as just told to Coach. */
+    fun writeSetup(context: Context, place: TrainingPlace, homeEquipment: Set<String>? = null, confirmed: Boolean = true) {
+        context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().apply {
+            putString(KEY_PLACE, place.name)
+            homeEquipment?.let { putStringSet(KEY_HOME_EQUIPMENT, it) }
+            if (confirmed) putLong(KEY_PLACE_CONFIRMED, System.currentTimeMillis())
+        }.apply()
     }
 }
 
@@ -310,10 +332,22 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         prefs.getString(K_TRAINING_GOAL, null)?.let { runCatching { TrainingGoal.valueOf(it) }.getOrNull() }
     )
 
-    /** A goal plan applied from Coach writes the same key; follow it while this screen is alive. */
+    private val _trainingSetup = mutableStateOf(TrainingGoalPrefs.read(prefs))
+
+    /** Gym (machines first) or home (the user's equipment and body weight). */
+    val trainingSetup: TrainingSetup get() = _trainingSetup.value
+
+    fun setTrainingPlace(place: TrainingPlace) {
+        TrainingGoalPrefs.writeSetup(getApplication(), place, confirmed = false)
+    }
+
+    /** A goal plan applied from Coach writes the same keys; follow them while this screen is alive. */
     private val trainingGoalListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
         if (key == K_TRAINING_GOAL) {
             _trainingGoal.value = p.getString(K_TRAINING_GOAL, null)?.let { runCatching { TrainingGoal.valueOf(it) }.getOrNull() }
+        }
+        if (key == TrainingGoalPrefs.KEY_PLACE || key == TrainingGoalPrefs.KEY_HOME_EQUIPMENT) {
+            _trainingSetup.value = TrainingGoalPrefs.read(p)
         }
     }.also { prefs.registerOnSharedPreferenceChangeListener(it) }
 

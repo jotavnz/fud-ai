@@ -30,6 +30,7 @@ object CoachGoalTool {
     private const val MIN_WEEKLY_KG = 0.1
     private const val MAX_LOSS_KG = 1.0
     private const val MAX_GAIN_KG = 0.5
+    private val HOME_EQUIPMENT = setOf("dumbbell", "bands", "kettlebells", "barbell", "medicine ball", "exercise ball", "e-z curl bar")
 
     fun parameterSchema(): Map<String, Any> = linkedMapOf(
         "type" to "object",
@@ -44,6 +45,12 @@ object CoachGoalTool {
                 "items" to linkedMapOf("type" to "string")
             ),
             "training_days_per_week" to prop("number", "Days per week the user can train (1–7), if they said it"),
+            "training_place" to prop("string", "gym or home, when the user said where they train"),
+            "home_equipment" to linkedMapOf(
+                "type" to "array",
+                "description" to "Equipment they have at home, using these names: dumbbell, bands, kettlebells, barbell, medicine ball, exercise ball, e-z curl bar. Body weight is always included.",
+                "items" to linkedMapOf("type" to "string")
+            ),
             "notes" to linkedMapOf(
                 "type" to "array",
                 "description" to "Up to $MAX_LIST_ITEMS short facts to remember, in the user's language: schedule, gym or home, equipment, injuries, foods they avoid",
@@ -90,6 +97,8 @@ object CoachGoalTool {
             focusAreas = textList(args["focus_areas"], MAX_FOCUS_TEXT),
             trainingDaysPerWeek = days,
             notes = textList(args["notes"], MAX_NOTE_TEXT),
+            trainingPlace = text(args["training_place"]).lowercase().takeIf { it == "gym" || it == "home" },
+            homeEquipment = textList(args["home_equipment"], MAX_FOCUS_TEXT).map { it.lowercase() }.filter { it in HOME_EQUIPMENT },
             updatedAt = now
         )
         return Parsed(plan, errors)

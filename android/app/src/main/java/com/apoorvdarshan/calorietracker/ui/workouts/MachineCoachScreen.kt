@@ -64,6 +64,7 @@ import com.apoorvdarshan.calorietracker.models.MachineMuscleGroup
 import com.apoorvdarshan.calorietracker.models.ProgressionHint
 import com.apoorvdarshan.calorietracker.models.SetPrescription
 import com.apoorvdarshan.calorietracker.models.TrainingGoal
+import com.apoorvdarshan.calorietracker.models.TrainingPlace
 import com.apoorvdarshan.calorietracker.models.TrainingInsight
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
@@ -169,7 +170,10 @@ internal fun MachineCoachScreen(
     val colors = workoutsColors()
     val state = vm.diaryUiState
     val fatiguedMuscles = if (smart) state.fatiguedMuscles else emptySet()
-    val candidates = remember(group, repo, fatiguedMuscles) { MachineCoach.candidates(group, repo.byId, fatiguedMuscles) }
+    val homeFilter = vm.trainingSetup.homeFilter
+    val candidates = remember(group, repo, fatiguedMuscles, homeFilter) {
+        MachineCoach.candidates(group, repo.byId, fatiguedMuscles, homeFilter)
+    }
     val candidateIds = remember(candidates) { candidates.map { it.id } }
     LaunchedEffect(candidateIds) { vm.syncMachineSelection(candidateIds) }
     val suggestions = vm.machineSelection
@@ -239,6 +243,10 @@ internal fun MachineCoachScreen(
         ) {
             item(key = "goal") {
                 GoalSelector(selected = goal, onSelect = { vm.trainingGoal = it })
+                PlaceSelector(selected = vm.trainingSetup.place, onSelect = vm::setTrainingPlace)
+                if (homeFilter != null && candidates.isEmpty()) {
+                    Text(stringResource(R.string.place_home_empty), color = workoutsColors().mutedText, fontSize = 13.sp)
+                }
             }
             listOfNotNull(recovery, overuse).forEach { tip ->
                 item(key = "tip-${tip::class.simpleName}") {
@@ -312,6 +320,54 @@ internal fun MachineCoachScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceSelector(selected: TrainingPlace, onSelect: (TrainingPlace) -> Unit) {
+    val colors = workoutsColors()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.place_label).uppercase(),
+                color = colors.mutedText,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+            InfoIconButton(
+                title = stringResource(R.string.place_label),
+                body = stringResource(R.string.place_info),
+                tint = colors.mutedText
+            )
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.panel.copy(alpha = 0.45f))
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            TrainingPlace.entries.forEach { place ->
+                val isSelected = place == selected
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSelected) colors.accent else colors.panel.copy(alpha = 0f))
+                        .clickable { onSelect(place) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        stringResource(if (place == TrainingPlace.GYM) R.string.place_gym else R.string.place_home),
+                        color = if (isSelected) colors.onAccent else colors.charcoal,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

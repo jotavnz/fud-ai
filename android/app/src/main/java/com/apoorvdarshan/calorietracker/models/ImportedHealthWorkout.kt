@@ -134,3 +134,26 @@ internal fun importedWorkoutTypeLabel(exerciseType: Int): Int = when (exerciseTy
     ExerciseSessionRecord.EXERCISE_TYPE_YOGA -> R.string.health_exercise_yoga
     else -> R.string.health_exercise_workout
 }
+
+/** Leg work per hour (effective sets) for leg-heavy activities; 0 for the rest. */
+internal fun legSetsPerHour(exerciseType: Int): Double = when (exerciseType) {
+    ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
+    ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL,
+    ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING,
+    ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING_MACHINE -> 8.0
+    ExerciseSessionRecord.EXERCISE_TYPE_SOCCER,
+    ExerciseSessionRecord.EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING,
+    ExerciseSessionRecord.EXERCISE_TYPE_BOOT_CAMP -> 6.0
+    ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
+    ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY,
+    ExerciseSessionRecord.EXERCISE_TYPE_HIKING -> 5.0
+    ExerciseSessionRecord.EXERCISE_TYPE_ELLIPTICAL,
+    ExerciseSessionRecord.EXERCISE_TYPE_ROWING,
+    ExerciseSessionRecord.EXERCISE_TYPE_ROWING_MACHINE -> 4.0
+    ExerciseSessionRecord.EXERCISE_TYPE_WALKING -> 2.0
+    else -> 0.0
+}
+
+/** The session as leg cardio for recovery and overreaching checks. */
+internal fun ImportedHealthWorkout.asCardioBout(): CardioBout =
+    CardioBout(startedAt, durationMinutes, legSetsPerHour(exerciseType), importedWorkoutTypeLabel(exerciseType))

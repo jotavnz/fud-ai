@@ -239,6 +239,7 @@ DisposableEffect(lifecycleOwner, vm) {
             if (event == Lifecycle.Event.ON_RESUME) {
                 vm.refreshDailySteps()
                 vm.bumpBurnRefresh()
+                vm.checkTrainingAlerts()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

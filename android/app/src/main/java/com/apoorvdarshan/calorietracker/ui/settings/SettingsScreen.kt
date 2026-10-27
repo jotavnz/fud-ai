@@ -1283,6 +1283,20 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Bedtime,
                     onChange = vm::setSleepAdviceEnabled
                 )
+                HorizontalDivider()
+                ToggleRow(
+                    stringResource(R.string.settings_overexertion_alerts),
+                    ui.overexertionAlertsEnabled,
+                    icon = Icons.Outlined.Lightbulb,
+                    onChange = vm::setOverexertionAlertsEnabled
+                )
+                Text(
+                    stringResource(R.string.settings_overexertion_alerts_footer),
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
                 Text(
                     stringResource(R.string.sleep_settings_footer),
                     fontSize = 12.sp,
