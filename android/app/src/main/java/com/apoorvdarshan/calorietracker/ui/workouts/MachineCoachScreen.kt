@@ -65,6 +65,8 @@ import com.apoorvdarshan.calorietracker.models.ProgressionHint
 import com.apoorvdarshan.calorietracker.models.SetPrescription
 import com.apoorvdarshan.calorietracker.models.TrainingGoal
 import com.apoorvdarshan.calorietracker.models.TrainingPlace
+import com.apoorvdarshan.calorietracker.models.MuscleReadiness
+import com.apoorvdarshan.calorietracker.models.CrossFatigue
 import com.apoorvdarshan.calorietracker.models.TrainingInsight
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
@@ -165,11 +167,15 @@ internal fun MachineCoachScreen(
     goal: TrainingGoal,
     modifier: Modifier = Modifier,
     /** Smart suggestions on: recovery/overuse banners, cross-fatigue ranking, load hints, warnings. */
-    smart: Boolean = true
+    smart: Boolean = true,
+    /** Every group's recovery (diary sets, secondary muscles and watch activities). */
+    readiness: List<MuscleReadiness> = emptyList()
 ) {
     val colors = workoutsColors()
     val state = vm.diaryUiState
-    val fatiguedMuscles = if (smart) state.fatiguedMuscles else emptySet()
+    // Groups still under ~70% count as tired: exercises that also work them move behind the rest.
+    val tired = if (smart) CrossFatigue.tiredGroups(readiness) else emptyMap()
+    val fatiguedMuscles = if (smart) state.fatiguedMuscles + CrossFatigue.musclesOf(tired.keys) else emptySet()
     val homeFilter = vm.trainingSetup.homeFilter
     val candidates = remember(group, repo, fatiguedMuscles, homeFilter) {
         MachineCoach.candidates(group, repo.byId, fatiguedMuscles, homeFilter)
@@ -185,6 +191,28 @@ internal fun MachineCoachScreen(
     val recovery = if (smart) recoveryInsight(state.fatigue[group], vm.restedAlternatives(group)) else null
     val overuse = if (smart) remember(group, state) { vm.overuseFor(group) } else null
     var pendingAdd by remember { mutableStateOf<Pair<ExerciseItem, TrainingInsight>?>(null) }
+    var pendingCross by remember { mutableStateOf<Pair<ExerciseItem, List<Pair<MachineMuscleGroup, Int>>>?>(null) }
+    val targetPercent = readiness.firstOrNull { it.group == group }?.percent
+    val betterToday = if (smart && recovery == null && targetPercent != null && targetPercent < CrossFatigue.TIRED_PERCENT) {
+        CrossFatigue.readyAlternatives(readiness, group)
+    } else emptyList()
+
+    pendingCross?.let { (item, hits) ->
+        CrossFatigueDialog(
+            exerciseName = item.name,
+            hits = hits,
+            onAddAnyway = {
+                vm.addSuggestedExercise(item, MachineCoach.prescription(goal, item).sets)
+                pendingCross = null
+            },
+            onOtherOptions = {
+                pendingCross = null
+                val index = vm.machineSelection.indexOf(item.id)
+                if (index >= 0) vm.swapMachine(index, candidateIds)
+            },
+            onDismiss = { pendingCross = null }
+        )
+    }
 
     pendingAdd?.let { (item, warning) ->
         InsightWarningDialog(
@@ -248,6 +276,16 @@ internal fun MachineCoachScreen(
                     Text(stringResource(R.string.place_home_empty), color = workoutsColors().mutedText, fontSize = 13.sp)
                 }
             }
+            if (betterToday.isNotEmpty()) {
+                item(key = "better-today") {
+                    BetterTodayCard(
+                        group = group,
+                        percent = targetPercent ?: 0,
+                        alternatives = betterToday,
+                        onOpenGroup = vm::openMachineCoach
+                    )
+                }
+            }
             listOfNotNull(recovery, overuse).forEach { tip ->
                 item(key = "tip-${tip::class.simpleName}") {
                     TrainingInsightCard(
@@ -271,6 +309,11 @@ internal fun MachineCoachScreen(
             }
             itemsIndexed(suggestions, key = { _, item -> item.id }) { index, item ->
                 val prescription = MachineCoach.prescription(goal, item)
+                val crossHits = if (smart) CrossFatigue.hits(item, group, tired) else emptyList()
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (crossHits.isNotEmpty()) {
+                    CrossFatigueBadge(crossHits)
+                }
                 SuggestionCard(
                     item = item,
                     repo = repo,
@@ -287,10 +330,15 @@ internal fun MachineCoachScreen(
                     onHowTo = { vm.openExerciseId = item.id },
                     onAdd = {
                         val warning = if (smart) recovery ?: overuse ?: vm.plateauFor(item.id) else null
-                        if (warning != null) pendingAdd = item to warning
-                        else vm.addSuggestedExercise(item, prescription.sets)
+                        val badHits = crossHits.filter { it.second < CrossFatigue.WARN_PERCENT }
+                        when {
+                            warning != null -> pendingAdd = item to warning
+                            badHits.isNotEmpty() -> pendingCross = item to badHits
+                            else -> vm.addSuggestedExercise(item, prescription.sets)
+                        }
                     }
                 )
+                }
             }
             if (candidates.size > MachineCoach.SUGGESTION_COUNT || vm.canUndoMachines) {
                 item(key = "more") {

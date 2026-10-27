@@ -36,6 +36,38 @@ class MuscleRecoveryTest {
     private fun readiness(s: WorkoutPersistedState, cardio: List<CardioBout> = emptyList()) =
         MuscleRecovery.readiness(MuscleRecovery.bouts(s, cardio, noon, zone), noon).associateBy { it.group }
 
+    private fun legCardio(start: java.time.Instant, minutes: Int, thighs: Double) =
+        CardioBout(start, minutes, mapOf(MachineMuscleGroup.LEGS to thighs, MachineMuscleGroup.CALVES to thighs * 0.6))
+
+    @Test
+    fun aSwimOnTiredShouldersRaisesAShoulderAlert() {
+        val s = state(today.minusDays(1) to listOf(exercise(listOf("Shoulders"), 10)))
+        val swim = CardioBout(noon.minusSeconds(1800), 30, mapOf(MachineMuscleGroup.SHOULDERS to 6.0, MachineMuscleGroup.BACK to 5.0))
+        val alert = OverexertionMonitor.check(s, listOf(swim), 30, noon, zone)
+            .filterIsInstance<OverexertionAlert.CardioOnTiredMuscles>().single()
+        assertEquals(MachineMuscleGroup.SHOULDERS, alert.group)
+    }
+
+    @Test
+    fun rowsAfterAHardArmDayAreFlaggedForTheBiceps() {
+        // Biceps hammered yesterday; today the user picks back, whose rows also work the biceps.
+        val s = state(today.minusDays(1) to listOf(exercise(listOf("Biceps"), 12)))
+        val r = readiness(s).values.toList()
+        val tired = CrossFatigue.tiredGroups(r)
+        assertTrue(MachineMuscleGroup.BICEPS in tired)
+        fun item(id: String, primary: String, secondary: List<String>) = ExerciseItem(
+            id = id, name = id, level = "beginner", imagePaths = emptyList(), force = "pull", mechanic = "compound",
+            category = "strength", equipment = "machine", primaryMuscles = listOf(primary),
+            secondaryMuscles = secondary, instructions = emptyList()
+        )
+        val row = item("Seated_Cable_Rows", "Middle Back", listOf("Biceps"))
+        val hits = CrossFatigue.hits(row, MachineMuscleGroup.BACK, tired)
+        assertEquals(MachineMuscleGroup.BICEPS, hits.single().first)
+        assertTrue(CrossFatigue.hits(item("Pullover", "Lats", emptyList()), MachineMuscleGroup.BACK, tired).isEmpty())
+        // Back itself is rested, so it is among the alternatives when another group is tired.
+        assertTrue(MachineMuscleGroup.BACK in CrossFatigue.readyAlternatives(r, MachineMuscleGroup.BICEPS))
+    }
+
     @Test
     fun aHardLegDayYesterdayLeavesLegsRecovering() {
         val legs = readiness(state(today.minusDays(1) to listOf(exercise(listOf("Quadriceps"), 10))))[MachineMuscleGroup.LEGS]!!
@@ -57,7 +89,7 @@ class MuscleRecoveryTest {
 
     @Test
     fun aWatchRunLoadsTheLegs() {
-        val run = CardioBout(start = noon.minusSeconds(3 * 3600), minutes = 60, legSetsPerHour = 8.0)
+        val run = legCardio(noon.minusSeconds(3 * 3600), 60, 8.0)
         val r = readiness(state(), listOf(run))
         assertFalse(r.getValue(MachineMuscleGroup.LEGS).ready)
         assertTrue(r.getValue(MachineMuscleGroup.CHEST).ready)
@@ -66,19 +98,20 @@ class MuscleRecoveryTest {
     @Test
     fun aRunOnTiredLegsRaisesAnAlertOnce() {
         val s = state(today.minusDays(1) to listOf(exercise(listOf("Quadriceps"), 10)))
-        val run = CardioBout(start = noon.minusSeconds(3600), minutes = 40, legSetsPerHour = 8.0)
+        val run = legCardio(noon.minusSeconds(3600), 40, 8.0)
         val alerts = OverexertionMonitor.check(s, listOf(run), exerciseMinutesToday = 40, now = noon, zone = zone)
-        val tired = alerts.filterIsInstance<OverexertionAlert.CardioOnTiredLegs>().single()
-        assertTrue(tired.legPercentBefore < 50)
-        assertEquals("cardio_legs_${run.start.epochSecond}", tired.key)
+        val tired = alerts.filterIsInstance<OverexertionAlert.CardioOnTiredMuscles>().single()
+        assertTrue(tired.percentBefore < 50)
+        assertEquals(MachineMuscleGroup.LEGS, tired.group)
+        assertEquals("cardio_LEGS_${run.start.epochSecond}", tired.key)
     }
 
     @Test
     fun anEasyWalkOrRestedLegsRaiseNothing() {
-        val walk = CardioBout(start = noon.minusSeconds(3600), minutes = 40, legSetsPerHour = 2.0)
+        val walk = legCardio(noon.minusSeconds(3600), 40, 2.0)
         val tiredLegs = state(today.minusDays(1) to listOf(exercise(listOf("Quadriceps"), 10)))
         assertTrue(OverexertionMonitor.check(tiredLegs, listOf(walk), 40, noon, zone).isEmpty())
-        val run = CardioBout(start = noon.minusSeconds(3600), minutes = 40, legSetsPerHour = 8.0)
+        val run = legCardio(noon.minusSeconds(3600), 40, 8.0)
         assertTrue(OverexertionMonitor.check(state(), listOf(run), 40, noon, zone).isEmpty())
     }
 

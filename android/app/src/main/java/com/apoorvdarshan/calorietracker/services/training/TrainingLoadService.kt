@@ -65,10 +65,11 @@ class TrainingLoadService(private val container: AppContainer) {
     private fun message(alert: OverexertionAlert): Pair<String, String> {
         val ctx = container.appContext
         return when (alert) {
-            is OverexertionAlert.CardioOnTiredLegs -> {
+            is OverexertionAlert.CardioOnTiredMuscles -> {
                 val activity = alert.bout.labelRes?.let(ctx::getString) ?: ctx.getString(R.string.alert_activity_generic)
-                ctx.getString(R.string.alert_tired_legs_title) to
-                    ctx.getString(R.string.alert_tired_legs_text, activity, alert.bout.minutes, alert.legPercentBefore)
+                val group = ctx.getString(alert.group.titleRes)
+                ctx.getString(R.string.alert_tired_muscle_title, group) to
+                    ctx.getString(R.string.alert_tired_muscle_text, activity, alert.bout.minutes, group, alert.percentBefore)
             }
             is OverexertionAlert.LongDay ->
                 ctx.getString(R.string.alert_long_day_title) to ctx.getString(R.string.alert_long_day_text, alert.minutes)

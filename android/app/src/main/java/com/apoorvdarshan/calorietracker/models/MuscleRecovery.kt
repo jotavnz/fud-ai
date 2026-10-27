@@ -10,16 +10,16 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-/** Cardio that loads the legs (a run, a hike, a ride), usually imported from a watch. */
+/** Cardio or sport (a run, a swim, a climb), usually imported from a watch. */
 data class CardioBout(
     val start: Instant,
     val minutes: Int,
-    /** Leg work per hour in effective sets: running ≈ 8, cycling ≈ 5, walking ≈ 2. */
-    val legSetsPerHour: Double,
+    /** Work per hour in effective sets for each group it loads: a run ≈ 8 for the thighs, a swim ≈ 6 for the shoulders. */
+    val setsPerHour: Map<MachineMuscleGroup, Double>,
     /** Activity name resource for messages, when known. */
     val labelRes: Int? = null
 ) {
-    val legSets: Double get() = minutes / 60.0 * legSetsPerHour
+    fun sets(group: MachineMuscleGroup): Double = minutes / 60.0 * (setsPerHour[group] ?: 0.0)
 }
 
 /** How ready one muscle group is to train again. */
@@ -48,8 +48,6 @@ object MuscleRecovery {
     private const val MEANINGFUL_SETS = 3.0
     /** Diary days carry no time; a past day's training counts as done at this hour. */
     private val DEFAULT_TRAINING_TIME: LocalTime = LocalTime.of(18, 0)
-
-    val legGroups = setOf(MachineMuscleGroup.LEGS, MachineMuscleGroup.HAMSTRINGS, MachineMuscleGroup.GLUTES, MachineMuscleGroup.CALVES)
 
     fun recoveryHours(group: MachineMuscleGroup): Int = when (group) {
         MachineMuscleGroup.LEGS, MachineMuscleGroup.HAMSTRINGS, MachineMuscleGroup.GLUTES, MachineMuscleGroup.BACK -> 72
@@ -83,14 +81,9 @@ object MuscleRecovery {
                 TrainingInsights.groupSets(plan).map { (group, sets) -> Bout(group, at, sets) }
             }
         val fromCardio = cardio
-            .filter { !it.start.isAfter(now) && Duration.between(it.start, now).toDays() <= days && it.legSets > 0 }
-            .flatMap { bout ->
-                legGroups.map { group ->
-                    // Calves and glutes share the load; the thighs carry most of it.
-                    val share = if (group == MachineMuscleGroup.LEGS) 1.0 else 0.6
-                    Bout(group, bout.start, bout.legSets * share)
-                }
-            }
+            .filter { !it.start.isAfter(now) && Duration.between(it.start, now).toDays() <= days }
+            .flatMap { bout -> bout.setsPerHour.keys.map { group -> Bout(group, bout.start, bout.sets(group)) } }
+            .filter { it.sets > 0 }
         return fromDiary + fromCardio
     }
 

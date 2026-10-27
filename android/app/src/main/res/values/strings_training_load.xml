@@ -18,8 +18,15 @@
     <string name="notif_channel_training_alerts">Training alerts</string>
     <string name="notif_channel_training_alerts_desc">Warnings when you may be pushing too hard</string>
     <string name="alert_activity_generic">a workout</string>
-    <string name="alert_tired_legs_title">Easy on your legs</string>
-    <string name="alert_tired_legs_text">You did %1$s for %2$d min with your legs at %3$d%% recovery. Today favor rest, stretching and a dinner with enough protein.</string>
+    <string name="alert_tired_muscle_title">Easy on your %1$s</string>
+    <string name="alert_tired_muscle_text">You did %1$s for %2$d min and it works your %3$s, which were at %4$d%% recovery. Today favor rest, stretching and a meal with enough protein.</string>
+
+    <string name="cross_hit">%1$s (%2$d%%)</string>
+    <string name="cross_badge">Also works %1$s, still recovering</string>
+    <string name="cross_better_title">%1$s is at %2$d%% recovery</string>
+    <string name="cross_better_body">Better today, these are rested:</string>
+    <string name="cross_dialog_title">This also works a tired muscle</string>
+    <string name="cross_dialog_body">%1$s also loads %2$s. Training it now slows that recovery; another option or another muscle group is better today.</string>
     <string name="alert_long_day_title">A lot of exercise today</string>
     <string name="alert_long_day_text">You have %1$d minutes of exercise today. More now adds fatigue rather than progress: drink water, eat well and rest.</string>
     <string name="alert_overuse_title">%1$s: too much volume</string>

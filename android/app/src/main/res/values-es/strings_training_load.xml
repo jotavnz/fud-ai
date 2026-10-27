@@ -18,8 +18,15 @@
     <string name="notif_channel_training_alerts">Alertas de entrenamiento</string>
     <string name="notif_channel_training_alerts_desc">Avisos cuando puede que te estés sobreexigiendo</string>
     <string name="alert_activity_generic">un entrenamiento</string>
-    <string name="alert_tired_legs_title">Cuida tus piernas</string>
-    <string name="alert_tired_legs_text">Hiciste %1$s durante %2$d min con las piernas al %3$d%% de recuperación. Hoy prioriza descanso, estiramientos y una cena con suficiente proteína.</string>
+    <string name="alert_tired_muscle_title">Cuida: %1$s</string>
+    <string name="alert_tired_muscle_text">Hiciste %1$s durante %2$d min y eso trabaja %3$s, que estaba al %4$d%% de recuperación. Hoy prioriza descanso, estiramientos y una comida con suficiente proteína.</string>
+
+    <string name="cross_hit">%1$s (%2$d%%)</string>
+    <string name="cross_badge">También trabaja %1$s, aún en recuperación</string>
+    <string name="cross_better_title">%1$s está al %2$d%% de recuperación</string>
+    <string name="cross_better_body">Mejor hoy, estos están descansados:</string>
+    <string name="cross_dialog_title">Esto también trabaja un músculo cansado</string>
+    <string name="cross_dialog_body">%1$s también carga %2$s. Entrenarlo ahora retrasa esa recuperación; hoy conviene otra opción u otro grupo muscular.</string>
     <string name="alert_long_day_title">Mucho ejercicio hoy</string>
     <string name="alert_long_day_text">Llevas %1$d minutos de ejercicio hoy. Más ahora suma fatiga, no progreso: toma agua, come bien y descansa.</string>
     <string name="alert_overuse_title">%1$s: demasiado volumen</string>

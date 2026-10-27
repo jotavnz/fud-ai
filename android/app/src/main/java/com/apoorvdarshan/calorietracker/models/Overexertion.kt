@@ -9,9 +9,9 @@ import java.time.temporal.IsoFields
 sealed interface OverexertionAlert {
     val key: String
 
-    /** Leg cardio (often from the watch) while the legs were still recovering from training. */
-    data class CardioOnTiredLegs(val bout: CardioBout, val legPercentBefore: Int) : OverexertionAlert {
-        override val key: String get() = "cardio_legs_${bout.start.epochSecond}"
+    /** Cardio or sport (often from the watch) on a muscle group still recovering from training. */
+    data class CardioOnTiredMuscles(val bout: CardioBout, val group: MachineMuscleGroup, val percentBefore: Int) : OverexertionAlert {
+        override val key: String get() = "cardio_${group.name}_${bout.start.epochSecond}"
     }
 
     /** A very long day of exercise. */
@@ -33,13 +33,15 @@ sealed interface OverexertionAlert {
 /**
  * Overreaching checks over the diary and imported cardio, for gym and home training alike.
  * Thresholds sit a little above the in-app suggestions so notifications only come when it
- * matters: legs under half recovered when a 15+ minute run starts, 150+ minutes of exercise
- * in a day, more than 25 weekly sets on a group, and seven active days in a row.
+ * matters: a 15+ minute activity that works a group under half recovered (a run on tired legs,
+ * a swim on tired shoulders), 150+ minutes of exercise in a day, more than 25 weekly sets on a
+ * group, and seven active days in a row.
  */
 object OverexertionMonitor {
-    private const val TIRED_LEGS_PERCENT = 50
+    private const val TIRED_PERCENT = 50
     private const val MIN_CARDIO_MINUTES = 15
-    private const val MIN_LEG_SETS_PER_HOUR = 4.0
+    /** Only groups an activity works hard count (a walk barely loads the legs). */
+    private const val MIN_SETS_PER_HOUR = 4.0
     private const val LONG_DAY_MINUTES = 150
     private const val OVERUSE_SETS = 25
     /** Only cardio that started recently is news. */
@@ -57,13 +59,16 @@ object OverexertionMonitor {
         val alerts = mutableListOf<OverexertionAlert>()
 
         cardio.filter {
-            it.minutes >= MIN_CARDIO_MINUTES && it.legSetsPerHour >= MIN_LEG_SETS_PER_HOUR &&
-                !it.start.isAfter(now) && Duration.between(it.start, now) <= RECENT
+            it.minutes >= MIN_CARDIO_MINUTES && !it.start.isAfter(now) && Duration.between(it.start, now) <= RECENT
         }.forEach { bout ->
-            // How the legs stood just before this bout, from everything that came earlier.
+            val worked = bout.setsPerHour.filterValues { it >= MIN_SETS_PER_HOUR }.keys
+            if (worked.isEmpty()) return@forEach
+            // How each worked group stood just before this bout, from everything that came earlier.
             val before = MuscleRecovery.bouts(state, cardio.filter { it.start.isBefore(bout.start) }, bout.start, zone)
-            val legs = MuscleRecovery.readiness(before, bout.start).first { it.group == MachineMuscleGroup.LEGS }
-            if (legs.percent < TIRED_LEGS_PERCENT) alerts += OverexertionAlert.CardioOnTiredLegs(bout, legs.percent)
+            MuscleRecovery.readiness(before, bout.start)
+                .filter { it.group in worked && it.percent < TIRED_PERCENT }
+                .minByOrNull { it.percent }
+                ?.let { alerts += OverexertionAlert.CardioOnTiredMuscles(bout, it.group, it.percent) }
         }
 
         if (exerciseMinutesToday >= LONG_DAY_MINUTES) alerts += OverexertionAlert.LongDay(exerciseMinutesToday, today.toString())

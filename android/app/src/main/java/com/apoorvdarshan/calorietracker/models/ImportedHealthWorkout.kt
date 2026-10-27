@@ -135,25 +135,54 @@ internal fun importedWorkoutTypeLabel(exerciseType: Int): Int = when (exerciseTy
     else -> R.string.health_exercise_workout
 }
 
-/** Leg work per hour (effective sets) for leg-heavy activities; 0 for the rest. */
-internal fun legSetsPerHour(exerciseType: Int): Double = when (exerciseType) {
-    ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
-    ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL,
-    ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING,
-    ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING_MACHINE -> 8.0
-    ExerciseSessionRecord.EXERCISE_TYPE_SOCCER,
-    ExerciseSessionRecord.EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING,
-    ExerciseSessionRecord.EXERCISE_TYPE_BOOT_CAMP -> 6.0
-    ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
-    ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY,
-    ExerciseSessionRecord.EXERCISE_TYPE_HIKING -> 5.0
-    ExerciseSessionRecord.EXERCISE_TYPE_ELLIPTICAL,
-    ExerciseSessionRecord.EXERCISE_TYPE_ROWING,
-    ExerciseSessionRecord.EXERCISE_TYPE_ROWING_MACHINE -> 4.0
-    ExerciseSessionRecord.EXERCISE_TYPE_WALKING -> 2.0
-    else -> 0.0
+/**
+ * Muscle work per hour (effective sets) an activity puts on each group. Strength sessions from
+ * other apps carry no muscle detail, so they only count as minutes; unknown types load nothing.
+ */
+internal fun cardioLoad(exerciseType: Int): Map<MachineMuscleGroup, Double> {
+    fun legs(thighs: Double) = mapOf(
+        MachineMuscleGroup.LEGS to thighs,
+        MachineMuscleGroup.HAMSTRINGS to thighs * 0.6,
+        MachineMuscleGroup.GLUTES to thighs * 0.6,
+        MachineMuscleGroup.CALVES to thighs * 0.6
+    )
+    return when (exerciseType) {
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL,
+        ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING,
+        ExerciseSessionRecord.EXERCISE_TYPE_STAIR_CLIMBING_MACHINE -> legs(8.0)
+        ExerciseSessionRecord.EXERCISE_TYPE_SOCCER -> legs(6.0)
+        ExerciseSessionRecord.EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING,
+        ExerciseSessionRecord.EXERCISE_TYPE_BOOT_CAMP ->
+            legs(5.0) + mapOf(MachineMuscleGroup.ABS to 3.0, MachineMuscleGroup.SHOULDERS to 2.0, MachineMuscleGroup.CHEST to 2.0)
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY,
+        ExerciseSessionRecord.EXERCISE_TYPE_HIKING -> legs(5.0)
+        ExerciseSessionRecord.EXERCISE_TYPE_ELLIPTICAL -> legs(4.0) + mapOf(MachineMuscleGroup.SHOULDERS to 1.5)
+        ExerciseSessionRecord.EXERCISE_TYPE_WALKING -> legs(2.0)
+        ExerciseSessionRecord.EXERCISE_TYPE_ROWING,
+        ExerciseSessionRecord.EXERCISE_TYPE_ROWING_MACHINE -> mapOf(
+            MachineMuscleGroup.BACK to 6.0, MachineMuscleGroup.LEGS to 4.0,
+            MachineMuscleGroup.BICEPS to 3.0, MachineMuscleGroup.SHOULDERS to 2.0
+        )
+        ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL,
+        ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_OPEN_WATER -> mapOf(
+            MachineMuscleGroup.SHOULDERS to 6.0, MachineMuscleGroup.BACK to 5.0,
+            MachineMuscleGroup.TRICEPS to 3.0, MachineMuscleGroup.CHEST to 3.0
+        )
+        ExerciseSessionRecord.EXERCISE_TYPE_ROCK_CLIMBING -> mapOf(
+            MachineMuscleGroup.BACK to 6.0, MachineMuscleGroup.BICEPS to 5.0, MachineMuscleGroup.SHOULDERS to 3.0
+        )
+        ExerciseSessionRecord.EXERCISE_TYPE_BOXING,
+        ExerciseSessionRecord.EXERCISE_TYPE_MARTIAL_ARTS -> mapOf(
+            MachineMuscleGroup.SHOULDERS to 5.0, MachineMuscleGroup.TRICEPS to 3.0,
+            MachineMuscleGroup.CHEST to 2.0, MachineMuscleGroup.ABS to 3.0, MachineMuscleGroup.LEGS to 2.0
+        )
+        ExerciseSessionRecord.EXERCISE_TYPE_TENNIS -> legs(4.0) + mapOf(MachineMuscleGroup.SHOULDERS to 3.0)
+        else -> emptyMap()
+    }
 }
 
-/** The session as leg cardio for recovery and overreaching checks. */
+/** The session as cardio for recovery and overreaching checks. */
 internal fun ImportedHealthWorkout.asCardioBout(): CardioBout =
-    CardioBout(startedAt, durationMinutes, legSetsPerHour(exerciseType), importedWorkoutTypeLabel(exerciseType))
+    CardioBout(startedAt, durationMinutes, cardioLoad(exerciseType), importedWorkoutTypeLabel(exerciseType))

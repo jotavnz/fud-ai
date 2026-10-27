@@ -191,6 +191,17 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
         return
     }
 
+    // Recovery of every group for the machine coach's cross-fatigue, refreshed as the diary changes.
+    val machineReadiness by androidx.compose.runtime.produceState(
+        initialValue = emptyList<com.apoorvdarshan.calorietracker.models.MuscleReadiness>(),
+        vm.machineGroup,
+        vm.diaryUiState.todayItemIds
+    ) {
+        value = runCatching { container.trainingLoad.readiness() }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            .getOrDefault(emptyList())
+    }
+
     // Machine coach sits under the detail screen, so "How to do it" returns here on back.
     vm.machineGroup?.let { group ->
         BackHandler(onBack = vm::closeMachineCoach)
@@ -200,7 +211,8 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
             vm = vm,
             goal = vm.trainingGoal ?: TrainingGoal.from(profile?.goal),
             modifier = modifier,
-            smart = smartSuggestions
+            smart = smartSuggestions,
+            readiness = machineReadiness
         )
         return
     }
