@@ -989,6 +989,12 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Brightness6
                 ) { sheet = SettingsSheet.APPEARANCE }
                 HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.tour_settings_row),
+                    "",
+                    icon = Icons.Outlined.Lightbulb
+                ) { vm.replayTour() }
+                HorizontalDivider()
                 val selectedAppLanguage = currentAppLanguageTag()
                 SettingRow(
                     stringResource(R.string.settings_app_language),

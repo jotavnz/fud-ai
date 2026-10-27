@@ -61,6 +61,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import com.apoorvdarshan.calorietracker.ui.tour.TourTarget
+import com.apoorvdarshan.calorietracker.ui.tour.tourTarget
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -380,7 +382,7 @@ private fun TabItem(
     val label = stringResource(tab.labelRes)
     val interactionSource = remember { MutableInteractionSource() }
     Column(
-        modifier = modifier.testTag("nav.${tab.route}").semantics {
+        modifier = modifier.testTag("nav.${tab.route}").tourTargetFor(tab.route).semantics {
             this.selected = selected
             role = Role.Tab
         }.clickable(
@@ -416,4 +418,13 @@ private fun TabItem(
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
         )
     }
+}
+
+/** The tab's tour stop, when the tour explains it. */
+private fun Modifier.tourTargetFor(route: String): Modifier = when (route) {
+    FudAIRoutes.COACH -> tourTarget(TourTarget.TAB_COACH)
+    FudAIRoutes.WORKOUTS -> tourTarget(TourTarget.TAB_WORKOUTS)
+    FudAIRoutes.PROGRESS -> tourTarget(TourTarget.TAB_PROGRESS)
+    FudAIRoutes.SETTINGS -> tourTarget(TourTarget.TAB_SETTINGS)
+    else -> this
 }

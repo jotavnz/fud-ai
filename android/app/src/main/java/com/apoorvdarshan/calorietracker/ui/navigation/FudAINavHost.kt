@@ -16,6 +16,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import com.apoorvdarshan.calorietracker.ui.tour.AppTourOverlay
+import com.apoorvdarshan.calorietracker.ui.tour.AppTourState
+import com.apoorvdarshan.calorietracker.ui.tour.LocalAppTour
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,6 +86,7 @@ fun FudAINavHost(
     onVoiceLaunchHandled: (Long) -> Unit = {}
 ) {
     val nav = rememberNavController()
+    val scope = rememberCoroutineScope()
     // Warm the app-scoped Settings state while Home is visible. By the time the user changes
     // tabs, its local profile/preferences are already ready and the page opens like every other
     // tab instead of constructing empty cards on first entry.
@@ -271,7 +278,31 @@ fun FudAINavHost(
         onVoiceLaunchHandled(request)
     }
 
-    CompositionLocalProvider(LocalLaunchFillEpoch provides launchFillEpoch) {
+    // First-use tour of Home and the tabs: once after onboarding, again from Settings.
+    val tour = remember { AppTourState() }
+    val tourCompleted by container.prefs.appTourCompleted.collectAsState(initial = true)
+    val tourRequested by container.navigator.tourRequested.collectAsState()
+    val goalInterviewPending by container.prefs.coachGoalInterviewPending.collectAsState(initial = false)
+    LaunchedEffect(currentRoute, tourCompleted, tourRequested, goalInterviewPending, analyzing) {
+        if (tour.active || analyzing || goalInterviewPending) return@LaunchedEffect
+        if (!tourRequested && tourCompleted) return@LaunchedEffect
+        if (currentRoute != FudAIRoutes.HOME) {
+            if (tourRequested) selectTab(FudAIRoutes.HOME)
+            return@LaunchedEffect
+        }
+        // Let Home lay out (and a pending Coach hand-off leave) before measuring its parts.
+        delay(700)
+        if (nav.current() != FudAIRoutes.HOME) return@LaunchedEffect
+        container.navigator.tourRequested.value = false
+        tour.start()
+    }
+    // Leaving Home mid-tour (a notification, the voice assistant) ends it without marking it seen.
+    LaunchedEffect(currentRoute) {
+        if (tour.active && currentRoute != FudAIRoutes.HOME) tour.stop()
+    }
+
+    CompositionLocalProvider(LocalLaunchFillEpoch provides launchFillEpoch, LocalAppTour provides tour) {
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         bottomBar = {
             if (showTabs) {
@@ -370,6 +401,10 @@ fun FudAINavHost(
             // (including onboarding).
             HostedUiHost(container = container)
         }
+    }
+    AppTourOverlay(tour) {
+        scope.launch { container.prefs.setAppTourCompleted(true) }
+    }
     }
     }
 }

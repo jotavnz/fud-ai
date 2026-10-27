@@ -897,32 +897,38 @@ class HealthConnectManager(
             lastDay = minOf(end, LocalDate.now()),
             onFailure = { Log.w(TAG, "Health Connect daily steps read failed", it) }
         ) { chunkStart, chunkEnd ->
-            c.aggregateGroupByPeriod(
-                AggregateGroupByPeriodRequest(
-                    metrics = setOf(StepsRecord.COUNT_TOTAL),
-                    timeRangeFilter = TimeRangeFilter.between(
-                        chunkStart.atStartOfDay(),
-                        chunkEnd.plusDays(1).atStartOfDay()
-                    ),
-                    timeRangeSlicer = Period.ofDays(1)
-                )
-            ).map { group ->
-                group.startTime.toLocalDate() to (group.result[StepsRecord.COUNT_TOTAL] ?: 0L)
-            }
+            val preference = stepSourcePreference()
+            c.dailyStepSourceTotals(chunkStart, chunkEnd, context.packageName)
+                .entries.sortedBy { it.key }
+                .map { (day, totals) -> day to totals.chosen(preference) }
         }
+    }
+
+    /**
+     * Which app's step count the app uses ([StepSources.AUTO] or a package name). Set by the app
+     * container from the user's setting; AUTO until then.
+     */
+    var stepSourcePreference: suspend () -> String = { StepSources.AUTO }
+
+    /** Today's (or [date]'s) merged and per-app step totals, for the Health status screen. */
+    suspend fun readStepSourcesForDay(date: LocalDate): StepSourceTotals? {
+        if (!hasStepsRead()) return null
+        val c = client ?: return null
+        val zone = ZoneId.systemDefault()
+        val start = date.atStartOfDay(zone).toInstant()
+        val end = minOf(date.plusDays(1).atStartOfDay(zone).toInstant(), Instant.now())
+        if (!end.isAfter(start)) return null
+        return runCatching { c.stepSourceTotals(start, end, context.packageName) }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrNull()
     }
 
     private suspend fun readDailySteps(start: Instant, end: Instant): Int? {
         val c = client ?: return null
-        val result = runCatching {
-            c.aggregate(
-                AggregateRequest(
-                    metrics = setOf(StepsRecord.COUNT_TOTAL),
-                    timeRangeFilter = TimeRangeFilter.between(start, end)
-                )
-            )
-        }.getOrNull() ?: return null
-        return result[StepsRecord.COUNT_TOTAL]?.toLong()?.toInt()?.takeIf { it >= 0 }
+        val totals = runCatching { c.stepSourceTotals(start, end, context.packageName) }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrNull() ?: return null
+        return totals.chosen(stepSourcePreference()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt().takeIf { it >= 0 }
     }
 
     private suspend fun readDailyEnergy(start: Instant, end: Instant): DailyEnergy? {

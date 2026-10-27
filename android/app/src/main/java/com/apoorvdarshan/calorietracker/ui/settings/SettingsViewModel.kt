@@ -1658,6 +1658,11 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     /** The goal plan agreed with Coach, shown in the goal sheet. */
     val coachGoalPlan = container.prefs.coachGoalPlan
 
+    /** Shows the app tour again from Home. */
+    fun replayTour() {
+        container.navigator.tourRequested.value = true
+    }
+
     /** Opens Coach to explain (or adjust) the goal. */
     fun explainGoalToCoach() = container.navigator.showCoachGoalInterview()
 

@@ -93,4 +93,7 @@
     <string name="hs_item_body_fat">Body fat %1$s</string>
     <string name="hs_item_workout">%1$s · %2$d min</string>
     <string name="hs_source_health_connect">Health Connect</string>
+    <string name="hs_step_source_title">Steps by source (today)</string>
+    <string name="hs_step_source_auto">Most complete (automatic)</string>
+    <string name="hs_step_source_note">Your watch and your phone each count steps. Health Connect keeps only one when they overlap, so a day with the watch can look short. Automatic uses the most complete count; pick an app to always use it. If the watch is missing steps, open its app (e.g. Samsung Health) so it syncs.</string>
 </resources>

@@ -401,6 +401,14 @@ class PreferencesStore(
     val yearReviewEarlyUnlock: Flow<Boolean> = ds.data.map { it[Keys.YEAR_REVIEW_EARLY_UNLOCK] ?: false }
     suspend fun setYearReviewEarlyUnlock(v: Boolean) { ds.edit { it[Keys.YEAR_REVIEW_EARLY_UNLOCK] = v } }
 
+    /** The first-use app tour was finished or skipped. */
+    val appTourCompleted: Flow<Boolean> = ds.data.map { it[Keys.APP_TOUR_COMPLETED] ?: false }
+    suspend fun setAppTourCompleted(v: Boolean) { ds.edit { it[Keys.APP_TOUR_COMPLETED] = v } }
+
+    /** Which app's step count to use: "auto" (most complete source) or an app package. */
+    val stepSource: Flow<String> = ds.data.map { it[Keys.STEP_SOURCE] ?: "auto" }
+    suspend fun setStepSource(v: String) { ds.edit { it[Keys.STEP_SOURCE] = v } }
+
     /** The goal plan the user agreed with Coach; null until they apply one. */
     val coachGoalPlan: Flow<CoachGoalPlan?> = ds.data.map { prefs ->
         prefs[Keys.COACH_GOAL_PLAN]?.let { runCatching { json.decodeFromString<CoachGoalPlan>(it) }.getOrNull() }
@@ -1644,6 +1652,8 @@ class PreferencesStore(
         val SMART_SUGGESTIONS_ENABLED = booleanPreferencesKey("smartSuggestionsEnabled")
         val YEAR_REVIEW_ENABLED = booleanPreferencesKey("yearReviewEnabled")
         val YEAR_REVIEW_EARLY_UNLOCK = booleanPreferencesKey("yearReviewEarlyUnlock")
+        val STEP_SOURCE = stringPreferencesKey("stepSource")
+        val APP_TOUR_COMPLETED = booleanPreferencesKey("appTourCompleted")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")

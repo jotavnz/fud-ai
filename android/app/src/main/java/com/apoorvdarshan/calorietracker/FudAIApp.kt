@@ -251,7 +251,10 @@ class AppContainer(app: FudAIApp) {
     val keyStore = KeyStore(app)
     val imageStore = FoodImageStore(app)
     val notifications = NotificationService(app)
-    val health = HealthConnectManager(app)
+    val health = HealthConnectManager(app).also { manager ->
+        // Steps follow the source the user picked on the Health status screen (default: most complete).
+        manager.stepSourcePreference = { prefs.stepSource.first() }
+    }
 
     private val workoutHealthSync = object : WorkoutHealthSync {
         override suspend fun upsertBurn(session: WorkoutSession): Boolean {

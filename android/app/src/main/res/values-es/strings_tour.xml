@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Recorrido guiado de primer uso (resaltados sobre Inicio y la barra de pestañas). -->
+<resources>
+    <string name="tour_counter">%1$d de %2$d</string>
+    <string name="tour_skip">Omitir</string>
+    <string name="tour_back">Atrás</string>
+    <string name="tour_next">Siguiente</string>
+    <string name="tour_start">Empezar</string>
+    <string name="tour_finish">Listo</string>
+    <string name="tour_settings_row">Tutorial de la app</string>
+
+    <string name="tour_welcome_title">¡Bienvenido! Un recorrido rápido</string>
+    <string name="tour_welcome_body">En menos de un minuto verás dónde está todo: registrar comida, tus metas del día, el coach, el entrenamiento y tu progreso. Puedes omitirlo y repetirlo cuando quieras desde Ajustes.</string>
+    <string name="tour_calories_title">Tu día de un vistazo</string>
+    <string name="tour_calories_body">Las calorías que te quedan hoy frente a tu meta, y lo que tu reloj o teléfono dice que quemaste. Desliza aquí a la izquierda o a la derecha para ver otros días.</string>
+    <string name="tour_macros_title">Proteína, carbohidratos y grasa</string>
+    <string name="tour_macros_body">Cuánto llevas de cada meta. Toca Ver más para vitaminas, minerales y el resto de la nutrición del día.</string>
+    <string name="tour_add_title">Registra lo que comes</string>
+    <string name="tour_add_body">El botón + registra comida con una foto, describiéndola, escaneando un código de barras, a mano o repitiendo comidas recientes y favoritas. También registra agua, peso y entrenamientos.</string>
+    <string name="tour_voice_title">Háblale a la app</string>
+    <string name="tour_voice_body">Di lo que comiste o pregunta algo y el asistente de voz lo registra por ti, sin usar las manos.</string>
+    <string name="tour_coach_title">Coach</string>
+    <string name="tour_coach_body">Tu coach con IA conoce tus datos. Pregúntale cómo vas, explícale tu objetivo para que planifique en base a eso, o cuéntale qué comiste y te prepara el registro para que lo confirmes.</string>
+    <string name="tour_workouts_title">Entrenamiento</string>
+    <string name="tour_workouts_body">Elige un músculo y te da tres máquinas del gimnasio con series, repeticiones y descanso según tu objetivo. Registra tus series para ver tu progreso y recibir sugerencias inteligentes.</string>
+    <string name="tour_progress_title">Progreso</string>
+    <string name="tour_progress_body">La tendencia de tu peso, medidas corporales, pasos y la predicción de dónde estarás en 30, 60 y 90 días.</string>
+    <string name="tour_settings_title">Ajustes</string>
+    <string name="tour_settings_body">Cambia tu objetivo, conecta tu reloj con Health Connect, configura tu clave de IA y repite este recorrido.</string>
+    <string name="tour_done_title">¡Todo listo!</string>
+    <string name="tour_done_body">Empieza registrando tu próxima comida. Mientras más registres, mejores serán los consejos del coach.</string>
+</resources>

@@ -2,6 +2,7 @@ package com.apoorvdarshan.calorietracker.ui.settings
 
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,10 +30,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +66,8 @@ import com.apoorvdarshan.calorietracker.services.health.HealthSyncInspector
 import com.apoorvdarshan.calorietracker.services.health.HealthSyncStatusStore
 import com.apoorvdarshan.calorietracker.services.health.HealthSyncType
 import com.apoorvdarshan.calorietracker.services.health.HealthTypeSnapshot
+import com.apoorvdarshan.calorietracker.services.health.StepSourceTotals
+import com.apoorvdarshan.calorietracker.services.health.StepSources
 import com.apoorvdarshan.calorietracker.services.health.healthSourceName
 import com.apoorvdarshan.calorietracker.services.health.importedEntryId
 import com.apoorvdarshan.calorietracker.services.health.isOwn
@@ -675,7 +680,14 @@ private fun ActivityCard(
             } else if (activity == null) {
                 StatusLine(stringResource(R.string.hs_hc_read_failed), "", null)
             } else {
-                activity.stepsToday?.let { Text(stringResource(R.string.hs_steps_today, nf.format(it)), style = MaterialTheme.typography.bodyMedium) }
+                // The figure Home shows: the chosen source, not Health Connect's priority-merged total.
+                val stepPreference by container.prefs.stepSource.collectAsState(initial = StepSources.AUTO)
+                (activity.stepSourcesToday?.chosen(stepPreference) ?: activity.stepsToday)?.let {
+                    Text(stringResource(R.string.hs_steps_today, nf.format(it)), style = MaterialTheme.typography.bodyMedium)
+                }
+                activity.stepSourcesToday?.takeIf { it.bySource.isNotEmpty() }?.let { totals ->
+                    StepSourcePicker(totals, container, nf)
+                }
                 activity.steps7Days?.let { Muted(stringResource(R.string.hs_steps_week, nf.format(it))) }
                 activity.activeKcalToday?.let { Text(stringResource(R.string.hs_active_today, nf.format(it)), style = MaterialTheme.typography.bodyMedium) }
                 activity.activeKcal7Days?.let { Muted(stringResource(R.string.hs_active_week, nf.format(it))) }
@@ -690,6 +702,47 @@ private fun ActivityCard(
             }
             Muted(stringResource(R.string.hs_activity_note))
         }
+    }
+}
+
+/**
+ * Today's steps from each app (the watch's app and the phone's usually differ) and which one the
+ * app uses: the most complete (default) or one the user picks.
+ */
+@Composable
+private fun StepSourcePicker(totals: StepSourceTotals, container: AppContainer, nf: NumberFormat) {
+    val preference by container.prefs.stepSource.collectAsState(initial = StepSources.AUTO)
+    val scope = rememberCoroutineScope()
+    val pick: (String) -> Unit = { value -> scope.launch { container.prefs.setStepSource(value) } }
+    Column(Modifier.padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(stringResource(R.string.hs_step_source_title), style = MaterialTheme.typography.labelLarge)
+        StepSourceRow(
+            label = stringResource(R.string.hs_step_source_auto),
+            steps = nf.format(totals.chosen(StepSources.AUTO)),
+            selected = preference == StepSources.AUTO || preference !in totals.bySource,
+            onClick = { pick(StepSources.AUTO) }
+        )
+        totals.bySource.entries.sortedByDescending { it.value }.forEach { (pkg, steps) ->
+            StepSourceRow(
+                label = sourceLabel(container, pkg),
+                steps = nf.format(steps),
+                selected = preference == pkg,
+                onClick = { pick(pkg) }
+            )
+        }
+        Muted(stringResource(R.string.hs_step_source_note))
+    }
+}
+
+@Composable
+private fun StepSourceRow(label: String, steps: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Text(steps, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
     }
 }
 

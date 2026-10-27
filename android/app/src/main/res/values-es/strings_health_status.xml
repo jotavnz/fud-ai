@@ -93,4 +93,7 @@
     <string name="hs_item_body_fat">Grasa corporal %1$s</string>
     <string name="hs_item_workout">%1$s · %2$d min</string>
     <string name="hs_source_health_connect">Health Connect</string>
+    <string name="hs_step_source_title">Pasos por fuente (hoy)</string>
+    <string name="hs_step_source_auto">La más completa (automático)</string>
+    <string name="hs_step_source_note">Tu reloj y tu teléfono cuentan pasos por separado. Health Connect se queda con uno solo cuando se cruzan, por eso un día con el reloj puede verse corto. Automático usa el conteo más completo; elige una app para usarla siempre. Si al reloj le faltan pasos, abre su app (p. ej. Samsung Health) para que sincronice.</string>
 </resources>

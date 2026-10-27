@@ -173,7 +173,9 @@ data class HealthActivitySnapshot(
     val activeKcal7Days: Double?,
     /** Newest step or active-calorie record another app wrote in the last 3 days. */
     val latestRecordAt: Instant?,
-    val sources: List<String>
+    val sources: List<String>,
+    /** Today's steps per app, so the user can see which source counts more and pick it. */
+    val stepSourcesToday: StepSourceTotals? = null
 )
 
 /**
@@ -255,6 +257,15 @@ class HealthSyncInspector(private val context: Context) {
             null
         }
         val stepsToday = if (stepsGranted) aggregate(StepsRecord.COUNT_TOTAL, todayStart)?.get(StepsRecord.COUNT_TOTAL) else null
+        val stepSources = if (stepsGranted) {
+            try {
+                c.stepSourceTotals(todayStart, now, context.packageName)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+        } else null
         val steps7 = if (stepsGranted) aggregate(StepsRecord.COUNT_TOTAL, weekStart)?.get(StepsRecord.COUNT_TOTAL) else null
         val activeToday = if (activeGranted) aggregate(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL, todayStart)
             ?.get(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)?.inKilocalories else null
@@ -273,7 +284,8 @@ class HealthSyncInspector(private val context: Context) {
             activeKcalToday = activeToday,
             activeKcal7Days = active7,
             latestRecordAt = latest,
-            sources = sources.toList()
+            sources = sources.toList(),
+            stepSourcesToday = stepSources
         )
     }
 

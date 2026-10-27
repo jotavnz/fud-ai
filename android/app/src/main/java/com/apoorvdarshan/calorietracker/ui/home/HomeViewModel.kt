@@ -307,8 +307,10 @@ viewModelScope.launch {
             combine(
                 container.prefs.healthConnectEnabled,
                 _selectedDate,
-                _stepsRefreshEpoch
-            ) { enabled, date, epoch -> Triple(enabled, date, epoch) }
+                _stepsRefreshEpoch,
+                // A new step source (Health status screen) re-reads the day.
+                container.prefs.stepSource
+            ) { enabled, date, epoch, _ -> Triple(enabled, date, epoch) }
                 .distinctUntilChanged()
                 .collect { (enabled, date, _) ->
                     if (!enabled || !container.health.hasStepsRead()) {

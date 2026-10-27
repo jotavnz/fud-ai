@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- First-use app tour (highlights over Home and the tab bar). -->
+<resources>
+    <string name="tour_counter">%1$d of %2$d</string>
+    <string name="tour_skip">Skip</string>
+    <string name="tour_back">Back</string>
+    <string name="tour_next">Next</string>
+    <string name="tour_start">Start</string>
+    <string name="tour_finish">Done</string>
+    <string name="tour_settings_row">App tour</string>
+
+    <string name="tour_welcome_title">Welcome! A quick tour</string>
+    <string name="tour_welcome_body">In under a minute you will see where everything is: logging food, your daily targets, Coach, training and progress. You can skip it and replay it any time from Settings.</string>
+    <string name="tour_calories_title">Your day at a glance</string>
+    <string name="tour_calories_body">Calories left for today against your goal, and what your watch or phone says you burned. Swipe left or right here to see other days.</string>
+    <string name="tour_macros_title">Protein, carbs and fat</string>
+    <string name="tour_macros_body">How far along you are with each target. Tap View more for vitamins, minerals and the rest of the day\'s nutrition.</string>
+    <string name="tour_add_title">Log what you eat</string>
+    <string name="tour_add_body">The + button logs food with a photo, by describing it, scanning a barcode, entering it by hand or repeating recent and favorite meals. It also logs water, weight and workouts.</string>
+    <string name="tour_voice_title">Talk to the app</string>
+    <string name="tour_voice_body">Say what you ate or ask something and the voice assistant logs it for you, hands free.</string>
+    <string name="tour_coach_title">Coach</string>
+    <string name="tour_coach_body">Your AI coach knows your data. Ask how you are doing, explain your goal so it plans around it, or tell it what you ate and it prepares the log for you to confirm.</string>
+    <string name="tour_workouts_title">Training</string>
+    <string name="tour_workouts_body">Pick a muscle and get three gym machines with sets, reps and rest for your goal. Log your sets to see your progress and get smart suggestions.</string>
+    <string name="tour_progress_title">Progress</string>
+    <string name="tour_progress_body">Your weight trend, body measurements, steps and the forecast of where you will be in 30, 60 and 90 days.</string>
+    <string name="tour_settings_title">Settings</string>
+    <string name="tour_settings_body">Change your goal, connect your watch through Health Connect, set your AI key and replay this tour.</string>
+    <string name="tour_done_title">All set</string>
+    <string name="tour_done_body">Start by logging your next meal. The more you log, the better Coach\'s advice gets.</string>
+</resources>

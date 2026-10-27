@@ -54,6 +54,9 @@ class AppNavigator {
     /** Coach should start the goal conversation when it next shows. */
     val pendingCoachGoalInterview = MutableStateFlow(false)
 
+    /** Settings asked to replay the app tour; the nav host shows Home and starts it. */
+    val tourRequested = MutableStateFlow(false)
+
     private val _requests = MutableSharedFlow<NavRequest>(extraBufferCapacity = 8)
     val requests: SharedFlow<NavRequest> = _requests.asSharedFlow()
 

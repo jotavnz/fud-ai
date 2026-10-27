@@ -16,6 +16,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.repeatOnLifecycle
+import com.apoorvdarshan.calorietracker.ui.tour.TourTarget
+import com.apoorvdarshan.calorietracker.ui.tour.tourTarget
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.apoorvdarshan.calorietracker.services.FoodImageDecoder
 import com.apoorvdarshan.calorietracker.ui.navigation.LocalLaunchFillEpoch
@@ -240,6 +243,16 @@ DisposableEffect(lifecycleOwner, vm) {
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    // Watches push steps to Health Connect through their app every few minutes, so re-read
+    // while Home stays open instead of only when it reopens.
+    LaunchedEffect(lifecycleOwner, vm) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                delay(5 * 60 * 1000L)
+                vm.refreshDailySteps()
+            }
+        }
     }
     val shareMeals = rememberMealSharer(container)
     val ctx = LocalContext.current
@@ -602,11 +615,13 @@ DisposableEffect(lifecycleOwner, vm) {
                     }
                 ) {
                     Spacer(Modifier.height(32.dp))
-CalorieHero(
-                        current = ui.caloriesToday,
-                        goal = ui.profile?.effectiveCalories ?: 2000,
-                        burnSummary = ui.homeBurnSummary
-                    )
+                    Box(Modifier.fillMaxWidth().tourTarget(TourTarget.CALORIE_HERO), contentAlignment = Alignment.Center) {
+                        CalorieHero(
+                            current = ui.caloriesToday,
+                            goal = ui.profile?.effectiveCalories ?: 2000,
+                            burnSummary = ui.homeBurnSummary
+                        )
+                    }
                     ui.dailySteps?.let { steps ->
                         Spacer(Modifier.height(8.dp))
                         DailyStepsRow(steps = steps)
@@ -615,7 +630,8 @@ CalorieHero(
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 16.dp)
+                            .tourTarget(TourTarget.MACROS),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         ui.homeTopNutrients.take(4).forEach { nutrient ->
@@ -772,12 +788,15 @@ CalorieHero(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (!voiceUi.visible) {
-                VoiceAssistantButton(onClick = container.voiceAssistant::requestStart)
+                Box(Modifier.tourTarget(TourTarget.VOICE)) {
+                    VoiceAssistantButton(onClick = container.voiceAssistant::requestStart)
+                }
             }
             Box {
             Box(
                 modifier = Modifier
                     .testTag("home.add")
+                    .tourTarget(TourTarget.ADD_FOOD)
                     .size(actionSize)
                     .clip(CircleShape)
                     .background(AppColors.Calorie)
