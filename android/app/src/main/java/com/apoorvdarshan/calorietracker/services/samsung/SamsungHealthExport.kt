@@ -60,7 +60,8 @@ object SamsungHealthExport {
         // "<type>.<yyyyMMddHHmmss>.csv": the type is everything before the timestamp.
         val type = name.removeSuffix(".csv").replace(Regex("""\.\d{8,}$"""), "")
         return when (type) {
-            "com.samsung.shealth.tracker.pedometer_day_summary" -> Kind.STEPS_DAY
+            // step_daily_trend marks the phone+watch total (source_type -2); the day summary is a fallback.
+            "com.samsung.shealth.tracker.pedometer_day_summary", "com.samsung.shealth.step_daily_trend" -> Kind.STEPS_DAY
             "com.samsung.shealth.sleep", "com.samsung.health.sleep" -> Kind.SLEEP
             "com.samsung.shealth.exercise", "com.samsung.health.exercise" -> Kind.EXERCISE
             "com.samsung.health.weight", "com.samsung.shealth.weight" -> Kind.WEIGHT
@@ -90,7 +91,8 @@ object SamsungHealthExport {
         table.rows.forEach { row ->
             val day = table.time(row, "day_time")?.let { dayOf(it) } ?: table.time(row, "create_time")?.atZone(zone)?.toLocalDate()
                 ?: return@forEach
-            val count = table.number(row, "step_count")?.roundToInt()?.takeIf { it in 1..200_000 } ?: return@forEach
+            val count = (table.number(row, "step_count") ?: table.number(row, "count"))
+                ?.roundToInt()?.takeIf { it in 1..200_000 } ?: return@forEach
             if (table.text(row, "source_type") == "-2") combined[day] = maxOf(combined[day] ?: 0, count)
             largest[day] = maxOf(largest[day] ?: 0, count)
         }
