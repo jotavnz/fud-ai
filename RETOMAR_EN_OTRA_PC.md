@@ -17,7 +17,8 @@ Lee también `PLAN_ENTRENADOR_IA.md` y **`PLAN_ENTRENADOR_AMIGABLE.md`** (plan d
 | `EntrenadorIA-beta-2026-10-28e.apk` (oficina) | `a345b0351` | + reglas del coach (descarga, inicio suave, logros, próxima sesión, estilo), progresiones |
 | `EntrenadorIA-beta-2026-10-28g.apk` | `ba0e4728e` | + coach no pierde el borrador, fotos de despensa, aviso de otro día. **Es la que está en el teléfono** (también recompilada en casa en `APK`) |
 | `EntrenadorIA-beta-2026-10-28h.apk` (casa) | `c3d72f53e` | + semáforo de despensa e histórico de compras |
-| `EntrenadorIA-beta-2026-10-28i.apk` (casa) | `733637c99` | + coach registra caminatas con km/pasos sin minutos y ve los pasos de hoy por app; botón Terminé/¡Hecho! en el diario y ✓ en la tira de días. **Es la que está en el teléfono** |
+| `EntrenadorIA-beta-2026-10-28i.apk` (casa) | `733637c99` | + coach registra caminatas con km/pasos sin minutos y ve los pasos de hoy por app; botón Terminé/¡Hecho! en el diario y ✓ en la tira de días. |
+| `EntrenadorIA-beta-2026-10-28j.apk` (casa) | `dcc9170e2` | + sin el botón gigante: barra "Terminé el entreno" / "Entreno hecho · hora" bajo las tarjetas. **Es la que está en el teléfono** |
 
 Las APK viven en la carpeta `APK` junto al repo en casa y en `C:\EntrenadorIA\` en la oficina (no en Git).
 
