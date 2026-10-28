@@ -164,4 +164,20 @@
     <string name="wk_guided_next">Next</string>
     <string name="wk_guided_finish">Finish for today</string>
     <string name="wk_guided_weight_hint">Type the reps you did, and the weight (empty if bodyweight). Then tell us how it felt.</string>
+    <string name="wk_starter_heading">Or start with a ready-made routine:</string>
+    <string name="wk_starter_gym_title">Whole body on machines</string>
+    <string name="wk_starter_gym_detail">6 gym machines · 2 sets of 12–15 · about 35 min</string>
+    <string name="wk_starter_home_title">At home, no equipment</string>
+    <string name="wk_starter_home_detail">5 exercises · 2 sets of 10–12 · about 25 min</string>
+    <string name="wk_starter_gentle_title">Gentle start or 60+</string>
+    <string name="wk_starter_gentle_detail">Balance and strength, standing or with a chair · 2 sets · about 20 min</string>
+    <string name="wk_first_weight_hint">First time: pick a weight you can lift 12–15 times with good form.</string>
+    <string name="wk_header_done">Done</string>
+    <string name="wk_cd_set_done">Set %1$d done, start rest</string>
+    <string name="wk_glossary_title">What does it mean?</string>
+    <string name="wk_glossary_set">Set: a block of repetitions in a row, then a rest. \"3 sets of 10\" = 10 reps, rest, three times.</string>
+    <string name="wk_glossary_rep">Repetition (rep): doing the movement once, all the way.</string>
+    <string name="wk_glossary_rest">Rest: the pause between sets, usually 1–2 minutes. Tap ✓ when you finish a set and the timer starts.</string>
+    <string name="wk_glossary_effort">Effort: Easy = 4 or more reps left; Good = 2–3 left; Hard = 0–1 more.</string>
+    <string name="wk_glossary_weight">Weight: the load you moved. Leave it empty for bodyweight exercises.</string>
 </resources>

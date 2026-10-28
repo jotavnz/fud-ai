@@ -119,13 +119,35 @@ class WorkoutRepository(
 
     suspend fun toggleExercise(item: ExerciseItem, dateKey: String) {
         val key = WorkoutDate.requireKey(dateKey)
+        val lastWeight = lastWorkingWeight(snapshot(), item.id, key)
         updatePlan(key) { plan ->
             val exercises = plan.exercises.toMutableList()
             val index = exercises.indexOfFirst { it.itemId == item.id }
-            if (index >= 0) exercises.removeAt(index) else exercises.add(PlannedExercise.from(item))
+            if (index >= 0) {
+                exercises.removeAt(index)
+            } else {
+                val added = PlannedExercise.from(item)
+                exercises.add(
+                    if (lastWeight == null || added.isCardio) added
+                    else added.copy(sets = added.sets.map { it.copy(weight = lastWeight.weight, weightUnit = lastWeight.weightUnit) })
+                )
+            }
             plan.copy(exercises = exercises)
         }
     }
+
+    /**
+     * Weight of the first performed set the last time [itemId] was trained before [dateKey], so a
+     * newly added lift starts at what the user moved last time instead of a blank field.
+     */
+    private fun lastWorkingWeight(state: WorkoutPersistedState, itemId: String, dateKey: String): CompletedSet? =
+        state.completedSessions
+            .filter { it.diaryDateKey < dateKey }
+            .sortedByDescending { it.completedAt }
+            .firstNotNullOfOrNull { session ->
+                session.exercises.firstOrNull { it.itemId == itemId }
+                    ?.sets?.firstOrNull { it.isPerformed && it.weight.isNotBlank() }
+            }
 
     /** Appends a completed timed cardio entry for quick logging from Home. */
     suspend fun logQuickCardio(

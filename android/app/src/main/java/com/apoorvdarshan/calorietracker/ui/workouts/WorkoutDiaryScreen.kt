@@ -460,6 +460,10 @@ internal fun WorkoutDiaryScreen(
                         simpleLogging = state.preferences.simpleLogging,
                         onAdd = { addMenuExpanded = true },
                         onAskCoach = { container.navigator.showCoachMessage(beginnerRoutinePrompt) },
+                        onStarter = { routine ->
+                            val items = routine.exerciseIds.mapNotNull { exerciseRepository.byId[it] }
+                            viewModel.addStarterRoutine(items, StarterRoutine.SETS)
+                        },
                         modifier = Modifier.workoutDaySwipe(
                             selectedDate = state.selectedDate,
                             onMove = { viewModel.moveDate(it) }
@@ -1227,6 +1231,7 @@ private fun WorkoutEmptyState(
     simpleLogging: Boolean,
     onAdd: () -> Unit,
     onAskCoach: () -> Unit,
+    onStarter: (StarterRoutine) -> Unit,
     modifier: Modifier = Modifier
 ) {
     FudGlassSurface(
@@ -1236,6 +1241,7 @@ private fun WorkoutEmptyState(
         cornerRadius = 20.dp,
         padding = 14.dp
     ) {
+        Column {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(Icons.Filled.Add, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(28.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -1256,6 +1262,34 @@ private fun WorkoutEmptyState(
                     FudGlassTextButton(text = stringResource(R.string.wk_ask_coach_routine), onClick = onAskCoach)
                 }
             }
+        }
+        if (simpleLogging) {
+            Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    stringResource(R.string.wk_starter_heading),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                StarterRoutine.entries.forEach { routine ->
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(AppColors.Calorie.copy(alpha = 0.1f))
+                            .clickable { onStarter(routine) }
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        Text(stringResource(routine.titleRes), color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(routine.detailRes),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
         }
     }
 }
@@ -1461,6 +1495,14 @@ private fun WorkoutExerciseCard(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
+                    } else if (simpleLogging) {
+                        // No history yet: say how to pick a first weight instead of leaving a blank.
+                        Text(
+                            stringResource(R.string.wk_first_weight_hint),
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f),
+                            fontSize = 13.sp
+                        )
                     } else {
                         Spacer(modifier = Modifier.weight(1f))
                     }
@@ -1493,14 +1535,14 @@ private fun WorkoutExerciseCard(
                     IconButton(
                         onClick = { onSetCount(exercise.sets.size - 1) },
                         enabled = exercise.sets.size > 1,
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(if (simpleLogging) 44.dp else 34.dp)
                     ) {
                         Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.wk_cd_remove_set), modifier = Modifier.size(18.dp))
                     }
                     Text(
                         pluralStringResource(R.plurals.wk_set_count, exercise.sets.size, exercise.sets.size),
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 13.sp,
+                        fontSize = if (simpleLogging) 14.sp else 13.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.width(64.dp)
@@ -1508,7 +1550,7 @@ private fun WorkoutExerciseCard(
                     IconButton(
                         onClick = { onSetCount(exercise.sets.size + 1) },
                         enabled = exercise.sets.size < 12,
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(if (simpleLogging) 44.dp else 34.dp)
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.wk_cd_add_set), modifier = Modifier.size(18.dp))
                     }
@@ -1751,7 +1793,7 @@ internal fun WorkoutSetRow(
         Text(
             stringResource(R.string.wk_set_number, index + 1),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
-            fontSize = 12.sp,
+            fontSize = if (simpleLogging) 14.sp else 12.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             modifier = Modifier.width(52.dp)
@@ -1803,7 +1845,11 @@ internal fun WorkoutSetRow(
         )
         }
         if (onStartRest != null) {
-            WorkoutRestSetButton(setNumber = index + 1, isResting = isResting, onClick = onStartRest)
+            if (simpleLogging) {
+                WorkoutSetDoneButton(setNumber = index + 1, done = set.reps.isNotBlank(), isResting = isResting, onClick = onStartRest)
+            } else {
+                WorkoutRestSetButton(setNumber = index + 1, isResting = isResting, onClick = onStartRest)
+            }
         }
     }
 }
@@ -1820,7 +1866,7 @@ private fun WorkoutSetHeader(weightUnit: WorkoutWeightUnit, hasRest: Boolean) {
         WorkoutSetHeaderTitle(stringResource(R.string.wk_header_weight, weightUnit.storageValue), color, Modifier.weight(1f))
         WorkoutSetHeaderTitle(stringResource(R.string.wk_header_reps), color, Modifier.weight(1f))
         WorkoutSetHeaderTitle(stringResource(R.string.wk_header_effort), color, Modifier.weight(1f))
-        if (hasRest) WorkoutSetHeaderTitle(stringResource(R.string.wk_header_rest), color, Modifier.width(WorkoutRestSetButtonWidth))
+        if (hasRest) WorkoutSetHeaderTitle(stringResource(R.string.wk_header_done), color, Modifier.width(WorkoutSetDoneButtonWidth))
     }
 }
 
@@ -1829,7 +1875,7 @@ private fun WorkoutSetHeaderTitle(text: String, color: Color, modifier: Modifier
     Text(
         text,
         color = color,
-        fontSize = 11.sp,
+        fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -1859,7 +1905,7 @@ private fun WorkoutSetFeelPicker(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(48.dp)
                 .clip(RoundedCornerShape(11.dp))
                 .background(tint.copy(alpha = if (feel == null) 0.08f else 0.16f))
                 .clickable(role = Role.DropdownList) { expanded = true }
@@ -1869,7 +1915,7 @@ private fun WorkoutSetFeelPicker(
             Text(
                 label ?: stringResource(R.string.wk_feel_placeholder),
                 color = tint,
-                fontSize = 13.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

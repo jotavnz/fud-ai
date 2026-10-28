@@ -131,6 +131,9 @@ fun ExerciseDetailScreen(
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp)
                     )
                 }
+                if (item.category != "cardio") item(key = "glossary") {
+                    GlossarySection(Modifier.padding(horizontal = 20.dp))
+                }
                 item(key = "pad") { Spacer(Modifier.size(40.dp)) }
             }
 
@@ -240,6 +243,39 @@ private fun MetricCard(title: String, value: String, icon: ImageVector, valueMax
             maxLines = valueMaxLines,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+/** Folded "What does it mean?" for beginners: set, rep, rest, effort and weight. */
+@Composable
+private fun GlossarySection(modifier: Modifier = Modifier) {
+    val colors = workoutsColors()
+    var expanded by remember { mutableStateOf(false) }
+    Column(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(colors.panel.copy(alpha = 0.16f))
+            .border(0.5.dp, colors.hairline.copy(alpha = 0.20f), RoundedCornerShape(18.dp))
+            .clickable { expanded = !expanded }
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            stringResource(R.string.wk_glossary_title) + if (expanded) "  ▲" else "  ▼",
+            color = colors.charcoal,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+        if (expanded) {
+            listOf(
+                R.string.wk_glossary_set,
+                R.string.wk_glossary_rep,
+                R.string.wk_glossary_rest,
+                R.string.wk_glossary_effort,
+                R.string.wk_glossary_weight
+            ).forEach { Text(stringResource(it), color = colors.charcoal, fontSize = 14.sp, lineHeight = 20.sp) }
+        }
     }
 }
 

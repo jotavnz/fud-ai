@@ -55,6 +55,32 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun aNewlyAddedLiftStartsAtLastTimesWeight() = runBlocking {
+        val last = com.apoorvdarshan.calorietracker.models.WorkoutSession(
+            diaryDateKey = "2026-10-20",
+            startedAt = java.time.Instant.parse("2026-10-20T18:00:00Z"),
+            completedAt = java.time.Instant.parse("2026-10-20T19:00:00Z"),
+            exercises = listOf(
+                com.apoorvdarshan.calorietracker.models.CompletedExercise(
+                    itemId = "bench", name = "Bench Press", targetMuscles = listOf("Chest"), equipment = "Barbell",
+                    sets = listOf(
+                        com.apoorvdarshan.calorietracker.models.CompletedSet(
+                            setNumber = 1, weight = "40", weightUnit = WorkoutWeightUnit.KG, reps = "10", rpe = ""
+                        )
+                    )
+                )
+            )
+        )
+        val repository = WorkoutRepository(FakeWorkoutStateStore(WorkoutPersistedState(completedSessions = listOf(last))))
+        val day = LocalDate.parse("2026-10-28")
+
+        repository.toggleExercise(exerciseItem(), day)
+
+        val sets = repository.planNow(day).exercises.single().sets
+        assertTrue(sets.all { it.weight == "40" && it.weightUnit == WorkoutWeightUnit.KG && it.reps.isEmpty() })
+    }
+
+    @Test
     fun voiceUndoDoesNotRestoreOldCaloriesOverALaterPlanEdit() = runBlocking {
         val previous = burnSession()
         val repository = WorkoutRepository(FakeWorkoutStateStore())

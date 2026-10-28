@@ -23,7 +23,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.CheckCircle as CheckCircleOutlined
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.HourglassEmpty
@@ -231,6 +233,30 @@ internal fun WorkoutRestSetButton(setNumber: Int, isResting: Boolean, onClick: (
             contentDescription = null,
             tint = if (isResting) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f),
             modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+/** Width of the simple-mode ✓ button, shared with the set header's "Done" column. */
+internal val WorkoutSetDoneButtonWidth = 48.dp
+
+/**
+ * Simple logging's per-set ✓: tapping it marks the set finished and starts its rest. It turns
+ * green once the set has reps, and pulses the rest colour while that set's rest runs.
+ */
+@Composable
+internal fun WorkoutSetDoneButton(setNumber: Int, done: Boolean, isResting: Boolean, onClick: () -> Unit) {
+    val description = stringResource(R.string.wk_cd_set_done, setNumber)
+    IconButton(onClick = onClick, modifier = Modifier.size(WorkoutSetDoneButtonWidth).semantics { contentDescription = description }) {
+        Icon(
+            if (done) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircleOutlined,
+            contentDescription = null,
+            tint = when {
+                isResting -> AppColors.Calorie
+                done -> Color(0xFF2E7D32)
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            },
+            modifier = Modifier.size(26.dp)
         )
     }
 }

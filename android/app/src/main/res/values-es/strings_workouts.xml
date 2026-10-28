@@ -164,4 +164,20 @@
     <string name="wk_guided_next">Siguiente</string>
     <string name="wk_guided_finish">Terminar por hoy</string>
     <string name="wk_guided_weight_hint">Escribe las repeticiones que hiciste y el peso (vacío si es con tu cuerpo). Luego dinos cómo te fue.</string>
+    <string name="wk_starter_heading">O empieza con una rutina lista:</string>
+    <string name="wk_starter_gym_title">Cuerpo completo en máquinas</string>
+    <string name="wk_starter_gym_detail">6 máquinas del gimnasio · 2 series de 12–15 · unos 35 min</string>
+    <string name="wk_starter_home_title">En casa, sin material</string>
+    <string name="wk_starter_home_detail">5 ejercicios · 2 series de 10–12 · unos 25 min</string>
+    <string name="wk_starter_gentle_title">Inicio suave o 60+</string>
+    <string name="wk_starter_gentle_detail">Equilibrio y fuerza, de pie o con silla · 2 series · unos 20 min</string>
+    <string name="wk_first_weight_hint">Primera vez: elige un peso que puedas mover 12–15 veces con buena técnica.</string>
+    <string name="wk_header_done">Hecha</string>
+    <string name="wk_cd_set_done">Serie %1$d hecha, iniciar descanso</string>
+    <string name="wk_glossary_title">¿Qué significa?</string>
+    <string name="wk_glossary_set">Serie: un bloque de repeticiones seguidas y luego un descanso. \"3 series de 10\" = 10 repeticiones, descanso, tres veces.</string>
+    <string name="wk_glossary_rep">Repetición: hacer el movimiento una vez, completo.</string>
+    <string name="wk_glossary_rest">Descanso: la pausa entre series, normalmente 1–2 minutos. Toca ✓ al terminar una serie y empieza el contador.</string>
+    <string name="wk_glossary_effort">Esfuerzo: Fácil = te quedaban 4 o más repeticiones; Bien = te quedaban 2–3; Al límite = 0–1 más.</string>
+    <string name="wk_glossary_weight">Peso: la carga que moviste. Déjalo vacío en ejercicios con tu propio cuerpo.</string>
 </resources>

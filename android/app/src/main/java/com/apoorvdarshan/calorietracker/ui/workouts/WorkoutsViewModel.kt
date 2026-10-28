@@ -414,6 +414,16 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { workoutRepository?.addPlannedExercises(exercises, dateKey, atStart) }
     }
 
+    /** Fills the selected day with a starter routine, [sets] empty sets per lift. */
+    fun addStarterRoutine(items: List<ExerciseItem>, sets: Int) {
+        val dateKey = WorkoutDate.key(diaryUiState.selectedDate)
+        val exercises = items.map { item ->
+            val planned = PlannedExercise.from(item)
+            if (planned.isCardio) planned else planned.copy(sets = List(sets) { PlannedSet() })
+        }
+        viewModelScope.launch { workoutRepository?.addPlannedExercises(exercises, dateKey, atStart = false) }
+    }
+
     /** Adds a suggested machine to today's plan with the prescribed number of empty sets. */
     fun addSuggestedExercise(item: ExerciseItem, sets: Int) {
         val today = LocalDate.now()
