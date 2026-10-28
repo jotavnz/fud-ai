@@ -10,13 +10,13 @@
     <string name="wk_metric_workouts">Workouts</string>
     <string name="wk_metric_reps">Reps</string>
     <string name="wk_metric_burn">Burn</string>
-    <string name="wk_calculating">Calculating…</string>
-    <string name="wk_calculate">Calculate</string>
-    <string name="wk_calorie_burn_caps">CALORIE BURN</string>
+    <string name="wk_calculating">Saving…</string>
+    <string name="wk_calculate">Done</string>
+    <string name="wk_calorie_burn_caps">SAVE WORKOUT</string>
     <string name="wk_cd_calculating">Calculating calorie burn</string>
-    <string name="wk_cd_calculate">Calculate calorie burn</string>
+    <string name="wk_cd_calculate">Mark workout done and save calorie burn</string>
     <string name="wk_log_first_title">Log your workout first</string>
-    <string name="wk_notice_calculate_body">Stop and save an exercise timer, or enter reps for at least one set, before calculating workout calories.</string>
+    <string name="wk_notice_calculate_body">Tick at least one set (enter its reps) or stop and save an exercise timer, then tap Done.</string>
 
     <!-- Workout diary: day header and empty state -->
     <plurals name="wk_workout_count">
@@ -184,4 +184,12 @@
     <string name="wk_progression_hint">Move on when the current step feels easy for 3 sets of 12–15 (or 30 s holds).</string>
     <string name="wk_progression_easier">← Easier: %1$s</string>
     <string name="wk_progression_harder">Next step → %1$s</string>
+    <string name="wk_done">Done!</string>
+    <string name="wk_done_caps">WORKOUT SAVED</string>
+    <string name="wk_done_update">Update</string>
+    <string name="wk_cd_done">Workout done. Tap to save again</string>
+    <string name="wk_cd_day_done">Workout done</string>
+    <string name="wk_done_at">Workout done at %1$s. Tap again if you change it.</string>
+    <string name="wk_done_changed">You changed sets after finishing. Tap Update to save them.</string>
+    <string name="wk_done_hint">When you finish, tap Done to save the workout.</string>
 </resources>

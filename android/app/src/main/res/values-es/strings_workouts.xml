@@ -10,13 +10,13 @@
     <string name="wk_metric_workouts">Entrenos</string>
     <string name="wk_metric_reps">Reps</string>
     <string name="wk_metric_burn">Quemadas</string>
-    <string name="wk_calculating">Calculando…</string>
-    <string name="wk_calculate">Calcular</string>
-    <string name="wk_calorie_burn_caps">CALORÍAS QUEMADAS</string>
+    <string name="wk_calculating">Guardando…</string>
+    <string name="wk_calculate">Terminé</string>
+    <string name="wk_calorie_burn_caps">GUARDAR ENTRENO</string>
     <string name="wk_cd_calculating">Calculando calorías quemadas</string>
-    <string name="wk_cd_calculate">Calcular calorías quemadas</string>
+    <string name="wk_cd_calculate">Marcar el entreno como hecho y guardar las calorías</string>
     <string name="wk_log_first_title">Registra tu entrenamiento primero</string>
-    <string name="wk_notice_calculate_body">Detén y guarda el cronómetro de un ejercicio, o ingresa las repeticiones de al menos una serie, antes de calcular las calorías del entrenamiento.</string>
+    <string name="wk_notice_calculate_body">Marca al menos una serie (pon sus repeticiones) o detén y guarda el cronómetro de un ejercicio, y luego toca Terminé.</string>
 
     <!-- Workout diary: day header and empty state -->
     <plurals name="wk_workout_count">
@@ -184,4 +184,12 @@
     <string name="wk_progression_hint">Pasa al siguiente cuando el actual te resulte fácil 3 series de 12–15 (o 30 s si es de aguantar).</string>
     <string name="wk_progression_easier">← Más fácil: %1$s</string>
     <string name="wk_progression_harder">Siguiente paso → %1$s</string>
+    <string name="wk_done">¡Hecho!</string>
+    <string name="wk_done_caps">ENTRENO GUARDADO</string>
+    <string name="wk_done_update">Actualizar</string>
+    <string name="wk_cd_done">Entreno hecho. Toca para guardarlo otra vez</string>
+    <string name="wk_cd_day_done">Entreno hecho</string>
+    <string name="wk_done_at">Entreno hecho a las %1$s. Si lo cambias, toca de nuevo.</string>
+    <string name="wk_done_changed">Cambiaste series después de terminar. Toca Actualizar para guardarlas.</string>
+    <string name="wk_done_hint">Cuando termines, toca Terminé para guardar el entreno.</string>
 </resources>

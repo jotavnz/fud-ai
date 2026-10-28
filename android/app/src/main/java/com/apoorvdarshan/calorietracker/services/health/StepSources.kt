@@ -93,3 +93,22 @@ internal suspend fun HealthConnectClient.dailyStepSourceTotals(
         )
     }
 }
+
+/** Coach's view of the step count, so a day total from the watch is not added on top of steps already counted. */
+object StepPromptLines {
+    data class Day(val label: String, val counted: Int?, val manual: Int, val bySource: Map<String, Long>)
+
+    fun lines(days: List<Day>, appLabel: (String) -> String): List<String> {
+        if (days.isEmpty()) return emptyList()
+        return listOf("## Steps (Health Connect plus steps added through Coach)") + days.map { day ->
+            val sources = day.bySource.entries.sortedByDescending { it.value }
+                .joinToString(", ") { "${appLabel(it.key)} ${it.value}" }
+            val counted = day.counted?.toString() ?: "unknown (Health Connect not readable)"
+            buildString {
+                append("- ${day.label}: $counted steps counted")
+                if (sources.isNotEmpty()) append(" (by app: $sources)")
+                if (day.manual > 0) append("; ${day.manual} of them added through Coach")
+            }
+        } + "Watch apps (Samsung Health) send steps to Health Connect only when they sync, so a fresh walk can be missing for a while. When the user reports a day total, add only the difference to what is counted here."
+    }
+}

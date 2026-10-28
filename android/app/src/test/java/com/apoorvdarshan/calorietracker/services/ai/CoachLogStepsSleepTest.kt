@@ -29,6 +29,27 @@ class CoachLogStepsSleepTest {
     }
 
     @Test
+    fun aDayOfWalkingWithKmAndNoMinutesIsEstimated() {
+        val parsed = CoachLogTool.parse(
+            mapOf("items" to listOf(mapOf("type" to "cardio", "name" to "Caminata", "distance_km" to 4.5, "steps" to 6000))),
+            today
+        )
+        assertTrue(parsed.errors.isEmpty())
+        val walk = parsed.items.single()
+        assertEquals(54, walk.minutes)
+        assertEquals("Caminata · 4.5 km", walk.name)
+    }
+
+    @Test
+    fun aWalkWithOnlyStepsIsEstimatedFromThem() {
+        val walk = CoachLogTool.parse(
+            mapOf("items" to listOf(mapOf("type" to "cardio", "name" to "Caminata", "steps" to 6000))),
+            today
+        ).items.single()
+        assertEquals(60, walk.minutes)
+    }
+
+    @Test
     fun stepsOutOfRangeAreRefused() {
         val parsed = CoachLogTool.parse(mapOf("items" to listOf(mapOf("type" to "steps", "steps" to 0))), today)
         assertTrue(parsed.items.isEmpty())

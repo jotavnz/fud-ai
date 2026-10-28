@@ -309,6 +309,7 @@ internal fun WorkoutDiaryScreen(
                 WorkoutWeekStrip(
                     selectedDate = state.selectedDate,
                     workoutCounts = state.workoutCounts,
+                    doneDates = state.doneDates,
                     onSelect = {
                         dismissKeyboard()
                         viewModel.selectDate(it)
@@ -898,10 +899,14 @@ private fun WorkoutBurnHero(
         Box(modifier = Modifier.fillMaxWidth().height(176.dp)) {
             WorkoutLogBurnButton(
                 isCalculating = state.isCalculatingBurn,
+                isDone = state.isDone && !state.hasChangesSinceDone,
+                hasChanges = state.isDone && state.hasChangesSinceDone,
                 onCalculate = onCalculate,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
+
+        WorkoutDoneStatus(state)
 
         FudGlassSurface(
             modifier = Modifier.fillMaxWidth(),
@@ -946,8 +951,34 @@ private fun WorkoutBurnHero(
 }
 
 @Composable
+private fun WorkoutDoneStatus(state: WorkoutDiaryUiState) {
+    val doneAt = state.doneAt
+    val locale = LocalConfiguration.current.locales[0]
+    val text = when {
+        doneAt != null && state.hasChangesSinceDone -> stringResource(R.string.wk_done_changed)
+        doneAt != null -> {
+            val time = DateTimeFormatter.ofPattern("HH:mm", locale).format(doneAt.atZone(java.time.ZoneId.systemDefault()))
+            stringResource(R.string.wk_done_at, time)
+        }
+        state.exercises.isNotEmpty() -> stringResource(R.string.wk_done_hint)
+        else -> return
+    }
+    Text(
+        text,
+        color = if (doneAt != null && !state.hasChangesSinceDone) WorkoutDoneGreen
+        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        fontSize = 13.sp,
+        fontWeight = if (doneAt != null) FontWeight.SemiBold else FontWeight.Normal,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+    )
+}
+
+@Composable
 private fun WorkoutLogBurnButton(
     isCalculating: Boolean,
+    isDone: Boolean,
+    hasChanges: Boolean,
     onCalculate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -959,7 +990,11 @@ private fun WorkoutLogBurnButton(
         label = "workout-burn-press"
     )
     val burnDescription = stringResource(
-        if (isCalculating) R.string.wk_cd_calculating else R.string.wk_cd_calculate
+        when {
+            isCalculating -> R.string.wk_cd_calculating
+            isDone -> R.string.wk_cd_done
+            else -> R.string.wk_cd_calculate
+        }
     )
     Box(
         modifier = modifier
@@ -977,11 +1012,21 @@ private fun WorkoutLogBurnButton(
             },
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(R.drawable.timer_button_red),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize()
-        )
+        if (isDone) {
+            Box(
+                Modifier
+                    .size(160.dp)
+                    .shadow(14.dp, CircleShape, ambientColor = WorkoutDoneGreen.copy(alpha = 0.4f), spotColor = WorkoutDoneGreen.copy(alpha = 0.4f))
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(WorkoutDoneGradient))
+            )
+        } else {
+            Image(
+                painter = painterResource(R.drawable.timer_button_red),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
         Column(
             modifier = Modifier.size(156.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -995,22 +1040,29 @@ private fun WorkoutLogBurnButton(
                 )
             } else {
                 Icon(
-                    Icons.Filled.LocalFireDepartment,
+                    if (hasChanges) Icons.Filled.Save else Icons.Filled.Check,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(27.dp)
+                    modifier = Modifier.size(if (isDone) 36.dp else 27.dp)
                 )
             }
             Spacer(Modifier.height(5.dp))
             Text(
-                text = stringResource(if (isCalculating) R.string.wk_calculating else R.string.wk_calculate),
+                text = stringResource(
+                    when {
+                        isCalculating -> R.string.wk_calculating
+                        isDone -> R.string.wk_done
+                        hasChanges -> R.string.wk_done_update
+                        else -> R.string.wk_calculate
+                    }
+                ),
                 color = Color.White,
                 fontSize = if (isCalculating) 18.sp else 22.sp,
                 fontWeight = FontWeight.Black,
                 maxLines = 1
             )
             Text(
-                text = stringResource(R.string.wk_calorie_burn_caps),
+                text = stringResource(if (isDone) R.string.wk_done_caps else R.string.wk_calorie_burn_caps),
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Black,
@@ -2124,6 +2176,7 @@ internal fun WorkoutSetField(
 private fun WorkoutWeekStrip(
     selectedDate: LocalDate,
     workoutCounts: Map<LocalDate, Int>,
+    doneDates: Set<LocalDate>,
     onSelect: (LocalDate) -> Unit,
     weekStartsOnMonday: Boolean,
     modifier: Modifier = Modifier
@@ -2158,6 +2211,7 @@ private fun WorkoutWeekStrip(
                             isSelected = date == selectedDate,
                             isToday = date == today,
                             count = workoutCounts[date] ?: 0,
+                            done = date in doneDates,
                             // The visible days in the current week are all
                             // selectable for planning, including tomorrow.
                             // Horizontal forward swipes remain capped at today.
@@ -2178,6 +2232,7 @@ private fun WorkoutDayTile(
     isSelected: Boolean,
     isToday: Boolean,
     count: Int,
+    done: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -2227,14 +2282,26 @@ private fun WorkoutDayTile(
                 fontWeight = FontWeight.SemiBold
             )
         }
-        Box(
-            Modifier
-                .size(4.dp)
-                .clip(CircleShape)
-                .background(if (count > 0) AppColors.Calorie else Color.Transparent)
-        )
+        if (done) {
+            Icon(
+                Icons.Filled.Check,
+                contentDescription = stringResource(R.string.wk_cd_day_done),
+                tint = WorkoutDoneGreen,
+                modifier = Modifier.size(12.dp)
+            )
+        } else {
+            Box(
+                Modifier
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(if (count > 0) AppColors.Calorie else Color.Transparent)
+            )
+        }
     }
 }
+
+private val WorkoutDoneGreen = Color(0xFF2FB457)
+private val WorkoutDoneGradient = listOf(Color(0xFF45D46F), Color(0xFF1F9A45))
 
 private fun Modifier.workoutDaySwipe(
     selectedDate: LocalDate,

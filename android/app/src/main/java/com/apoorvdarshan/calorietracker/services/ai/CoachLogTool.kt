@@ -41,7 +41,9 @@ object CoachLogTool {
         "foods and drinks with your calorie/macro estimate, plain water, body weight, body-fat percent, strength workouts, and timed cardio. " +
         "Use it whenever the user asks you to log, record, add, track or save something (\"regístralo\", \"anótalo\", \"log this\"), " +
         "or clearly reports a meal and wants it in the diary. Steps they walked that the phone or watch did not count go in a steps item " +
-        "(a walk with minutes and steps: a cardio item plus a steps item); sleep (bed and wake time, or hours) goes in a sleep item. " +
+        "(a walk with minutes and steps: a cardio item plus a steps item; a cardio item without minutes is fine when it has distance_km or steps). " +
+        "When the user gives a day total from their watch (\"6000 pasos según mi reloj\"), compare it with the steps the app already counted that day " +
+        "(Steps section of the context) and add only the missing difference, or nothing if it is already counted; sleep (bed and wake time, or hours) goes in a sleep item. " +
         "When they say a muscle is still sore or not recovered (\"sigo muerto de los bíceps\"), add a soreness item so the app keeps it locked longer. " +
         "Never say you cannot update steps, sleep or soreness. Put every item in ONE call: one food item per distinct dish or drink " +
         "(keep quantities in description, e.g. \"2 ham and cheese sandwiches\"), with meal = breakfast, lunch, dinner or snack when the user says it. " +
@@ -75,8 +77,9 @@ object CoachLogTool {
                 "unit" to prop("string", "water: ml, l, oz, cup or glass; weight: kg or lb"),
                 "value" to prop("number", "weight: body weight in unit"),
                 "percent" to prop("number", "body_fat: percent, e.g. 18.5"),
-                "minutes" to prop("number", "cardio: duration in minutes"),
-                "steps" to prop("number", "steps: how many steps to add to that day (a walk the phone or watch missed)"),
+                "minutes" to prop("number", "cardio: duration in minutes. Optional when distance_km or steps is given (the app estimates it)"),
+                "distance_km" to prop("number", "cardio: distance in km, when the user or their watch says it"),
+                "steps" to prop("number", "steps: how many steps to add to that day (a walk the phone or watch missed); cardio: the walk's steps, only to estimate minutes"),
                 "bed_time" to prop("string", "sleep: when they went to bed, HH:mm"),
                 "wake_time" to prop("string", "sleep: when they woke up, HH:mm; date is the morning they woke up"),
                 "hours" to prop("number", "sleep: hours slept, when they did not give the times"),
@@ -97,6 +100,9 @@ object CoachLogTool {
             "required" to listOf("items")
         )
     }
+
+    private fun formatKm(km: Double): String =
+        if (km == Math.floor(km)) km.toLong().toString() else String.format(java.util.Locale.ROOT, "%.1f", km)
 
     private fun prop(type: String, description: String) = linkedMapOf("type" to type, "description" to description)
 
@@ -193,13 +199,23 @@ object CoachLogTool {
             CoachLogItem.Kind.CARDIO -> {
                 val activity = name.ifEmpty { description }
                 if (activity.isEmpty()) throw IllegalArgumentException("cardio needs a name (the activity).")
+                val km = number(map["distance_km"])?.also {
+                    if (it <= 0 || it > 500) throw IllegalArgumentException("distance_km must be above 0 and at most 500.")
+                }
+                val steps = number(map["steps"])?.takeIf { it > 0 }
+                // A day of walking from the watch comes as steps or km, rarely minutes: estimate them
+                // at an easy walk (about 100 steps or 1/12 km a minute) so the card can still be saved.
                 val minutes = number(map["minutes"])?.let { Math.round(it).toInt() }
-                    ?: throw IllegalArgumentException("cardio needs minutes.")
+                    ?: km?.let { Math.round(it * 12).toInt().coerceAtLeast(1) }
+                    ?: steps?.let { Math.round(it / 100).toInt().coerceAtLeast(1) }
+                    ?: throw IllegalArgumentException("cardio needs minutes, distance_km or steps.")
                 if (minutes !in 1..1_440) throw IllegalArgumentException("minutes must be 1 to 1440.")
                 val burned = number(map["calories"])?.let { Math.round(it).toInt() }?.also {
                     if (it !in 1..5_000) throw IllegalArgumentException("calories must be 1 to 5000.")
                 }
-                base.copy(name = activity, minutes = minutes, caloriesBurned = burned)
+                val label = if (km == null || activity.contains("km", ignoreCase = true)) activity
+                else "$activity · ${formatKm(km)} km"
+                base.copy(name = label, minutes = minutes, caloriesBurned = burned)
             }
             CoachLogItem.Kind.STEPS -> {
                 val steps = (number(map["steps"]) ?: number(map["value"]) ?: number(map["amount"]))?.let { Math.round(it).toInt() }

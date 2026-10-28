@@ -75,6 +75,11 @@ data class WorkoutDiaryUiState(
     val exercises: List<PlannedExercise> = emptyList(),
     val workoutCounts: Map<LocalDate, Int> = emptyMap(),
     val caloriesBurned: Int? = null,
+    /** When the day was marked done (its burn saved) and how many sets it had then. */
+    val doneAt: java.time.Instant? = null,
+    val doneSetCount: Int? = null,
+    /** Days with a saved, done workout: a check in the week strip. */
+    val doneDates: Set<LocalDate> = emptySet(),
     val savedExerciseIds: Set<String> = emptySet(),
     val preferences: WorkoutPreferences = WorkoutPreferences(),
     val splitGroups: List<WorkoutSplitGroup> = emptyList(),
@@ -99,6 +104,11 @@ data class WorkoutDiaryUiState(
 
     val repCount: Int
         get() = exercises.sumOf { exercise -> exercise.sets.sumOf { it.reps.toIntOrNull() ?: 0 } }
+
+    val isDone: Boolean get() = doneAt != null
+
+    /** Done, but sets were added or cleared since: the button offers to save again. */
+    val hasChangesSinceDone: Boolean get() = doneSetCount != null && doneSetCount != performedSetCount
 
     /** Rest runs only on today's log, and only while the rest timer is on. */
     fun isRestAvailable(today: LocalDate = LocalDate.now()): Boolean =
@@ -782,11 +792,14 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         val today = LocalDate.now()
         val dismissed = loadSet(K_DISMISSED_INSIGHTS)
         val exercises = latestPersistedState.dayPlans[dateKey]?.exercises.orEmpty()
-        val burn = latestPersistedState.completedSessions
+        val burnSession = latestPersistedState.completedSessions
             .asSequence()
             .filter { it.diaryDateKey == dateKey && it.caloriesBurned != null }
             .maxWithOrNull(compareBy({ it.healthSyncVersion ?: 0 }, { it.completedAt }))
-            ?.caloriesBurned
+        val burn = burnSession?.caloriesBurned
+        val doneDates = latestPersistedState.completedSessions
+            .filter { it.caloriesBurned != null }
+            .mapNotNullTo(mutableSetOf()) { WorkoutDate.parse(it.diaryDateKey) }
         val counts = latestPersistedState.dayPlans.mapNotNull { (key, plan) ->
             WorkoutDate.parse(key)?.let { it to plan.exercises.size }
         }.toMap()
@@ -823,6 +836,9 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
             exercises = exercises,
             workoutCounts = counts,
             caloriesBurned = burn,
+            doneAt = burnSession?.completedAt,
+            doneSetCount = burnSession?.performedSetCount,
+            doneDates = doneDates,
             savedExerciseIds = latestPersistedState.savedExerciseIds,
             preferences = preferences,
             splitGroups = splitGroups,

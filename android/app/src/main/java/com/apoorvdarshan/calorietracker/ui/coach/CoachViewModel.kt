@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import com.apoorvdarshan.calorietracker.models.stepsByDay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -306,7 +307,29 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
             ?.let { com.apoorvdarshan.calorietracker.models.MuscleRecovery.promptLines(it) }
             .orEmpty()
         val place = TrainingGoalPrefs.setup(container.appContext).promptLines(java.time.Instant.now())
-        return listOf(sleep, recovery, place).filter { it.isNotEmpty() }.flatMap { it + "" }
+        val steps = runCatching { stepLines() }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+            .getOrNull()
+            .orEmpty()
+        return listOf(sleep, recovery, place, steps).filter { it.isNotEmpty() }.flatMap { it + "" }
+    }
+
+    /** Today's and yesterday's steps per app, so Coach adds only what the watch has not sent yet. */
+    private suspend fun stepLines(): List<String> {
+        if (!container.prefs.healthConnectEnabled.first() || !container.health.hasStepsRead()) return emptyList()
+        val manual = container.prefs.manualSteps.first().stepsByDay()
+        val today = java.time.LocalDate.now()
+        val days = listOf("Today ($today)" to today, "Yesterday (${today.minusDays(1)})" to today.minusDays(1)).map { (label, day) ->
+            val extra = manual[day] ?: 0
+            val measured = container.health.readStepsForDay(day)
+            com.apoorvdarshan.calorietracker.services.health.StepPromptLines.Day(
+                label = label,
+                counted = measured?.plus(extra),
+                manual = extra,
+                bySource = container.health.readStepSourcesForDay(day)?.bySource.orEmpty()
+            )
+        }
+        return com.apoorvdarshan.calorietracker.services.health.StepPromptLines.lines(days) { container.health.appLabel(it) ?: it }
     }
 
     // MARK: - Goal cards
