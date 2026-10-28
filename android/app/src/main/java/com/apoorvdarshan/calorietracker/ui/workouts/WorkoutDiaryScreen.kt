@@ -544,6 +544,19 @@ internal fun WorkoutDiaryScreen(
                 }
             }
 
+            if (state.exercises.isNotEmpty() && !isReordering) {
+                item(key = "workout-finish") {
+                    WorkoutFinishBar(
+                        state = state,
+                        onFinish = {
+                            dismissKeyboard()
+                            viewModel.calculateBurn()
+                        },
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+
             // Real scrollable space lets the final set move clear of the IME.
             item(key = "workout-extra-space") {
                 Spacer(Modifier.height(BottomNavScrollPadding + 160.dp))
@@ -892,22 +905,9 @@ private fun WorkoutBurnHero(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(top = 18.dp, bottom = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(22.dp)
+        modifier = modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(modifier = Modifier.fillMaxWidth().height(176.dp)) {
-            WorkoutLogBurnButton(
-                isCalculating = state.isCalculatingBurn,
-                isDone = state.isDone && !state.hasChangesSinceDone,
-                hasChanges = state.isDone && state.hasChangesSinceDone,
-                onCalculate = onCalculate,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-
-        WorkoutDoneStatus(state)
-
         FudGlassSurface(
             modifier = Modifier.fillMaxWidth(),
             cornerRadius = 26.dp,
@@ -950,124 +950,62 @@ private fun WorkoutBurnHero(
     }
 }
 
+/** Under the day's exercise cards: "Terminé" saves the workout; once saved it turns green with the time. */
 @Composable
-private fun WorkoutDoneStatus(state: WorkoutDiaryUiState) {
-    val doneAt = state.doneAt
-    val locale = LocalConfiguration.current.locales[0]
-    val text = when {
-        doneAt != null && state.hasChangesSinceDone -> stringResource(R.string.wk_done_changed)
-        doneAt != null -> {
-            val time = DateTimeFormatter.ofPattern("HH:mm", locale).format(doneAt.atZone(java.time.ZoneId.systemDefault()))
-            stringResource(R.string.wk_done_at, time)
-        }
-        state.exercises.isNotEmpty() -> stringResource(R.string.wk_done_hint)
-        else -> return
-    }
-    Text(
-        text,
-        color = if (doneAt != null && !state.hasChangesSinceDone) WorkoutDoneGreen
-        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        fontSize = 13.sp,
-        fontWeight = if (doneAt != null) FontWeight.SemiBold else FontWeight.Normal,
-        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-    )
-}
-
-@Composable
-private fun WorkoutLogBurnButton(
-    isCalculating: Boolean,
-    isDone: Boolean,
-    hasChanges: Boolean,
-    onCalculate: () -> Unit,
+private fun WorkoutFinishBar(
+    state: WorkoutDiaryUiState,
+    onFinish: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.88f else 1f,
-        animationSpec = tween(durationMillis = 120),
-        label = "workout-burn-press"
-    )
-    val burnDescription = stringResource(
-        when {
-            isCalculating -> R.string.wk_cd_calculating
-            isDone -> R.string.wk_cd_done
-            else -> R.string.wk_cd_calculate
+    val done = state.isDone && !state.hasChangesSinceDone
+    val changed = state.isDone && state.hasChangesSinceDone
+    val locale = LocalConfiguration.current.locales[0]
+    val label = when {
+        state.isCalculatingBurn -> stringResource(R.string.wk_calculating)
+        done -> {
+            val time = DateTimeFormatter.ofPattern("HH:mm", locale)
+                .format(state.doneAt!!.atZone(java.time.ZoneId.systemDefault()))
+            stringResource(R.string.wk_done_at, time)
         }
-    )
-    Box(
-        modifier = modifier
-            .size(176.dp)
-            .scale(scale)
-            .clickable(
-                enabled = !isCalculating,
-                interactionSource = interactionSource,
-                indication = null,
-                role = Role.Button,
-                onClick = onCalculate
-            )
-            .semantics {
-                contentDescription = burnDescription
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        if (isDone) {
-            Box(
-                Modifier
-                    .size(160.dp)
-                    .shadow(14.dp, CircleShape, ambientColor = WorkoutDoneGreen.copy(alpha = 0.4f), spotColor = WorkoutDoneGreen.copy(alpha = 0.4f))
-                    .clip(CircleShape)
-                    .background(Brush.linearGradient(WorkoutDoneGradient))
-            )
-        } else {
-            Image(
-                painter = painterResource(R.drawable.timer_button_red),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        Column(
-            modifier = Modifier.size(156.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            if (isCalculating) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(27.dp),
-                    color = Color.White,
-                    strokeWidth = 2.5.dp
+        changed -> stringResource(R.string.wk_done_update)
+        else -> stringResource(R.string.wk_calculate)
+    }
+    val description = stringResource(if (done) R.string.wk_cd_done else R.string.wk_cd_calculate)
+    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(26.dp))
+                .background(
+                    if (done) Brush.linearGradient(WorkoutDoneGradient)
+                    else Brush.linearGradient(listOf(AppColors.CalorieStart, AppColors.CalorieEnd))
                 )
+                .clickable(enabled = !state.isCalculatingBurn, role = Role.Button, onClick = onFinish)
+                .semantics { contentDescription = description },
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (state.isCalculatingBurn) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
             } else {
                 Icon(
-                    if (hasChanges) Icons.Filled.Save else Icons.Filled.Check,
+                    if (changed) Icons.Filled.Save else Icons.Filled.Check,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(if (isDone) 36.dp else 27.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(Modifier.height(5.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(label, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        }
+        if (changed || !state.isDone) {
             Text(
-                text = stringResource(
-                    when {
-                        isCalculating -> R.string.wk_calculating
-                        isDone -> R.string.wk_done
-                        hasChanges -> R.string.wk_done_update
-                        else -> R.string.wk_calculate
-                    }
-                ),
-                color = Color.White,
-                fontSize = if (isCalculating) 18.sp else 22.sp,
-                fontWeight = FontWeight.Black,
-                maxLines = 1
-            )
-            Text(
-                text = stringResource(if (isDone) R.string.wk_done_caps else R.string.wk_calorie_burn_caps),
-                color = Color.White.copy(alpha = 0.9f),
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.4.sp,
-                maxLines = 1
+                stringResource(if (changed) R.string.wk_done_changed else R.string.wk_done_hint),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                fontSize = 12.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(top = 6.dp, start = 12.dp, end = 12.dp)
             )
         }
     }
