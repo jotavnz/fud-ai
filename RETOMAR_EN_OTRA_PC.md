@@ -58,7 +58,9 @@ Eso regenera el catálogo y convierte solo los medios que falten.
   `add_pantry_items`) aplica add/set/used_up/discard sin preguntar y junta lo repetido (`PantryEditor` en `Pantry.kt`).
 
 **SIGUIENTE (pedido el 28 al cerrar, en este orden):**
-1. Aviso al añadir comida en un día que no es hoy (la tira de días de arriba en Inicio): que se note en qué día
+1. HECHO (commit "Warn when adding food to a day other than today", sin compilar APK ni probar en el teléfono): aviso ámbar
+   en Inicio bajo la tira de días con "Volver a hoy", y en la hoja de revisión de comida con "Guardar hoy"
+   (`ui/home/OtherDayNotice.kt`). Antes decía: aviso al añadir comida en un día que no es hoy: que se note en qué día
    estás añadiendo, sin bloquear.
 2. Despensa y mercado con más diseño, inspirado en whats-in-the-fridge (MIT: semáforo de frescura, etc.) y grocy
    (MIT: historial de precios por tienda). Solo ideas, no copiar código ajeno sin revisar licencia.

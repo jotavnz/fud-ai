@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_other_day_past">Estás en el %1$s. Lo que añadas se guarda en ese día, no hoy.</string>
+    <string name="home_other_day_future">Estás en el %1$s, un día que aún no llega. Lo que añadas se guarda en ese día, no hoy.</string>
+    <string name="home_back_to_today">Volver a hoy</string>
+    <string name="sheet_other_day">Se guardará el %1$s, no hoy.</string>
+    <string name="sheet_use_today">Guardar hoy</string>
+</resources>

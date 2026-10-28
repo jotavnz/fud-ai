@@ -564,6 +564,15 @@ fun FoodResultSheet(
                 }
             }
 
+            if (loggedDate != LocalDate.now(zone)) {
+                item {
+                    SheetOtherDayNotice(loggedDate, onToday = {
+                        loggedDate = LocalDate.now(zone)
+                        loggedTime = java.time.LocalTime.now(zone)
+                    })
+                }
+            }
+
             if (usesSavedBarcodeLabel) {
                 item { SavedBarcodeLabelNoticeCard() }
             }

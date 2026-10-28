@@ -615,6 +615,15 @@ DisposableEffect(lifecycleOwner, vm) {
                     )
                 }
             }
+            if (!isToday) {
+                item {
+                    HomeOtherDayNotice(
+                        date = selectedDate,
+                        onToday = { vm.setSelectedDate(today) },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+            }
 
             // Calorie hero + macros + View More — grouped so the day-swipe gesture covers only
             // this top region, not the food log below "View More". Swipe left/right to change day;

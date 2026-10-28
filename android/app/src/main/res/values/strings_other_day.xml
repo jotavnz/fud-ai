@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_other_day_past">You are on %1$s. Whatever you add goes to that day, not today.</string>
+    <string name="home_other_day_future">You are on %1$s, a day ahead. Whatever you add goes to that day, not today.</string>
+    <string name="home_back_to_today">Back to today</string>
+    <string name="sheet_other_day">This will be saved on %1$s, not today.</string>
+    <string name="sheet_use_today">Save today</string>
+</resources>
