@@ -115,6 +115,9 @@ data class SettingsUiState(
     /** Rest countdown after a logged set, in seconds; 0 = off. */
     val workoutRestTimerSeconds: Int = com.apoorvdarshan.calorietracker.models.WorkoutRestTimerSetting.DEFAULT_SECONDS,
     val workoutSimpleLogging: Boolean = true,
+    val workoutWarmupReminder: Boolean = false,
+    val workoutTrainingDays: Set<Int> = emptySet(),
+    val workoutTrainingHour: Int = 18,
     val userContext: String = "",
     val fallbackEnabled: Boolean = false,
     val fallbackProvider: AIProvider = AIProvider.GEMINI,
@@ -195,7 +198,10 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     workoutSplit = preferences.split,
                     workoutRpeScale = preferences.rpeScale,
                     workoutRestTimerSeconds = preferences.restTimerSeconds,
-                    workoutSimpleLogging = preferences.simpleLogging
+                    workoutSimpleLogging = preferences.simpleLogging,
+                    workoutWarmupReminder = preferences.warmupReminder,
+                    workoutTrainingDays = preferences.trainingDays,
+                    workoutTrainingHour = preferences.trainingHour
                 )
             }
         }
@@ -534,6 +540,20 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun setWorkoutSimpleLogging(enabled: Boolean) {
         viewModelScope.launch {
             container.workoutRepository.updatePreferences { it.copy(simpleLogging = enabled, loggingGuideDismissed = false) }
+        }
+    }
+
+    /** Warm-up reminder settings; [days] are ISO days of week. */
+    fun setWarmupReminder(enabled: Boolean? = null, days: Set<Int>? = null, hour: Int? = null) {
+        viewModelScope.launch {
+            container.workoutRepository.updatePreferences { current ->
+                current.copy(
+                    warmupReminder = enabled ?: current.warmupReminder,
+                    trainingDays = days ?: current.trainingDays,
+                    trainingHour = hour ?: current.trainingHour
+                )
+            }
+            syncNotificationSchedules()
         }
     }
 
@@ -1259,6 +1279,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             container.notifications.cancelWaterReminder()
             container.notifications.cancelFastingGoal()
             container.notifications.cancelProductHuntLaunch()
+            container.notifications.cancelWarmupReminder()
             return
         }
 
@@ -1301,6 +1322,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         } else {
             container.notifications.cancelWaterReminder()
         }
+
+        container.notifications.syncWarmupReminder(container.workoutRepository.snapshot().preferences)
 
         if (container.prefs.fastingTrackingEnabled.first() &&
             container.prefs.fastingGoalNotificationEnabled.first()

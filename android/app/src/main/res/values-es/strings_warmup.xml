@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_warmup_title">Calienta antes de entrenar</string>
+    <string name="notif_warmup_generic">Tu calentamiento de hoy está listo.</string>
+    <string name="notif_warmup_text">5–8 minutos, de camino o en el gimnasio:\n%1$s</string>
+    <string name="settings_warmup_reminder">Aviso de calentamiento</string>
+    <string name="settings_warmup_reminder_footer">30 minutos antes de tu hora habitual, en tus días de entrenamiento o cualquier día con ejercicios planificados en el diario, recibes un calentamiento corto para los músculos de ese día.</string>
+    <string name="settings_training_days">Suelo entrenar los</string>
+    <string name="settings_training_hour">A las</string>
+</resources>

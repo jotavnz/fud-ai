@@ -464,6 +464,7 @@ class AppContainer(app: FudAIApp) {
         } else {
             notifications.cancelWaterReminder()
         }
+        notifications.syncWarmupReminder(workoutRepository.snapshot().preferences)
         if (prefs.fastingTrackingEnabled.first() &&
             prefs.fastingGoalNotificationEnabled.first()
         ) {

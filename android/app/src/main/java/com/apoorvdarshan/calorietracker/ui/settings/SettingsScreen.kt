@@ -1227,6 +1227,13 @@ fun SettingsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
                 HorizontalDivider()
+                WarmupReminderSettings(
+                    enabled = ui.workoutWarmupReminder,
+                    days = ui.workoutTrainingDays,
+                    hour = ui.workoutTrainingHour,
+                    onChange = vm::setWarmupReminder
+                )
+                HorizontalDivider()
                 SettingRow(
                     stringResource(R.string.cycle_menu),
                     "",

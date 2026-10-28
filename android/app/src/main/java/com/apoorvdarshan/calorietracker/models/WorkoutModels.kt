@@ -234,7 +234,13 @@ data class WorkoutPreferences(
      */
     val simpleLogging: Boolean = true,
     /** The "how to fill in a set" guide card was dismissed. */
-    val loggingGuideDismissed: Boolean = false
+    val loggingGuideDismissed: Boolean = false,
+    /** Notify a warm-up before training ([WarmupReminder]). */
+    val warmupReminder: Boolean = false,
+    /** Usual training days (ISO day of week, Monday = 1) for [warmupReminder]. */
+    val trainingDays: Set<Int> = emptySet(),
+    /** Usual training hour (0–23) for [warmupReminder]. */
+    val trainingHour: Int = 18
 ) {
     /** Keeps legacy fields decodable while enforcing the final selectable settings. */
     fun sanitized(): WorkoutPreferences = copy(
@@ -243,6 +249,8 @@ data class WorkoutPreferences(
         split = if (split == WorkoutSplit.CUSTOM) WorkoutSplit.FULL_BODY else split,
         customSplit = "",
         restTimerSeconds = WorkoutRestTimerSetting.sanitized(restTimerSeconds),
+        trainingDays = trainingDays.filterTo(mutableSetOf()) { it in 1..7 },
+        trainingHour = trainingHour.coerceIn(0, 23),
         strength = WorkoutStrengthNumbers(
             benchPressKg = validLoad(strength.benchPressKg),
             squatKg = validLoad(strength.squatKg),

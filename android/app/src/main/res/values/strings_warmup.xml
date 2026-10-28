@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_warmup_title">Warm up before training</string>
+    <string name="notif_warmup_generic">Your warm-up for today is ready.</string>
+    <string name="notif_warmup_text">5–8 minutes, on the way or at the gym:\n%1$s</string>
+    <string name="settings_warmup_reminder">Warm-up reminder</string>
+    <string name="settings_warmup_reminder_footer">30 minutes before you usually train, on your training days or any day with exercises planned in the diary, you get a short warm-up for that day\'s muscles.</string>
+    <string name="settings_training_days">I usually train on</string>
+    <string name="settings_training_hour">At</string>
+</resources>

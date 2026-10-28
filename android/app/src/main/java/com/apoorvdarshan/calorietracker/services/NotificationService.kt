@@ -13,6 +13,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import com.apoorvdarshan.calorietracker.FudAIApp
+import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.FudAILinks
 import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateChecker
@@ -23,6 +24,8 @@ import androidx.core.content.ContextCompat
 import com.apoorvdarshan.calorietracker.MainActivity
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FastingSession
+import com.apoorvdarshan.calorietracker.models.WarmupReminder
+import com.apoorvdarshan.calorietracker.models.WorkoutPreferences
 import com.apoorvdarshan.calorietracker.models.formatFastingDuration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -426,6 +429,21 @@ class NotificationService(private val context: Context) {
         text = context.getString(R.string.notif_water_text)
     )
 
+    /** Daily check [WarmupReminder.LEAD_MINUTES] before the usual training hour; posts only on training days. */
+    fun scheduleWarmupReminder(trainingHour: Int) {
+        val (hour, minute) = WarmupReminder.alarmTime(trainingHour)
+        schedule(
+            REQUEST_WARMUP, hour, minute, CHANNEL_TRAINING_ALERTS,
+            title = context.getString(R.string.notif_warmup_title),
+            text = context.getString(R.string.notif_warmup_generic)
+        )
+    }
+
+    fun cancelWarmupReminder() = cancel(REQUEST_WARMUP)
+
+    fun syncWarmupReminder(preferences: WorkoutPreferences) {
+        if (preferences.warmupReminder) scheduleWarmupReminder(preferences.trainingHour) else cancelWarmupReminder()
+    }
     fun cancelStreakReminder() = cancel(REQUEST_STREAK)
     fun cancelDailySummary() = cancel(REQUEST_DAILY)
     fun cancelWeightReminder() = cancel(REQUEST_WEIGHT)
@@ -540,6 +558,7 @@ class NotificationService(private val context: Context) {
         private const val REQUEST_PRODUCT_HUNT = 1008
         private const val REQUEST_WORKOUT_REST = 1009
         private const val REQUEST_WHATS_NEW = 1010
+        internal const val REQUEST_WARMUP = 1011
     }
 }
 
@@ -708,6 +727,11 @@ class ReminderReceiver : BroadcastReceiver() {
             return
         }
 
+        if (request == NotificationService.REQUEST_WARMUP) {
+            postWarmup(context, title, request)
+            return
+        }
+
         if (channel != NotificationService.CHANNEL_STREAK) {
             postNotification(context, channel, title, text, request)
             return
@@ -736,6 +760,32 @@ class ReminderReceiver : BroadcastReceiver() {
                 ) {
                     postNotification(context, channel, title, text, request)
                 }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    /** Today's warm-up from the catalog, only when [WarmupReminder] says today is a training day. */
+    private fun postWarmup(context: Context, title: String, request: Int) {
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val app = context.applicationContext as FudAIApp
+                val plan = WarmupReminder.plan(app.container.workoutRepository.snapshot(), LocalDate.now())
+                    ?: return@launch
+                val catalog = ExerciseRepository.get(context).byId
+                val lines = plan.picks.mapNotNull { pick -> catalog[pick.id]?.let { "${it.name} (${pick.dose})" } }
+                if (lines.isEmpty()) return@launch
+                postNotification(
+                    context = context,
+                    channel = NotificationService.CHANNEL_TRAINING_ALERTS,
+                    title = title,
+                    text = context.getString(R.string.notif_warmup_text, lines.joinToString("\n")),
+                    request = request
+                )
+            } catch (error: Exception) {
+                Log.w(TAG, "Unable to build the warm-up reminder", error)
             } finally {
                 pendingResult.finish()
             }
