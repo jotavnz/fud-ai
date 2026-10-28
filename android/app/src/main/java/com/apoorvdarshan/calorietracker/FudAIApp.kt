@@ -102,6 +102,7 @@ open class FudAIApp : Application() {
         AppCompatDelegate.setApplicationLocales(AppCompatDelegate.getApplicationLocales())
         // Before anything reads saved workouts: maps old catalog ids onto the current ones.
         com.apoorvdarshan.calorietracker.data.ExerciseIdMigration.load(this)
+        com.apoorvdarshan.calorietracker.data.ShelfLife.load(this)
         // Barcode lookups from Home and the voice assistant name unknown products in the app language.
         com.apoorvdarshan.calorietracker.services.OpenFoodFactsService.barcodeFallbackName =
             { barcode -> getString(R.string.hm_barcode_name_format, barcode) }

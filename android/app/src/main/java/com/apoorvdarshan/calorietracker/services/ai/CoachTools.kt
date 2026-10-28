@@ -453,7 +453,7 @@ class CoachTools(
             val location = com.apoorvdarshan.calorietracker.models.PantryLocation.parse(map["location"] as? String)
                 ?: com.apoorvdarshan.calorietracker.models.PantryLocation.FRIDGE
             val days = (map["best_before_days"] as? Number)?.toLong()?.takeIf { it in 0..730 }
-                ?: location.defaultShelfLifeDays
+                ?: com.apoorvdarshan.calorietracker.data.ShelfLife.estimateDays(name, location)
             com.apoorvdarshan.calorietracker.models.PantryItem(
                 name = name,
                 quantity = (map["quantity"] as? String)?.trim()?.take(30).orEmpty(),
@@ -1237,7 +1237,7 @@ class CoachTools(
             "get_workout_history" to "Fetch completed workouts between two dates, including calculated calorie burn, saved exercise durations and intensity, and logged sets with weight, reps, and RPE. A timed exercise can be performed without any reps or sets. For one specific lift across many dates, prefer get_exercise_lift_history.",
             "get_workout_plans" to "Fetch dated workout diary plans, set targets, saved exercise durations, and current timer state. Running or paused timer time is unsaved. Optional ISO from/to dates narrow the result; without them it returns recent and upcoming plans around today.",
             "get_session_extras" to "Get catalog exercises (with catalog_id, dose and guidance) for the parts of training beyond the main lifts: kind=warmup (dynamic warm-up for the given muscles; gentle=true for beginners, seniors or higher body weight), cooldown (after a session; heavy_legs=true after hard leg work), mobility, posture (desk workers, rounded shoulders), deep_core, hypopressive, balance (joint stability, seniors, sedentary starters) or calisthenics (push/pull progressions). Use it before suggesting a session, after a hard session, or when the user asks for these styles.",
-            "add_pantry_items" to "Save food the user says they bought or have at home into their pantry (fridge, freezer or cupboard). Use it when they list groceries, read out a shopping haul, or say what is in their fridge. Expand everyday names into clear food names in the user's language and estimate best_before_days when they do not say it. If an item looks like one already in the pantry the tool does not save and returns possible_duplicates: ask the user, then call again with confirmed=true. Never invent items.",
+            "add_pantry_items" to "Save food the user says they bought or have at home into their pantry (fridge, freezer or cupboard). Use it when they list groceries, read out a shopping haul, or say what is in their fridge. Expand everyday names into clear food names in the user's language and send best_before_days only when they say a date (the app estimates it per food otherwise). If an item looks like one already in the pantry the tool does not save and returns possible_duplicates: ask the user, then call again with confirmed=true. Never invent items.",
             "get_cycle" to "Fetch the user's menstrual cycle summary when they turned cycle tracking on: cycle day, estimated phase with confidence, whether they are on their period, the next period estimate, today's symptoms (cramps, fatigue, headache, low mood, bloating, heavy flow) and suggested training adjustments. Call it before planning or adjusting a session for a user who tracks their cycle, or when they mention their period. Returns enabled=false otherwise.",
             "get_pantry" to "Fetch the food the user has at home (fridge, freezer, pantry) with quantities and best-before dates, plus recent grocery shops and spending. Use it to suggest meals from what is available (use soon-to-expire items first and fit the remaining calories and macros), to build the next weekly, biweekly or monthly shopping list from what is missing and what they eat, or to summarize grocery spending. If the user is travelling, mention local names for ingredients.",
             "get_workout_preferences" to "Fetch workout-only preferences such as target muscles, injuries or issues, equipment, schedule, split, RPE scale, and strength numbers.",
@@ -1311,7 +1311,7 @@ class CoachTools(
                                     "name" to linkedMapOf("type" to "string", "description" to "Food name in the user's language"),
                                     "quantity" to linkedMapOf("type" to "string", "description" to "As said: 6, 500 g, 1 bottle"),
                                     "location" to linkedMapOf("type" to "string", "description" to "fridge, freezer or pantry (cupboard)"),
-                                    "best_before_days" to linkedMapOf("type" to "integer", "description" to "Estimated days until it should be eaten")
+                                    "best_before_days" to linkedMapOf("type" to "integer", "description" to "Days until it should be eaten, only when the user says a date or how long it keeps. Omit it otherwise: the app estimates it per food from USDA FoodKeeper.")
                                 ),
                                 "required" to listOf("name")
                             )

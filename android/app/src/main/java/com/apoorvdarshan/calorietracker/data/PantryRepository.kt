@@ -64,7 +64,7 @@ class PantryRepository(private val prefs: PreferencesStore) {
         prefs.updateShoppingList { list -> list.filter { it.id != id } }
     }
 
-    /** Moves everything ticked on the list into the pantry, with a default best-before. */
+    /** Moves everything ticked on the list into the pantry, with a best-before estimated per food ([ShelfLife]). */
     suspend fun stockCheckedShopping(today: LocalDate = LocalDate.now()) {
         val bought = prefs.shoppingList.first().filter { it.checked }
         if (bought.isEmpty()) return
@@ -74,7 +74,7 @@ class PantryRepository(private val prefs: PreferencesStore) {
                     name = it.name,
                     quantity = it.quantity,
                     location = it.location,
-                    expiresOn = today.plusDays(it.location.defaultShelfLifeDays).toString()
+                    expiresOn = today.plusDays(ShelfLife.estimateDays(it.name, it.location)).toString()
                 )
             }
         }
@@ -83,7 +83,7 @@ class PantryRepository(private val prefs: PreferencesStore) {
 
     suspend fun shoppingSnapshot(): List<ShoppingItem> = prefs.shoppingList.first()
 
-    /** Saves a reviewed receipt and stocks its lines, with a default best-before by location. */
+    /** Saves a reviewed receipt and stocks its lines, with a best-before estimated per food ([ShelfLife]). */
     suspend fun addPurchase(purchase: GroceryPurchase, today: LocalDate = LocalDate.now()) {
         prefs.updateGroceryPurchases { it + purchase }
         val stocked = purchase.items.map { line ->
@@ -91,7 +91,7 @@ class PantryRepository(private val prefs: PreferencesStore) {
                 name = line.name,
                 quantity = line.quantity,
                 location = line.location,
-                expiresOn = today.plusDays(line.location.defaultShelfLifeDays).toString()
+                expiresOn = today.plusDays(ShelfLife.estimateDays(line.name, line.location)).toString()
             )
         }
         prefs.updatePantryItems { it + stocked }

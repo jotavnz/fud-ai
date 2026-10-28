@@ -30,6 +30,7 @@
     <string name="pantry_best_before">Consumir en</string>
     <string name="pantry_in_days">%1$d días</string>
     <string name="pantry_no_date">Sin fecha</string>
+    <string name="pantry_suggested_days">Sugerido: %1$d días</string>
     <string name="pantry_reading_receipt">Leyendo la factura…</string>
     <string name="pantry_looking_up">Buscando el producto…</string>
     <string name="pantry_receipt_failed">No pude leer esa factura. Prueba con una foto más nítida, plana y con la factura completa.</string>

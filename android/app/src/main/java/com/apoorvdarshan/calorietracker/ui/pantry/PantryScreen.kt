@@ -62,6 +62,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.data.ShelfLife
 import com.apoorvdarshan.calorietracker.models.GroceryPurchase
 import com.apoorvdarshan.calorietracker.models.PantryItem
 import com.apoorvdarshan.calorietracker.models.PantryLocation
@@ -459,8 +460,14 @@ private fun PantryItemDialog(
         }
         Text(stringResource(R.string.pantry_best_before), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         val today = LocalDate.now()
+        // Per-food estimate (USDA FoodKeeper); the fixed chips stay for anything else.
+        val suggested = remember(name, location) { name.trim().takeIf { it.length >= 3 }?.let { ShelfLife.estimateDays(it, location) } }
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(2L, 5L, 14L, 90L).forEach { days ->
+            suggested?.let { days ->
+                val date = today.plusDays(days).toString()
+                PantryFilterChip(stringResource(R.string.pantry_suggested_days, days.toInt()), expiresOn == date) { expiresOn = date }
+            }
+            listOf(2L, 5L, 14L, 90L).filter { it != suggested }.forEach { days ->
                 val date = today.plusDays(days).toString()
                 PantryFilterChip(stringResource(R.string.pantry_in_days, days.toInt()), expiresOn == date) { expiresOn = date }
             }

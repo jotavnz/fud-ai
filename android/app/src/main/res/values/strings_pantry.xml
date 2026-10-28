@@ -30,6 +30,7 @@
     <string name="pantry_best_before">Eat within</string>
     <string name="pantry_in_days">%1$d days</string>
     <string name="pantry_no_date">No date</string>
+    <string name="pantry_suggested_days">Suggested: %1$d days</string>
     <string name="pantry_reading_receipt">Reading the receipt…</string>
     <string name="pantry_looking_up">Looking up the product…</string>
     <string name="pantry_receipt_failed">Could not read that receipt. Try a sharper, flat photo with the whole receipt visible.</string>
