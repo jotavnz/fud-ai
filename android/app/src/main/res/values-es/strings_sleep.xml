@@ -18,4 +18,5 @@
     <string name="sleep_history_average">Promedio de las últimas %2$d noches: %1$s</string>
     <string name="sleep_history_manual">contado al coach</string>
     <string name="sleep_history_detail">%1$s – %2$s · %3$s</string>
+    <string name="sleep_history_see_all">Ver todo (%1$d noches)</string>
 </resources>

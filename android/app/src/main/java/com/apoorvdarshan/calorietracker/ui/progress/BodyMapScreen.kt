@@ -235,8 +235,11 @@ internal fun BodyMapScreen(container: AppContainer) {
         }
 
         item(key = "sleep") {
+            // Only the latest nights here; the full history opens on demand so this tab stays short.
+            var showAllSleep by remember { mutableStateOf(false) }
+            if (showAllSleep) com.apoorvdarshan.calorietracker.ui.home.SleepHistoryDialog(container) { showAllSleep = false }
             FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 14.dp) {
-                com.apoorvdarshan.calorietracker.ui.home.SleepHistorySection(container)
+                com.apoorvdarshan.calorietracker.ui.home.SleepHistorySection(container, limit = 5, onShowAll = { showAllSleep = true })
             }
         }
 

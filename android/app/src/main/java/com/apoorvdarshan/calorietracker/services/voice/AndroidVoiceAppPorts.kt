@@ -31,6 +31,7 @@ import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
@@ -468,6 +469,9 @@ class AndroidVoiceAppPorts(
 
     // MARK: - Coach data
 
+    /** Pantry items the voice assistant hears are saved off the tool call's thread. */
+    private val pantryScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+
     override suspend fun coachTools(): CoachTools {
         val workouts = container.workoutRepository.snapshot()
         return CoachTools(
@@ -487,6 +491,7 @@ class AndroidVoiceAppPorts(
             pantryItems = container.pantryRepository.snapshot(),
             groceryPurchases = container.pantryRepository.purchaseSnapshot(),
             shoppingList = container.pantryRepository.shoppingSnapshot(),
+            pantryWriter = { items -> pantryScope.launch { items.forEach { container.pantryRepository.add(it) } } },
             cycle = container.cycleRepository.coachSnapshot()
         )
     }

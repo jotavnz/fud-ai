@@ -44,4 +44,7 @@
     <string name="nudge_pantry_text">%1$s conviene comerlo antes de mañana. Pídele al Coach una comida rápida con eso.</string>
     <string name="nudge_comeback_title">¿Volvemos, con calma?</string>
     <string name="nudge_comeback_text">Han pasado %1$d días desde tu último entrenamiento. Una sesión de 15 minutos cuenta. El Coach puede armarte una suave para hoy.</string>
+    <string name="pantry_home_empty">Cuéntale al Coach o añade lo que tienes en casa</string>
+    <string name="pantry_home_summary">%1$d productos en casa</string>
+    <string name="pantry_home_summary_expiring">%1$d productos en casa · %2$d vencen pronto</string>
 </resources>

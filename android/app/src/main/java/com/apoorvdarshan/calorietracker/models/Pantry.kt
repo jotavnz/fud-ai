@@ -89,6 +89,28 @@ data class GroceryLine(
     val location: PantryLocation = PantryLocation.PANTRY
 )
 
+/** Spots items that are probably the same food ("Huevos" vs "huevos blancos", "leche" vs "Leche entera"). */
+object PantryMatching {
+    private val accents = Regex("[\\u0300-\\u036f]")
+
+    fun key(name: String): String =
+        java.text.Normalizer.normalize(name.lowercase().trim(), java.text.Normalizer.Form.NFD)
+            .replace(accents, "")
+            .replace(Regex("[^a-z0-9 ]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+
+    fun similar(a: String, b: String): Boolean {
+        val ka = key(a)
+        val kb = key(b)
+        if (ka.isEmpty() || kb.isEmpty()) return false
+        if (ka == kb) return true
+        val wa = ka.split(' ').filter { it.length >= 4 }.map { it.trimEnd('s') }.toSet()
+        val wb = kb.split(' ').filter { it.length >= 4 }.map { it.trimEnd('s') }.toSet()
+        return wa.isNotEmpty() && wb.isNotEmpty() && (wa.containsAll(wb) || wb.containsAll(wa))
+    }
+}
+
 /** Reads the AI's receipt JSON into a purchase the user reviews before saving. */
 object ReceiptParser {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }

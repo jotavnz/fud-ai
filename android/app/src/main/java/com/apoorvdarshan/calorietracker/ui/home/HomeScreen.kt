@@ -475,6 +475,7 @@ DisposableEffect(lifecycleOwner, vm) {
     }
     val coachGoalPlan by container.prefs.coachGoalPlan.collectAsState(initial = null)
     val coachGoalPromptDismissed by container.prefs.coachGoalPromptDismissed.collectAsState(initial = true)
+    val pantryItems by container.pantryRepository.items.collectAsState(initial = emptyList())
     val homeScope = rememberCoroutineScope()
     var healthSyncing by remember { mutableStateOf(false) }
     var showSleepHistory by remember { mutableStateOf(false) }
@@ -689,6 +690,15 @@ DisposableEffect(lifecycleOwner, vm) {
                         }
                     }
                 }
+            }
+
+            // Pantry lives on Home, under the nutrition cards: what is at home feeds meal ideas.
+            item(key = "pantry-entry") {
+                PantryEntryCard(
+                    itemCount = pantryItems.size,
+                    expiringCount = pantryItems.count { item -> item.daysLeft()?.let { it in 0..2 } == true },
+                    onOpen = { showPantry = true }
+                )
             }
 
             if (isToday && coachGoalPlan == null && !coachGoalPromptDismissed) {
@@ -911,14 +921,6 @@ DisposableEffect(lifecycleOwner, vm) {
                                     trailingIcon = Icons.Filled.ChevronRight
                                 ) { addMenuDestination = AddMenuDestination.Fasting }
                             }
-                        }
-                        SheetHairline()
-                        SheetGlassDropdownMenuItem(
-                            label = stringResource(R.string.pantry_menu),
-                            leadingIcon = Icons.Filled.Kitchen
-                        ) {
-                            showAddMenu = false
-                            showPantry = true
                         }
                         // Cycle tracking is offered unless the profile says male.
                         if (ui.profile?.gender != com.apoorvdarshan.calorietracker.models.Gender.MALE) {
@@ -3351,3 +3353,33 @@ private fun filterDecimalInput(value: String): String =
 
 internal fun parseOptionalManualNutritionValue(value: String): Double? =
     ServingUnitOption.parseQuantity(value)?.takeIf { it >= 0 }
+
+/** Home's door to the pantry: item count and how many expire within two days. */
+@Composable
+private fun PantryEntryCard(itemCount: Int, expiringCount: Int, onOpen: () -> Unit) {
+    com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clickable(onClick = onOpen),
+        cornerRadius = 20.dp,
+        padding = 14.dp
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(Icons.Filled.Kitchen, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(28.dp))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.pantry_menu), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    when {
+                        itemCount == 0 -> stringResource(R.string.pantry_home_empty)
+                        expiringCount > 0 -> stringResource(R.string.pantry_home_summary_expiring, itemCount, expiringCount)
+                        else -> stringResource(R.string.pantry_home_summary, itemCount)
+                    },
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
+                )
+            }
+            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+        }
+    }
+}

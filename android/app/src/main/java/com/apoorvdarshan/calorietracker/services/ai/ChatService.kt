@@ -85,6 +85,7 @@ class ChatService(
         pantryItems: List<com.apoorvdarshan.calorietracker.models.PantryItem> = emptyList(),
         groceryPurchases: List<com.apoorvdarshan.calorietracker.models.GroceryPurchase> = emptyList(),
         shoppingList: List<com.apoorvdarshan.calorietracker.models.ShoppingItem> = emptyList(),
+        pantryWriter: ((List<com.apoorvdarshan.calorietracker.models.PantryItem>) -> Unit)? = null,
         cycle: com.apoorvdarshan.calorietracker.data.CycleRepository.Snapshot? = null
     ): String {
         val energyUnit = prefs.energyUnit.first()
@@ -147,6 +148,7 @@ class ChatService(
             pantryItems = pantryItems,
             groceryPurchases = groceryPurchases,
             shoppingList = shoppingList,
+            pantryWriter = pantryWriter,
             cycle = cycle
         )
 
@@ -356,6 +358,7 @@ class ChatService(
         lines.add("- \"What workout do I have planned?\" → call get_workout_plans")
         lines.add("- A photo of a gym machine, or \"is this exercise in my library?\" → identify the exercise, then call search_exercise_library(query)")
         lines.add("- \"What can I cook?\", \"what should I buy?\", or grocery spending → call get_pantry, then suggest meals from what they have that fit today's remaining calories and macros, or a shopping list")
+        lines.add("- The user lists groceries they bought or what is in their fridge → call add_pantry_items (ask before adding likely duplicates)")
         lines.add("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
         if (canProposeWorkoutChanges) {
             lines.add("- \"Add this to my workout\" → search_exercise_library, then propose_add_exercise_to_day. A gym machine that is not in the library → propose_custom_exercise. These only show the user a card to confirm; nothing is saved until they tap Add, so never say a change was made.")

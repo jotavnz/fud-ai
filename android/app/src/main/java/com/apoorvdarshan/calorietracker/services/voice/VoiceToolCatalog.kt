@@ -90,12 +90,12 @@ object VoiceToolCatalog {
     }
 
     /** Coach's data tools, read-only, sharing Coach's descriptions and schemas. */
-    fun coachDataTools(): List<VoiceToolSpec> = CoachTools.TOOL_NAMES.map { name ->
+    fun coachDataTools(): List<VoiceToolSpec> = (CoachTools.TOOL_NAMES + CoachTools.PANTRY_WRITE_TOOL_NAMES).map { name ->
         VoiceToolSpec(
             name = name,
             description = CoachTools.TOOL_DESCRIPTIONS[name].orEmpty(),
             parameters = toJsonElement(CoachTools.parameterSchemaFor(name)).jsonObject,
-            effect = ToolEffect.READ,
+            effect = if (name in CoachTools.PANTRY_WRITE_TOOL_NAMES) ToolEffect.WRITE else ToolEffect.READ,
             confirm = ToolConfirm.NEVER,
             workout = name in CoachTools.WORKOUT_TOOL_NAMES,
             isCoachDataTool = true

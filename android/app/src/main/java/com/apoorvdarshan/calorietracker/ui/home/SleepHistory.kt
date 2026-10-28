@@ -42,9 +42,12 @@ private val Enough = Color(0xFF2E9E5B)
 private val Short = Color(0xFFE0A100)
 private val VeryShort = Color(0xFFD9483B)
 
-/** Sleep history: the last 30 nights from every source, longest-recorded app per night. */
+/**
+ * Sleep history: the last 30 nights from every source, longest-recorded app per night.
+ * With [limit] only the latest nights show, plus a "See all" link to [onShowAll].
+ */
 @Composable
-internal fun SleepHistorySection(container: AppContainer) {
+internal fun SleepHistorySection(container: AppContainer, limit: Int? = null, onShowAll: (() -> Unit)? = null) {
     var nights by remember { mutableStateOf<List<SleepNight>?>(null) }
     var need by remember { mutableStateOf(480L) }
     val tick by container.healthRefreshTick.collectAsState()
@@ -69,7 +72,8 @@ internal fun SleepHistorySection(container: AppContainer) {
             else -> {
                 val average = list.take(7).map { it.minutes }.average().toLong()
                 Text(stringResource(R.string.sleep_history_average, hours(average), list.take(7).size), color = muted, fontSize = 13.sp)
-                list.forEach { night ->
+                val shown = if (limit != null) list.take(limit) else list
+                shown.forEach { night ->
                     val color = when {
                         night.minutes >= need - 30 -> Enough
                         night.minutes >= need - 90 -> Short
@@ -94,6 +98,9 @@ internal fun SleepHistorySection(container: AppContainer) {
                             modifier = Modifier.padding(start = 96.dp)
                         )
                     }
+                }
+                if (onShowAll != null && shown.size < list.size) {
+                    TextButton(onClick = onShowAll) { Text(stringResource(R.string.sleep_history_see_all, list.size)) }
                 }
             }
         }

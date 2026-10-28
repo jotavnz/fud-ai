@@ -50,6 +50,40 @@ class PantryTest {
     }
 
     @Test
+    fun similarNamesAreCaught() {
+        assertTrue(PantryMatching.similar("Huevos", "huevos blancos"))
+        assertTrue(PantryMatching.similar("Leche entera", "LECHE"))
+        assertTrue(PantryMatching.similar("Plátanos", "platano"))
+        assertTrue(!PantryMatching.similar("Leche", "Pan"))
+    }
+
+    @Test
+    fun coachAsksBeforeAddingLikelyDuplicates() {
+        val saved = mutableListOf<PantryItem>()
+        val tools = CoachTools(
+            weights = emptyList(), bodyFats = emptyList(), foods = emptyList(),
+            clock = Clock.fixed(Instant.parse("2026-10-27T12:00:00Z"), ZoneOffset.UTC),
+            pantryItems = listOf(PantryItem(name = "Huevos", quantity = "6")),
+            pantryWriter = { saved += it }
+        )
+        assertTrue("add_pantry_items" in tools.availableToolNames)
+        val items = listOf(
+            mapOf("name" to "huevos blancos", "quantity" to "12"),
+            mapOf("name" to "Arroz", "location" to "pantry", "best_before_days" to 180)
+        )
+        val first = JsonParser.parseString(tools.execute("add_pantry_items", mapOf("items" to items))).asJsonObject
+        assertEquals(false, first["saved"].asBoolean)
+        assertEquals("Huevos", first["possible_duplicates"].asJsonArray[0].asJsonObject["already_have"].asString)
+        assertTrue(saved.isEmpty())
+
+        val second = JsonParser.parseString(tools.execute("add_pantry_items", mapOf("items" to items, "confirmed" to true))).asJsonObject
+        assertEquals(true, second["saved"].asBoolean)
+        assertEquals(listOf("huevos blancos", "Arroz"), saved.map { it.name })
+        assertEquals("2027-04-25", saved[1].expiresOn)
+        assertEquals(PantryLocation.PANTRY, saved[1].location)
+    }
+
+    @Test
     fun coachSeesThePantryAndSpending() {
         val tools = CoachTools(
             weights = emptyList(),

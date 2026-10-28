@@ -198,6 +198,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     pantryItems = container.pantryRepository.snapshot(),
                     groceryPurchases = container.pantryRepository.purchaseSnapshot(),
                     shoppingList = container.pantryRepository.shoppingSnapshot(),
+                    pantryWriter = { items -> viewModelScope.launch { items.forEach { container.pantryRepository.add(it) } } },
                     cycle = container.cycleRepository.coachSnapshot()
                 )
                 val logCards = logProposals.proposals

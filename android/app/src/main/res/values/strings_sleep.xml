@@ -18,4 +18,5 @@
     <string name="sleep_history_average">Average of the last %2$d nights: %1$s</string>
     <string name="sleep_history_manual">told to Coach</string>
     <string name="sleep_history_detail">%1$s – %2$s · %3$s</string>
+    <string name="sleep_history_see_all">See all (%1$d nights)</string>
 </resources>
