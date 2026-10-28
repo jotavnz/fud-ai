@@ -76,7 +76,9 @@ fun ExerciseDetailScreen(
     visual: ExerciseVisual,
     onBack: () -> Unit,
     onEdit: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    progression: ProgressionLinks? = null,
+    onOpenExercise: (ExerciseItem) -> Unit = {}
 ) {
     val colors = workoutsColors()
     var showMetrics by remember { mutableStateOf(false) }
@@ -130,6 +132,11 @@ fun ExerciseDetailScreen(
                         instructions = item.instructions,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp)
                     )
+                }
+                if (progression != null && (progression.easier != null || progression.harder != null)) {
+                    item(key = "progression") {
+                        ProgressionSection(progression, onOpenExercise, Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp))
+                    }
                 }
                 if (item.category != "cardio") item(key = "glossary") {
                     GlossarySection(Modifier.padding(horizontal = 20.dp))
@@ -243,6 +250,42 @@ private fun MetricCard(title: String, value: String, icon: ImageVector, valueMax
             maxLines = valueMaxLines,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+/** The easier and harder step of this exercise's bodyweight ladder ([com.apoorvdarshan.calorietracker.models.ExerciseProgressions]). */
+data class ProgressionLinks(val easier: ExerciseItem?, val harder: ExerciseItem?)
+
+@Composable
+private fun ProgressionSection(links: ProgressionLinks, onOpen: (ExerciseItem) -> Unit, modifier: Modifier = Modifier) {
+    val colors = workoutsColors()
+    Column(
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(colors.panel.copy(alpha = 0.16f))
+            .border(0.5.dp, colors.hairline.copy(alpha = 0.20f), RoundedCornerShape(18.dp))
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(stringResource(R.string.wk_progression_title), color = colors.charcoal, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.wk_progression_hint), color = colors.charcoal.copy(alpha = 0.7f), fontSize = 14.sp, lineHeight = 20.sp)
+        listOfNotNull(
+            links.easier?.let { R.string.wk_progression_easier to it },
+            links.harder?.let { R.string.wk_progression_harder to it }
+        ).forEach { (label, target) ->
+            Text(
+                stringResource(label, target.name),
+                color = colors.accent,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onOpen(target) }
+                    .padding(vertical = 10.dp)
+            )
+        }
     }
 }
 

@@ -178,6 +178,10 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
             item = openItem,
             visual = repo.visualFor(openItem, vm.diaryUiState.visualGender),
             onBack = vm::closeExerciseDetail,
+            progression = com.apoorvdarshan.calorietracker.models.ExerciseProgressions.around(openItem.id)?.let { steps ->
+                ProgressionLinks(steps.easier?.let(repo.byId::get), steps.harder?.let(repo.byId::get))
+            },
+            onOpenExercise = { vm.openExerciseId = it.id },
             onEdit = if (com.apoorvdarshan.calorietracker.models.UserExercise.isUserExercise(openItem.id)) {
                 {
                     val itemId = openItem.id

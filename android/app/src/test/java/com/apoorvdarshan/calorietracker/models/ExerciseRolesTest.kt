@@ -28,6 +28,15 @@ class ExerciseRolesTest {
     }
 
     @Test
+    fun progressionLaddersUseCatalogExercisesOnce() {
+        val ids = catalog.map { it.id }.toSet()
+        val steps = ExerciseProgressions.ladders.flatten()
+        assertTrue("missing: ${steps.toSet() - ids}", ids.containsAll(steps))
+        assertTrue("an exercise on two ladders", steps.size == steps.toSet().size)
+        assertTrue(ExerciseProgressions.around("Fud_Knee_Push_Up") == ExerciseProgressions.Steps("ed_0493", "ed_0662"))
+    }
+
+    @Test
     fun extraExercisesUseTheLibraryVocabularyAndHaveSpanish() {
         val extras = records("src/main/assets/exercises_extra.json")
         val es: Map<String, Map<String, Any>> = Gson().fromJson(

@@ -180,4 +180,8 @@
     <string name="wk_glossary_rest">Rest: the pause between sets, usually 1–2 minutes. Tap ✓ when you finish a set and the timer starts.</string>
     <string name="wk_glossary_effort">Effort: Easy = 4 or more reps left; Good = 2–3 left; Hard = 0–1 more.</string>
     <string name="wk_glossary_weight">Weight: the load you moved. Leave it empty for bodyweight exercises.</string>
+    <string name="wk_progression_title">Progression</string>
+    <string name="wk_progression_hint">Move on when the current step feels easy for 3 sets of 12–15 (or 30 s holds).</string>
+    <string name="wk_progression_easier">← Easier: %1$s</string>
+    <string name="wk_progression_harder">Next step → %1$s</string>
 </resources>

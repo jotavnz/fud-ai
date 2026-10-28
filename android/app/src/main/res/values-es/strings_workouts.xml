@@ -180,4 +180,8 @@
     <string name="wk_glossary_rest">Descanso: la pausa entre series, normalmente 1–2 minutos. Toca ✓ al terminar una serie y empieza el contador.</string>
     <string name="wk_glossary_effort">Esfuerzo: Fácil = te quedaban 4 o más repeticiones; Bien = te quedaban 2–3; Al límite = 0–1 más.</string>
     <string name="wk_glossary_weight">Peso: la carga que moviste. Déjalo vacío en ejercicios con tu propio cuerpo.</string>
+    <string name="wk_progression_title">Progresión</string>
+    <string name="wk_progression_hint">Pasa al siguiente cuando el actual te resulte fácil 3 series de 12–15 (o 30 s si es de aguantar).</string>
+    <string name="wk_progression_easier">← Más fácil: %1$s</string>
+    <string name="wk_progression_harder">Siguiente paso → %1$s</string>
 </resources>
