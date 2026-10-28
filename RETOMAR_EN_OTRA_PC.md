@@ -67,7 +67,8 @@ Eso regenera el catálogo y convierte solo los medios que falten.
 3. Histórico de compras: registro de cada vez que se hace el mercado (fecha, tienda, total, qué se compró) y un botón
    para verlo. Hoy solo las facturas guardan `GroceryPurchase`; también deberían contar el stock de la lista de compras,
    la foto de nevera no.
-4. Instalar la 28f (o la siguiente) en el teléfono. iOS: el usuario dijo que todavía no.
+4. HECHO: `EntrenadorIA-beta-2026-10-28g.apk` (commit `ba0e4728e`, incluye 28f + aviso de otro día) instalada en el
+   teléfono el 28 a las 17:10, firma de casa verificada. iOS: el usuario dijo que todavía no.
 
 **Pendiente:**
 - Probar en el teléfono: factura real, código de barras, importación de Flo, despensa por voz.
