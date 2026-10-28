@@ -7,7 +7,13 @@ import com.google.gson.annotations.SerializedName
 enum class ExerciseVisualFormat {
     JPEG,
     SVG,
-    PNG
+    PNG,
+    /**
+     * Gym visual animation (© Gym visual, gymvisual.com): [framePaths] holds a still JPEG then
+     * the animated GIF, both bundled assets under `gymvisual/`. Optional: absent in builds made
+     * without the licensed media, which then use the authored frames.
+     */
+    GYM_VISUAL
 }
 
 /**
@@ -27,11 +33,19 @@ data class ExerciseVisual(
     val representativeFrameIndex: Int,
     val frameDigests: List<String?> = emptyList()
 ) {
-    val isAuthored: Boolean get() = format != ExerciseVisualFormat.JPEG
+    val isAuthored: Boolean get() = format == ExerciseVisualFormat.PNG || format == ExerciseVisualFormat.SVG
+
+    val isGymVisual: Boolean get() = format == ExerciseVisualFormat.GYM_VISUAL
 
     fun digestAt(index: Int): String? = frameDigests.getOrNull(index)
 
     companion object {
+        fun gymVisual(itemId: String): ExerciseVisual = ExerciseVisual(
+            framePaths = listOf("gymvisual/$itemId.jpg", "gymvisual/$itemId.gif"),
+            format = ExerciseVisualFormat.GYM_VISUAL,
+            representativeFrameIndex = 0
+        )
+
         fun jpeg(paths: List<String>): ExerciseVisual = ExerciseVisual(
             framePaths = paths,
             format = ExerciseVisualFormat.JPEG,

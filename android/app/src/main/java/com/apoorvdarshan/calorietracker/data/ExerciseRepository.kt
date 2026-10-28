@@ -19,12 +19,14 @@ class ExerciseRepository private constructor(
     val exercises: List<ExerciseItem>,
     private val authoredFrames: Map<String, GenderedExerciseFrames>,
     /** Language the names and instructions were loaded in ("en" or "es"). */
-    val language: String = "en"
+    val language: String = "en",
+    /** Exercises with a bundled Gym visual animation (see android/scripts/match_gymvisual.py). */
+    private val gymVisualIds: Set<String> = emptySet()
 ) {
 
     fun includingActivities(activities: List<com.apoorvdarshan.calorietracker.models.PlannedExercise>): ExerciseRepository =
         if (activities.isEmpty()) this else ExerciseRepository(
-            (exercises + activities.map { it.asExerciseItem() }).distinctBy { it.id }, authoredFrames, language
+            (exercises + activities.map { it.asExerciseItem() }).distinctBy { it.id }, authoredFrames, language, gymVisualIds
         )
 
     val byId: Map<String, ExerciseItem> by lazy { exercises.associateBy { it.id } }
@@ -79,7 +81,9 @@ class ExerciseRepository private constructor(
     fun visualFor(
         item: ExerciseItem,
         gender: com.apoorvdarshan.calorietracker.models.Gender
-    ): ExerciseVisual = ExerciseVisualResolver.resolve(item, gender, authoredFrames)
+    ): ExerciseVisual =
+        if (item.id in gymVisualIds) ExerciseVisual.gymVisual(item.id)
+        else ExerciseVisualResolver.resolve(item, gender, authoredFrames)
 
     private fun comparator(sort: ExerciseSort): Comparator<ExerciseItem> {
         // Case-SENSITIVE to match Swift's `<` (the dataset is ASCII, so ordinal == Swift order).
@@ -165,7 +169,7 @@ class ExerciseRepository private constructor(
                 "load complete exercises=${items.size} visuals=${authoredFrames.size} language=$language " +
                     "ms=${SystemClock.elapsedRealtime() - startedAt}"
             )
-            return ExerciseRepository(items, authoredFrames, language)
+            return ExerciseRepository(items, authoredFrames, language, loadGymVisualIds(context))
         }
 
         /**
@@ -196,6 +200,14 @@ class ExerciseRepository private constructor(
         }
 
         private const val EXTRA_ASSET = "exercises_extra.json"
+
+        /** Ids listed in the optional Gym visual map; empty when the media was not bundled. */
+        private fun loadGymVisualIds(context: Context): Set<String> = runCatching {
+            context.assets.open("gymvisual/gymvisual_map.json").bufferedReader(Charsets.UTF_8).use { reader ->
+                val type = object : TypeToken<Map<String, Any>>() {}.type
+                Gson().fromJson<Map<String, Any>>(reader, type)?.keys.orEmpty()
+            }
+        }.getOrDefault(emptySet())
 
         private fun loadAuthoredFrames(context: Context): Map<String, GenderedExerciseFrames> {
             val json = runCatching {

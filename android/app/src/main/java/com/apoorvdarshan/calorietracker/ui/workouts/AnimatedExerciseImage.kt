@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.Icon
@@ -77,6 +78,10 @@ fun AnimatedExerciseImage(
     animatesFrames: Boolean = true
 ) {
     val colors = workoutsColors()
+    if (visual.isGymVisual) {
+        GymVisualImage(visual, modifier, animatesFrames)
+        return
+    }
     val imagePaths = visual.framePaths
 
     if (imagePaths.isEmpty()) {
@@ -149,6 +154,50 @@ fun AnimatedExerciseImage(
             colorFilter = if (isJpeg) ExerciseImageFilter else null,
             modifier = Modifier.fillMaxSize()
         )
+    }
+}
+
+/**
+ * Gym visual media: the still JPEG in lists, the animated GIF where the exercise is shown on
+ * its own. White-background art, so it sits on a light card.
+ */
+@Composable
+private fun GymVisualImage(visual: ExerciseVisual, modifier: Modifier, animates: Boolean) {
+    val context = LocalContext.current
+    val animationsEnabled = remember {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+    }
+    val path = if (animates && animationsEnabled) visual.framePaths.last() else visual.framePaths.first()
+    val request = remember(path) {
+        ImageRequest.Builder(context)
+            .data(ExerciseRepository.imageAssetUri(path))
+            .memoryCacheKey(path)
+            .apply {
+                if (path.endsWith(".gif")) {
+                    decoderFactory(
+                        if (android.os.Build.VERSION.SDK_INT >= 28) coil.decode.ImageDecoderDecoder.Factory()
+                        else coil.decode.GifDecoder.Factory()
+                    )
+                }
+            }
+            .build()
+    }
+    Box(modifier.background(androidx.compose.ui.graphics.Color.White)) {
+        AsyncImage(
+            model = request,
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize()
+        )
+        // Attribution the media's terms require, wherever the exercise is shown large.
+        if (animates) {
+            Text(
+                "© Gym visual — gymvisual.com",
+                color = androidx.compose.ui.graphics.Color(0xFF8A8A8A),
+                fontSize = 9.sp,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+            )
+        }
     }
 }
 

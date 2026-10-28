@@ -1,9 +1,47 @@
 # Retomar el proyecto en otra PC
 
-Última actualización: 2026-10-27 (PC de casa). Todo está en GitHub: **jotavnz/fud-ai**, rama **`feature/entrenador-ia-es`**
-(último commit `cb231dd`, importador de Samsung Health). Lee también `PLAN_ENTRENADOR_IA.md` (plan por fases y pendientes).
+Última actualización: **2026-10-28** (PC de casa). Todo está en GitHub: **jotavnz/fud-ai**, rama **`feature/entrenador-ia-es`**.
+Lee también `PLAN_ENTRENADOR_IA.md` y **`PLAN_ENTRENADOR_AMIGABLE.md`** (plan de la tanda del 27–28 y pendientes).
 
-## 0. Mañana en la oficina (2026-10-28): arranque rápido
+## 00. Estado al 2026-10-28 (leer primero)
+
+**Versiones**
+| APK | Commit / etiqueta | Estado |
+|---|---|---|
+| `EntrenadorIA-beta-2026-10-27n.apk` | `83fdda6f8`, etiqueta `estable-2026-10-27n` | Estable, probada en el teléfono |
+| `EntrenadorIA-beta-2026-10-27o.apk` | `742dfbbf2` | Despensa en Inicio, despensa por voz, sueño corto |
+| `EntrenadorIA-beta-2026-10-28a.apk` | último commit de la rama | + imágenes Gym visual. **Es la que está en el teléfono** |
+
+Las APK viven en la carpeta `APK` junto al repo (no en Git); `APK/VERSIONES.md` tiene el detalle.
+
+**Hecho en la tanda del 27–28** (detalle en `PLAN_ENTRENADOR_AMIGABLE.md`): vista sencilla/experta (Ajustes → Entrenamiento),
+"Entrenar paso a paso", calentamiento y vuelta a la calma, 22 ejercicios propios (hipopresivos, core profundo, postura,
+mayores, calistenia), coach con reglas de entrenador atento (`get_session_extras`, `get_pantry`, `get_cycle`,
+`add_pantry_items`), Despensa (tarjeta en Inicio, código de barras, foto de factura, lista de compras, gastos, por voz con
+aviso de duplicados), Ciclo menstrual (opt-in, síntomas, importar de Health Connect), avisos (comida por vencer, volver tras
+7 días), búsqueda con tildes, scroll más fluido, esfera de voz encima del +, sueño en Mi cuerpo limitado a 5 noches.
+
+**Imágenes Gym visual (importante en la otra PC):** las animaciones son © Gym visual (gymvisual.com) y **no están en Git**.
+Para que la APK las incluya, en la otra PC hace falta la carpeta `exercises-dataset-main` (o su .zip, de
+github.com/hasaneyldrm/exercises-dataset) y correr, desde la raíz del repo:
+```
+python android/scripts/match_gymvisual.py <ruta>/exercises-dataset-main
+```
+Eso genera `android/app/src/gymvisual/assets/gymvisual/` (git-ignorada): 272 ejercicios del catálogo emparejados
+(GIF + JPG, renombrados por id). Sin esa carpeta la app compila igual y usa sus ilustraciones propias. La licencia de
+Gym visual exige el crédito (ya se muestra en el detalle) y su permiso para uso comercial: revisar antes de publicar.
+
+**Pendiente:** probar en el teléfono factura real, código de barras, importación de Flo, despensa por voz;
+emparejar más ejercicios con Gym visual (hoy 272 de 899) o añadir los que solo existen en el dataset;
+caducidades por alimento (USDA FoodKeeper); aviso de calentamiento antes de la sesión; ilustraciones para
+los 22 ejercicios propios; declarar `READ_MENSTRUATION` en Google Play antes de publicar.
+
+**Para Claude en la otra PC:** el usuario prefiere mensajes muy cortos y que se siga el plan sin pedir confirmación
+en cada paso; ignorar las 3 pruebas que fallan solo en Windows (abajo); nunca copiar código GPL/AGPL (openGym, wger,
+Menstrudel) a esta app MIT; no subir medios de Gym visual ni de RepDB a Git. Commits con
+`git -c user.name=jotavnz -c user.email=jotavnz@users.noreply.github.com commit …` si la PC no tiene identidad.
+
+## 0. Arranque rápido en otra PC
 
 **Antes, desde la PC de casa:** copia `C:\Users\Job\.android\debug.keystore` a la oficina, **en la misma ruta**
 (`C:\Users\<tu usuario>\.android\debug.keystore`, reemplazando el que haya). Sin eso, las APK de la oficina
