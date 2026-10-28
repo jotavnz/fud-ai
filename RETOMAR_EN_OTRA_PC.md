@@ -14,7 +14,9 @@ Lee también `PLAN_ENTRENADOR_IA.md` y **`PLAN_ENTRENADOR_AMIGABLE.md`** (plan d
 | `EntrenadorIA-beta-2026-10-28b.apk` (oficina) | `e6786f39d` | Catálogo nuevo de 1.368 ejercicios, buscador tolerante |
 | `EntrenadorIA-beta-2026-10-28c.apk` (oficina) | `95b9221de` | + imágenes para los 44 sin foto, caducidad por alimento (FoodKeeper), aviso de calentamiento |
 | `EntrenadorIA-beta-2026-10-28d.apk` (oficina) | `eb84338a6` | + Fase 1: rutinas de inicio, ✓ por serie, peso de la última vez, glosario |
-| `EntrenadorIA-beta-2026-10-28e.apk` (oficina) | `a345b0351` | + reglas del coach (descarga, inicio suave, logros, próxima sesión, estilo), progresiones. **Es la que está en el teléfono** (firmada con el `debug.keystore` de casa, ya copiado a la oficina) |
+| `EntrenadorIA-beta-2026-10-28e.apk` (oficina) | `a345b0351` | + reglas del coach (descarga, inicio suave, logros, próxima sesión, estilo), progresiones |
+| `EntrenadorIA-beta-2026-10-28g.apk` | `ba0e4728e` | + coach no pierde el borrador, fotos de despensa, aviso de otro día. **Es la que está en el teléfono** (también recompilada en casa en `APK`) |
+| `EntrenadorIA-beta-2026-10-28h.apk` (casa) | ver `git log` | + semáforo de despensa e histórico de compras. Sin instalar (teléfono desconectado) |
 
 Las APK viven en la carpeta `APK` junto al repo en casa y en `C:\EntrenadorIA\` en la oficina (no en Git).
 
@@ -62,11 +64,14 @@ Eso regenera el catálogo y convierte solo los medios que falten.
    en Inicio bajo la tira de días con "Volver a hoy", y en la hoja de revisión de comida con "Guardar hoy"
    (`ui/home/OtherDayNotice.kt`). Antes decía: aviso al añadir comida en un día que no es hoy: que se note en qué día
    estás añadiendo, sin bloquear.
-2. Despensa y mercado con más diseño, inspirado en whats-in-the-fridge (MIT: semáforo de frescura, etc.) y grocy
-   (MIT: historial de precios por tienda). Solo ideas, no copiar código ajeno sin revisar licencia.
-3. Histórico de compras: registro de cada vez que se hace el mercado (fecha, tienda, total, qué se compró) y un botón
-   para verlo. Hoy solo las facturas guardan `GroceryPurchase`; también deberían contar el stock de la lista de compras,
-   la foto de nevera no.
+2. HECHO (28h, casa, noche del 28): Despensa con semáforo de frescura (Hoy / Pronto / Bien, toca para filtrar,
+   "Come primero: N"), barra de color por producto, secciones por lugar (nevera, congelador, alacena) con ícono.
+3. HECHO (28h): histórico de compras. Cada mercado queda en `GroceryPurchase` con `source` (factura, lista de compras,
+   contado al Coach). Al pasar lo comprado de la lista se pregunta tienda y total (opcional). El Coach registra el
+   mercado con `update_pantry` + `shop` (tienda, total, moneda, fecha) y `price` por producto. Pantalla
+   "Histórico de compras" (botón en la tarjeta de gastos): pestaña Compras por mes con totales y detalle, y pestaña
+   Precios (último precio y tienda más barata por producto, idea de grocy). `ShoppingHistory` en `Pantry.kt`.
+   La foto de nevera no cuenta como compra.
 4. HECHO: `EntrenadorIA-beta-2026-10-28g.apk` (commit `ba0e4728e`, incluye 28f + aviso de otro día) instalada en el
    teléfono el 28 a las 17:10, firma de casa verificada. iOS: el usuario dijo que todavía no.
 

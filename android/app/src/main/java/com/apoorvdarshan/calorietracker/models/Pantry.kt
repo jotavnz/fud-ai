@@ -79,8 +79,67 @@ data class GroceryPurchase(
     val store: String = "",
     val total: Double? = null,
     val currency: String = "",
-    val items: List<GroceryLine> = emptyList()
-)
+    val items: List<GroceryLine> = emptyList(),
+    /** How the shop was recorded: [SOURCE_RECEIPT], [SOURCE_LIST] or [SOURCE_COACH]. */
+    val source: String = SOURCE_RECEIPT
+) {
+    companion object {
+        const val SOURCE_RECEIPT = "receipt"
+        const val SOURCE_LIST = "list"
+        const val SOURCE_COACH = "coach"
+    }
+}
+
+/**
+ * Shopping history views over [GroceryPurchase]s: spending per month and, per food, the latest
+ * and cheapest price seen at each store (an idea from grocy's price history).
+ */
+object ShoppingHistory {
+    data class Month(val key: String, val purchases: List<GroceryPurchase>, val totals: Map<String, Double>)
+
+    data class StorePrice(val store: String, val price: Double, val currency: String, val date: String)
+
+    data class ProductPrices(
+        val name: String,
+        val latest: StorePrice,
+        val cheapest: StorePrice,
+        /** Last price per store, cheapest first. */
+        val byStore: List<StorePrice>
+    )
+
+    fun months(purchases: List<GroceryPurchase>): List<Month> =
+        purchases.sortedByDescending { it.date }
+            .groupBy { it.date.take(7) }
+            .map { (key, list) ->
+                Month(
+                    key = key,
+                    purchases = list,
+                    totals = list.filter { it.total != null }.groupBy { it.currency }
+                        .mapValues { (_, shops) -> shops.sumOf { it.total ?: 0.0 } }
+                )
+            }
+
+    fun prices(purchases: List<GroceryPurchase>): List<ProductPrices> {
+        val seen = purchases.sortedBy { it.date }.flatMap { purchase ->
+            purchase.items.filter { it.price != null && it.price > 0 }.map { line ->
+                Triple(PantryMatching.key(line.name), line.name, StorePrice(purchase.store, line.price!!, purchase.currency, purchase.date))
+            }
+        }
+        // "Leche" and "leche entera" are the same product across stores.
+        val groups = mutableListOf<MutableList<Triple<String, String, StorePrice>>>()
+        seen.forEach { entry ->
+            val group = groups.firstOrNull { g -> PantryMatching.similar(g.first().second, entry.second) }
+            if (group != null) group += entry else groups += mutableListOf(entry)
+        }
+        return groups.mapNotNull { entries ->
+            val latest = entries.last()
+            val byStore = entries.groupBy { it.third.store.trim().lowercase() }
+                .map { (_, list) -> list.last().third }
+                .sortedBy { it.price }
+            ProductPrices(latest.second, latest.third, byStore.first(), byStore)
+        }.sortedBy { it.name.lowercase() }
+    }
+}
 
 @Serializable
 data class GroceryLine(

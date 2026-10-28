@@ -86,6 +86,7 @@ class ChatService(
         groceryPurchases: List<com.apoorvdarshan.calorietracker.models.GroceryPurchase> = emptyList(),
         shoppingList: List<com.apoorvdarshan.calorietracker.models.ShoppingItem> = emptyList(),
         pantryWriter: ((List<com.apoorvdarshan.calorietracker.models.PantryChange>) -> Unit)? = null,
+        purchaseWriter: ((com.apoorvdarshan.calorietracker.models.GroceryPurchase) -> Unit)? = null,
         cycle: com.apoorvdarshan.calorietracker.data.CycleRepository.Snapshot? = null
     ): String {
         val energyUnit = prefs.energyUnit.first()
@@ -149,6 +150,7 @@ class ChatService(
             groceryPurchases = groceryPurchases,
             shoppingList = shoppingList,
             pantryWriter = pantryWriter,
+            purchaseWriter = purchaseWriter,
             cycle = cycle
         )
 

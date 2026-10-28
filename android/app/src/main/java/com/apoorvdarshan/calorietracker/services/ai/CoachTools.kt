@@ -70,6 +70,8 @@ class CoachTools(
      * may be written; `update_pantry` is then not offered.
      */
     private val pantryWriter: ((List<com.apoorvdarshan.calorietracker.models.PantryChange>) -> Unit)? = null,
+    /** Records a shop (store, total, prices) told to Coach with update_pantry's `shop`. */
+    private val purchaseWriter: ((com.apoorvdarshan.calorietracker.models.GroceryPurchase) -> Unit)? = null,
     /** Null while cycle tracking is off; the tool then says so and shares nothing. */
     private val cycle: com.apoorvdarshan.calorietracker.data.CycleRepository.Snapshot? = null
 ) {
@@ -461,6 +463,38 @@ class CoachTools(
         val outcome = com.apoorvdarshan.calorietracker.models.PantryEditor.apply(pantryWorking, changes, LocalDate.now(clock))
         pantryWorking = outcome.items
         writer(changes)
+        val shop = when (val raw = args["shop"]) {
+            is Map<*, *> -> raw
+            is org.json.JSONObject -> CoachLogTool.plain(raw)
+            else -> null
+        }
+        val recordedShop = shop?.let { s ->
+            val prices = (args["items"] as? List<*>).orEmpty().mapNotNull { entry ->
+                when (entry) {
+                    is Map<*, *> -> entry
+                    is org.json.JSONObject -> CoachLogTool.plain(entry)
+                    else -> null
+                }
+            }.associate { (it["name"] as? String)?.trim().orEmpty() to (it["price"] as? Number)?.toDouble() }
+            val bought = changes.filter { it.action == com.apoorvdarshan.calorietracker.models.PantryChange.Action.ADD }
+            val date = (s["date"] as? String)?.takeIf { runCatching { LocalDate.parse(it) }.isSuccess }
+                ?: LocalDate.now(clock).toString()
+            com.apoorvdarshan.calorietracker.models.GroceryPurchase(
+                date = date,
+                store = (s["store"] as? String)?.trim()?.take(60).orEmpty(),
+                total = (s["total"] as? Number)?.toDouble() ?: prices.values.filterNotNull().takeIf { it.isNotEmpty() }?.sum(),
+                currency = (s["currency"] as? String)?.trim()?.take(8).orEmpty(),
+                items = bought.map {
+                    com.apoorvdarshan.calorietracker.models.GroceryLine(
+                        name = it.name,
+                        quantity = it.quantity,
+                        price = prices[it.name],
+                        location = it.location ?: com.apoorvdarshan.calorietracker.models.PantryLocation.PANTRY
+                    )
+                },
+                source = com.apoorvdarshan.calorietracker.models.GroceryPurchase.SOURCE_COACH
+            ).also { purchase -> purchaseWriter?.invoke(purchase) }
+        }
         return json(
             linkedMapOf(
                 "saved" to true,
@@ -480,6 +514,7 @@ class CoachTools(
                 "pantry_now" to com.apoorvdarshan.calorietracker.models.PantryLocation.entries.associate { location ->
                     location.name.lowercase() to outcome.items.count { it.location == location }
                 },
+                "shop_recorded" to (recordedShop != null && purchaseWriter != null),
                 "note" to "Saved. Reply with a short summary grouped by fridge, freezer and pantry (added, joined an item already there, moved, removed). For not_found, say you did not find it at home. Finished items went on the shopping list. Best-before dates are estimates the user can edit in Home > Pantry."
             )
         )
@@ -1212,7 +1247,7 @@ class CoachTools(
 
         private val PROPOSAL_ARGUMENT_KEYS = listOf(
             "name", "category", "equipment", "primary_muscles", "secondary_muscles", "instructions",
-            "catalog_id", "date", "sets", "reps", "duration_minutes", "items", "confirmed"
+            "catalog_id", "date", "sets", "reps", "duration_minutes", "items", "confirmed", "shop"
         )
 
         /** Pantry writes offered where a writer exists (Coach chat, voice assistant). */
@@ -1303,9 +1338,20 @@ class CoachTools(
                                     "name" to linkedMapOf("type" to "string", "description" to "Food name in the user's language"),
                                     "quantity" to linkedMapOf("type" to "string", "description" to "As said: 6, 500 g, 1 bottle. For set, what is left now (0 = ran out)"),
                                     "location" to linkedMapOf("type" to "string", "description" to "fridge, freezer or pantry (cupboard). For add where it goes; for set where it is now"),
-                                    "best_before_days" to linkedMapOf("type" to "integer", "description" to "Days until it should be eaten, only when the user says a date or how long it keeps. Omit it otherwise: the app estimates it per food from USDA FoodKeeper.")
+                                    "best_before_days" to linkedMapOf("type" to "integer", "description" to "Days until it should be eaten, only when the user says a date or how long it keeps. Omit it otherwise: the app estimates it per food from USDA FoodKeeper."),
+                                    "price" to linkedMapOf("type" to "number", "description" to "What this item cost, only when the user says it")
                                 ),
                                 "required" to listOf("name")
+                            )
+                        ),
+                        "shop" to linkedMapOf(
+                            "type" to "object",
+                            "description" to "Only when the user says they went shopping: records the shop in their shopping history",
+                            "properties" to linkedMapOf(
+                                "store" to linkedMapOf("type" to "string", "description" to "Store or market name, if said"),
+                                "total" to linkedMapOf("type" to "number", "description" to "Total spent, if said"),
+                                "currency" to linkedMapOf("type" to "string", "description" to "Currency code or symbol, if known"),
+                                "date" to linkedMapOf("type" to "string", "description" to "ISO date of the shop if not today")
                             )
                         )
                     ),

@@ -29,6 +29,9 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Checkbox
@@ -96,6 +99,9 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var filter by remember { mutableStateOf<PantryLocation?>(null) }
+    var freshFilter by remember { mutableStateOf<Freshness?>(null) }
+    var showHistory by remember { mutableStateOf(false) }
+    var stockingShop by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<PantryItem?>(null) }
     var scanning by remember { mutableStateOf(false) }
     var busyMessage by remember { mutableStateOf<String?>(null) }
@@ -229,7 +235,12 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                         }
                     }
                 }
-                val shown = items.filter { filter == null || it.location == filter }
+                if (items.isNotEmpty()) {
+                    item {
+                        FreshnessSummary(items, freshFilter) { freshFilter = if (freshFilter == it) null else it }
+                    }
+                }
+                val shown = items.filter { (filter == null || it.location == filter) && (freshFilter == null || Freshness.of(it) == freshFilter) }
                 if (shown.isEmpty()) {
                     item {
                         Text(
@@ -240,12 +251,30 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                         )
                     }
                 }
-                items(shown, key = { it.id }) { item ->
-                    PantryRow(
-                        item = item,
-                        onEdit = { editing = item },
-                        onUsed = { scope.launch { container.pantryRepository.usedUp(item) } }
-                    )
+                // With no filter, one section per place (fridge, freezer, cupboard), soonest first.
+                val groups = if (filter == null && freshFilter == null) shown.groupBy { it.location }.toSortedMap()
+                else sortedMapOf<PantryLocation, List<PantryItem>>().apply { if (shown.isNotEmpty()) put(filter ?: shown.first().location, shown) }
+                groups.forEach { (location, list) ->
+                    if (filter == null && freshFilter == null) {
+                        item(key = "h-$location") {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+                                Icon(location.icon, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(20.dp))
+                                Text(
+                                    "  ${stringResource(location.labelRes)} · ${list.size}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                    items(list, key = { it.id }) { item ->
+                        PantryRow(
+                            item = item,
+                            onEdit = { editing = item },
+                            onUsed = { scope.launch { container.pantryRepository.usedUp(item) } }
+                        )
+                    }
                 }
                 item {
                     ShoppingListCard(
@@ -259,12 +288,10 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                         },
                         onToggle = { id -> scope.launch { container.pantryRepository.toggleShopping(id) } },
                         onRemove = { id -> scope.launch { container.pantryRepository.removeShopping(id) } },
-                        onStock = { scope.launch { container.pantryRepository.stockCheckedShopping() } }
+                        onStock = { stockingShop = true }
                     )
                 }
-                if (purchases.isNotEmpty()) {
-                    item { SpendingCard(purchases) }
-                }
+                item { SpendingCard(purchases, onOpenHistory = { showHistory = true }) }
             }
             busyMessage?.let { message ->
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
@@ -276,6 +303,17 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
             }
         }
 
+        if (showHistory) ShoppingHistoryScreen(container) { showHistory = false }
+        if (stockingShop) {
+            StockShopDialog(
+                lastCurrency = purchases.firstOrNull { it.currency.isNotBlank() }?.currency.orEmpty(),
+                onDismiss = { stockingShop = false },
+                onSave = { store, total, currency ->
+                    stockingShop = false
+                    scope.launch { container.pantryRepository.stockCheckedShopping(store = store, total = total, currency = currency) }
+                }
+            )
+        }
         editing?.let { draft ->
             PantryItemDialog(
                 initial = draft,
@@ -425,6 +463,13 @@ private fun PantryRow(item: PantryItem, onEdit: () -> Unit, onUsed: () -> Unit) 
     }
     FudGlassSurface(modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit), cornerRadius = 16.dp, padding = 12.dp) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Freshness light: red eat today, orange eat soon, green fine, grey no date.
+            Box(
+                Modifier
+                    .size(width = 5.dp, height = 40.dp)
+                    .clip(CircleShape)
+                    .background(Freshness.of(item).color)
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(item.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val details = listOfNotNull(item.quantity.takeIf { it.isNotBlank() }, stringResource(item.location.labelRes))
@@ -491,8 +536,96 @@ private fun ShoppingListCard(
     }
 }
 
+/** Traffic light for the pantry (idea from whats-in-the-fridge): eat first what turns red. */
+internal enum class Freshness(val color: Color, val labelRes: Int) {
+    NOW(Color(0xFFD32F2F), R.string.pantry_fresh_now),
+    SOON(Color(0xFFF57C00), R.string.pantry_fresh_soon),
+    OK(Color(0xFF2E7D32), R.string.pantry_fresh_ok),
+    UNKNOWN(Color(0xFF9E9E9E), R.string.pantry_fresh_unknown);
+
+    companion object {
+        fun of(item: PantryItem, today: LocalDate = LocalDate.now()): Freshness {
+            val days = item.daysLeft(today) ?: return UNKNOWN
+            return when {
+                days <= 0 -> NOW
+                days <= 3 -> SOON
+                else -> OK
+            }
+        }
+    }
+}
+
+internal val PantryLocation.icon: androidx.compose.ui.graphics.vector.ImageVector
+    get() = when (this) {
+        PantryLocation.FRIDGE -> Icons.Filled.Kitchen
+        PantryLocation.FREEZER -> Icons.Filled.AcUnit
+        PantryLocation.PANTRY -> Icons.Filled.Inventory2
+    }
+
 @Composable
-private fun SpendingCard(purchases: List<GroceryPurchase>) {
+private fun FreshnessSummary(items: List<PantryItem>, selected: Freshness?, onSelect: (Freshness) -> Unit) {
+    val counts = items.groupingBy { Freshness.of(it) }.eachCount()
+    FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 12.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val first = (counts[Freshness.NOW] ?: 0) + (counts[Freshness.SOON] ?: 0)
+            Text(
+                if (first > 0) stringResource(R.string.pantry_eat_first, first) else stringResource(R.string.pantry_all_fresh),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(Freshness.NOW, Freshness.SOON, Freshness.OK).forEach { level ->
+                    val isSelected = selected == level
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(level.color.copy(alpha = if (isSelected) 0.32f else 0.14f))
+                            .clickable { onSelect(level) }
+                            .padding(vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("${counts[level] ?: 0}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = level.color)
+                        Text(stringResource(level.labelRes), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f), maxLines = 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StockShopDialog(lastCurrency: String, onDismiss: () -> Unit, onSave: (String, Double?, String) -> Unit) {
+    var store by remember { mutableStateOf("") }
+    var total by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf(lastCurrency) }
+    FudGlassDialog(onDismissRequest = onDismiss) {
+        Text(stringResource(R.string.pantry_stock_title), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Text(stringResource(R.string.pantry_stock_hint), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+        OutlinedTextField(value = store, onValueChange = { store = it.take(60) }, label = { Text(stringResource(R.string.pantry_stock_store)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = total,
+                onValueChange = { total = it.filter { c -> c.isDigit() || c == '.' || c == ',' }.take(12) },
+                label = { Text(stringResource(R.string.pantry_stock_total)) },
+                singleLine = true,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
+                modifier = Modifier.weight(2f)
+            )
+            OutlinedTextField(value = currency, onValueChange = { currency = it.take(8) }, label = { Text(stringResource(R.string.pantry_stock_currency)) }, singleLine = true, modifier = Modifier.weight(1f))
+        }
+        FudGlassDialogActions(
+            primaryText = stringResource(R.string.pantry_shopping_stock),
+            onPrimary = { onSave(store, total.replace(',', '.').toDoubleOrNull(), currency) },
+            dismissText = stringResource(R.string.action_cancel),
+            onDismiss = onDismiss
+        )
+    }
+}
+
+@Composable
+private fun SpendingCard(purchases: List<GroceryPurchase>, onOpenHistory: () -> Unit) {
     val since = LocalDate.now().minusDays(30).toString()
     val recent = purchases.filter { it.date >= since }
     val totals = recent.filter { it.total != null }.groupBy { it.currency }.mapValues { (_, list) -> list.sumOf { it.total ?: 0.0 } }
@@ -506,7 +639,7 @@ private fun SpendingCard(purchases: List<GroceryPurchase>) {
                 fontWeight = FontWeight.Bold,
                 color = AppColors.Calorie
             )
-            recent.take(5).forEach { shop ->
+            recent.take(3).forEach { shop ->
                 Text(
                     listOfNotNull(shop.date, shop.store.takeIf { it.isNotBlank() }, shop.total?.let { String.format(Locale.getDefault(), "%.2f", it) })
                         .joinToString(" · "),
@@ -514,6 +647,7 @@ private fun SpendingCard(purchases: List<GroceryPurchase>) {
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                 )
             }
+            FudGlassTextButton(text = stringResource(R.string.pantry_history_open, purchases.size), onClick = onOpenHistory)
         }
     }
 }

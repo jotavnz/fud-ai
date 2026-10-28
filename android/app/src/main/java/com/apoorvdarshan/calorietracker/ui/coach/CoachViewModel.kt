@@ -210,6 +210,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     groceryPurchases = container.pantryRepository.purchaseSnapshot(),
                     shoppingList = container.pantryRepository.shoppingSnapshot(),
                     pantryWriter = { changes -> session.scope.launch { container.pantryRepository.applyChanges(changes) } },
+                    purchaseWriter = { purchase -> session.scope.launch { container.pantryRepository.recordPurchase(purchase) } },
                     cycle = container.cycleRepository.coachSnapshot()
                 )
                 val logCards = logProposals.proposals

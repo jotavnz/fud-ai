@@ -78,10 +78,30 @@ class PantryRepository(private val prefs: PreferencesStore) {
         prefs.updateShoppingList { list -> list.filter { it.id != id } }
     }
 
-    /** Moves everything ticked on the list into the pantry, with a best-before estimated per food ([ShelfLife]). */
-    suspend fun stockCheckedShopping(today: LocalDate = LocalDate.now()) {
+    /**
+     * Moves everything ticked on the list into the pantry and records the shop in the history
+     * ([store] and [total] are optional; what the user remembers).
+     */
+    suspend fun stockCheckedShopping(
+        today: LocalDate = LocalDate.now(),
+        store: String = "",
+        total: Double? = null,
+        currency: String = ""
+    ) {
         val bought = prefs.shoppingList.first().filter { it.checked }
         if (bought.isEmpty()) return
+        prefs.updateGroceryPurchases { list ->
+            list + GroceryPurchase(
+                date = today.toString(),
+                store = store.trim().take(60),
+                total = total,
+                currency = currency.trim().take(8),
+                items = bought.map {
+                    com.apoorvdarshan.calorietracker.models.GroceryLine(name = it.name, quantity = it.quantity, location = it.location)
+                },
+                source = GroceryPurchase.SOURCE_LIST
+            )
+        }
         prefs.updatePantryItems { list ->
             list + bought.map {
                 PantryItem(
@@ -119,6 +139,11 @@ class PantryRepository(private val prefs: PreferencesStore) {
             },
             today
         )
+    }
+
+    /** Records a shop the user told Coach about (no pantry changes: those come separately). */
+    suspend fun recordPurchase(purchase: GroceryPurchase) {
+        prefs.updateGroceryPurchases { it + purchase }
     }
 
     suspend fun removePurchase(id: UUID) {
