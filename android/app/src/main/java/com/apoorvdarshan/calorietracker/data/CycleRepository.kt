@@ -12,8 +12,9 @@ import java.time.LocalDate
 import java.util.UUID
 
 /**
- * Local-only menstrual cycle data (periods, daily symptoms, settings). Nothing leaves the
- * device except the summary Coach reads while tracking is on.
+ * Menstrual cycle data (periods, daily symptoms, settings), kept on the device. It leaves it
+ * only as the summary Coach reads while tracking is on (no period dates, only cycle day, phase
+ * and the next-period estimate) and inside the user's own Google Drive backup when that is on.
  */
 class CycleRepository(private val prefs: PreferencesStore) {
     val settings: Flow<CycleSettings> = prefs.cycleSettings

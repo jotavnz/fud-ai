@@ -191,6 +191,14 @@ After Apply → Save, if Publishing overview lists pending changes, **Send for r
 **Step 1 — App features (select only these)**
 - Activity and fitness
 - Nutrition and weight management
+- Sleep management (sleep advice reads sleep sessions)
+- Period / menstrual cycle tracking (opt-in Cycle screen; pick Play's closest women's health option)
+
+> **EntrenadorIA fork, before the first Play upload with the cycle feature:** `READ_SLEEP` and
+> `READ_MENSTRUATION` are in the manifest but not yet in the submitted declaration. Add the two
+> texts below, explain both in the privacy policy (including that cycle data is in the user's own
+> Drive backup when backup is on), and upload that release through Play Console first.
+> `READ_HEART_RATE` was removed on 2026-10-28 because nothing read it.
 
 Do **not** select medical, mental health, research studies, or Other.
 
@@ -234,6 +242,37 @@ by Fud AI itself are skipped, so calories are never counted twice.
 Imported sessions stay on the device, are never written back, and do
 not change calorie goals. This data is not used for diagnosis,
 treatment, clinical decisions, or medical advice.
+```
+
+#### Sleep — Sleep sessions
+`READ_SLEEP`
+```
+Fud AI reads sleep sessions (start and end time, and the app that
+recorded them) from Health Connect, with the user's permission, to
+show recent nights and give sleep advice: recommended hours, bedtime
+and wake time, and sleep debt from the 7-night average. Sleep stages
+are not read. Sessions are read when needed and not stored by Fud AI.
+When the user asks the optional AI Coach a question, a short summary
+(last night's duration, 7-night average, tonight's recommendation)
+may be included; raw sessions are never sent. This data is not used
+for diagnosis, treatment, clinical decisions, or medical advice.
+```
+
+#### Cycle tracking — Menstruation
+`READ_MENSTRUATION`
+```
+Cycle tracking is off by default. When the user turns it on and taps
+"Import from Health Connect", Fud AI reads menstruation periods (start
+and end dates, and the app that recorded them) from the last 400 days,
+so periods logged in apps such as Flo or Samsung Health appear in the
+in-app cycle history. Fud AI uses them to estimate the cycle day,
+phase and next period, and to adapt training suggestions to how the
+user feels. Data is stored on the device and in the user's own Google
+Drive backup only if they enable backup. The optional AI Coach
+receives only a summary (cycle day, estimated phase, next-period
+estimate, today's symptoms), never the period history. Users can
+delete periods individually or with Delete All Data. This data is not
+used for diagnosis, treatment, clinical decisions, or medical advice.
 ```
 
 #### Body measurement — Body fat

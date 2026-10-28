@@ -17,7 +17,6 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.MealType as HCMealType
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
-import androidx.health.connect.client.records.HeartRateRecord
 import com.apoorvdarshan.calorietracker.models.SleepEntry
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
@@ -215,7 +214,6 @@ class HealthConnectManager(
     private val totalEnergyRead = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
     private val stepsRead = HealthPermission.getReadPermission(StepsRecord::class)
     private val sleepRead = HealthPermission.getReadPermission(SleepSessionRecord::class)
-    private val heartRateRead = HealthPermission.getReadPermission(HeartRateRecord::class)
     /** Optional: imports other apps' workouts (Garmin Connect, Strava, …) read-only. */
     private val exerciseRead = HealthPermission.getReadPermission(ExerciseSessionRecord::class)
     /** Optional and opt-in (cycle tracking): periods other apps share. Read only. */
@@ -226,7 +224,7 @@ class HealthConnectManager(
     val permissions: Set<String> = setOf(
         weightRead, weightWrite, nutritionRead, nutritionWrite,
         bodyFatRead, bodyFatWrite, activeEnergyRead, activeEnergyWrite, totalEnergyRead,
-        stepsRead, exerciseRead, sleepRead, heartRateRead
+        stepsRead, exerciseRead, sleepRead
     )
 
     /** What the connect flows request: [permissions] plus history access where supported.
@@ -1197,7 +1195,8 @@ class HealthConnectManager(
          *  v4 = added NutritionRecord read permission (food-log restore).
          *  v5 = added ActiveCaloriesBurnedRecord write permission (workout burn sync).
          *  v6 = added StepsRecord read permission (daily steps on Home).
-         *  v7 = added SleepSessionRecord and HeartRateRecord read (sleep advice, fatigue).
+         *  v7 = added SleepSessionRecord read (sleep advice). HeartRateRecord read was asked here too
+         *       but never used, so it was dropped (no bump: dropping a type re-prompts no one).
          *  v8 = ExerciseSessionRecord read is part of the regular access: watch workouts drive
          *       recovery and overreaching alerts, so asking once beats a hidden optional row.
          *  ExerciseSessionRecord read (imported workouts) is optional and deliberately does

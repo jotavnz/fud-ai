@@ -30,7 +30,6 @@
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <!-- Opt-in cycle tracking: periods other apps (Flo, Samsung Health, …) share. Read only. -->
     <uses-permission android:name="android.permission.health.READ_MENSTRUATION" />
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <!-- Optional: imports workouts other apps (Garmin Connect, Strava, …) shared with Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />

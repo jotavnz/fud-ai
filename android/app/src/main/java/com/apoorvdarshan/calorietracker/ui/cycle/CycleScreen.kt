@@ -62,7 +62,8 @@ import java.time.temporal.ChronoUnit
 /**
  * Opt-in menstrual cycle tracking: log periods (or import them from Health Connect, where apps
  * like Flo or Samsung Health may share them) and how you feel today. Coach adapts training to
- * the day's symptoms. Everything stays on the device.
+ * the day's symptoms. Data stays on the device (and in the user's Drive backup, if enabled);
+ * Coach gets only a summary.
  */
 @Composable
 fun CycleScreen(container: AppContainer, onDismiss: () -> Unit) {

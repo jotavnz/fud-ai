@@ -78,7 +78,8 @@ function category(record) {
   return "strength";
 }
 
-const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+// The export has a few mis-encoded degree signs ("sled 45в° leg press").
+const capitalize = (text) => (text.charAt(0).toUpperCase() + text.slice(1)).replaceAll("в°", "°");
 const steps = (list) => (list ?? []).map((step) => step.trim()).filter(Boolean);
 
 const records = [];
