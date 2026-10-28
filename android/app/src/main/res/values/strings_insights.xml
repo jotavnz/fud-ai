@@ -27,4 +27,15 @@
     <string name="insight_unit_lb">%1$s lb</string>
     <string name="machine_coach_previous">Previous</string>
     <string name="machine_coach_swap_one">Change this one</string>
+    <string name="insight_high_load_title">%1$s: a heavier week than usual</string>
+    <string name="insight_high_load_body">%1$d sets this week; your usual is about %2$d. If the same weight feels heavier or your reps drop, a light session or a deload week (half the sets) helps you recover.</string>
+    <string name="insight_beginner_volume_title">A lot of %1$s for a start</string>
+    <string name="insight_beginner_volume_body">%1$d sets of %2$s in one session. When you start, 4–8 sets per muscle are enough to progress with less soreness; add more little by little.</string>
+    <string name="insight_milestone_title">%1$d weeks in a row!</string>
+    <string name="insight_milestone_body">You have trained every week since then. Most people quit before their third month: keep it up.</string>
+    <string name="insight_next_session_title">Next session</string>
+    <string name="insight_next_session_body">Good work today. These will be the most rested next time:</string>
+    <string name="insight_style_title">You seem to train %1$s</string>
+    <string name="insight_style_body">Your sessions in the last 4 weeks fit %1$s. Use it so suggestions follow your style?</string>
+    <string name="insight_style_action">Use %1$s</string>
 </resources>

@@ -35,6 +35,7 @@ import com.apoorvdarshan.calorietracker.models.WorkoutPreferences
 import com.apoorvdarshan.calorietracker.models.WorkoutRestTimer
 import com.apoorvdarshan.calorietracker.models.WorkoutRoutine
 import com.apoorvdarshan.calorietracker.models.WorkoutSetInput
+import com.apoorvdarshan.calorietracker.models.WorkoutSplit
 import com.apoorvdarshan.calorietracker.models.WorkoutSplitGroup
 import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.OutdoorActivitySettings
@@ -391,17 +392,29 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
     fun progressionHint(itemId: String, prescription: SetPrescription): ProgressionHint? =
         TrainingInsights.progression(latestPersistedState, itemId, LocalDate.now(), prescription, workoutWeightUnit)
 
-    /** Hides a diary tip until tomorrow. */
+    /** Hides a diary tip until tomorrow; a milestone or a split suggestion stays hidden for good. */
     fun dismissInsight(insight: TrainingInsight) {
         val today = LocalDate.now().toString()
-        val kept = loadSet(K_DISMISSED_INSIGHTS).filterTo(mutableSetOf()) { it.startsWith("$today|") }
-        saveSet(K_DISMISSED_INSIGHTS, kept + "$today|${insightKey(insight)}")
+        val kept = loadSet(K_DISMISSED_INSIGHTS).filterTo(mutableSetOf()) { it.startsWith("$today|") || '|' !in it }
+        val key = insightKey(insight)
+        saveSet(K_DISMISSED_INSIGHTS, kept + if (isPermanentlyDismissed(insight)) key else "$today|$key")
         rebuildDiaryState()
     }
 
+    /** Uses the split the diary detected (Style tip). */
+    fun applySplit(split: WorkoutSplit) {
+        viewModelScope.launch { workoutRepository?.updatePreferences { it.copy(split = split) } }
+    }
+
+    private fun isPermanentlyDismissed(insight: TrainingInsight): Boolean =
+        insight is TrainingInsight.Milestone || insight is TrainingInsight.Style
+
     private fun insightKey(insight: TrainingInsight): String = when (insight) {
         is TrainingInsight.Plateau -> "plateau:${insight.exerciseId}"
-        else -> "${insight::class.simpleName}:${insight.group.name}"
+        is TrainingInsight.Milestone -> "milestone:${insight.weeks}"
+        is TrainingInsight.Style -> "style:${insight.split.name}"
+        is TrainingInsight.NextSession -> "next-session"
+        else -> "${insight::class.simpleName}:${insight.group?.name}"
     }
 
     /** Adds a suggested warm-up (first) or cool-down (last) to the selected day, one empty set each. */
@@ -824,7 +837,7 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
             fatigue = TrainingInsights.fatigue(latestPersistedState, today),
             fatiguedMuscles = TrainingInsights.fatiguedMuscles(latestPersistedState, today),
             insights = TrainingInsights.dashboard(latestPersistedState, today, workoutWeightUnit)
-                .filterNot { "$today|${insightKey(it)}" in dismissed }
+                .filterNot { "$today|${insightKey(it)}" in dismissed || insightKey(it) in dismissed }
         )
         rebuildExerciseLiftSummariesIfNeeded()
     }

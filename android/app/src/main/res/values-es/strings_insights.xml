@@ -27,4 +27,15 @@
     <string name="insight_unit_lb">%1$s lb</string>
     <string name="machine_coach_previous">Ver anterior</string>
     <string name="machine_coach_swap_one">Cambiar esta</string>
+    <string name="insight_high_load_title">%1$s: semana más cargada de lo habitual</string>
+    <string name="insight_high_load_body">%1$d series esta semana; lo habitual para ti son unas %2$d. Si el mismo peso se siente más pesado o haces menos repeticiones, una sesión ligera o una semana de descarga (la mitad de series) te ayuda a recuperarte.</string>
+    <string name="insight_beginner_volume_title">Mucho trabajo de %1$s para empezar</string>
+    <string name="insight_beginner_volume_body">%1$d series de %2$s en una sesión. Al empezar, 4–8 series por músculo bastan para progresar con menos agujetas; sube poco a poco.</string>
+    <string name="insight_milestone_title">¡%1$d semanas seguidas!</string>
+    <string name="insight_milestone_body">Has entrenado todas las semanas desde entonces. La mayoría abandona antes del tercer mes: sigue así.</string>
+    <string name="insight_next_session_title">Próxima sesión</string>
+    <string name="insight_next_session_body">Buen trabajo hoy. Esto es lo que tendrás más descansado la próxima vez:</string>
+    <string name="insight_style_title">Parece que entrenas tipo %1$s</string>
+    <string name="insight_style_body">Tus sesiones de las últimas 4 semanas encajan con %1$s. ¿Lo configuro así para que las sugerencias sigan tu estilo?</string>
+    <string name="insight_style_action">Usar %1$s</string>
 </resources>

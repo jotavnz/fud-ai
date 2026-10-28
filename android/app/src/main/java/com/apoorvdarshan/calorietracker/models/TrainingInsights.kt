@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.models
 
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
@@ -13,7 +14,8 @@ data class GroupFatigue(
 
 /** Something worth telling the user about their training, ordered by [kind] priority. */
 sealed interface TrainingInsight {
-    val group: MachineMuscleGroup
+    /** The muscle group the tip is about, or null for tips about training as a whole. */
+    val group: MachineMuscleGroup?
 
     /** Worked yesterday (or heavily two days ago): suggest other, rested groups. */
     data class Recovery(
@@ -52,6 +54,34 @@ sealed interface TrainingInsight {
         override val group: MachineMuscleGroup,
         val daysSince: Int?
     ) : TrainingInsight
+
+    /** Much more weekly volume than usual for this group: offer a light session or a deload week. */
+    data class HighLoad(
+        override val group: MachineMuscleGroup,
+        val weeklySets: Int,
+        val usualSets: Int
+    ) : TrainingInsight
+
+    /** A newcomer did a lot of sets for one group in a single session: build up gradually. */
+    data class BeginnerVolume(
+        override val group: MachineMuscleGroup,
+        val sets: Int
+    ) : TrainingInsight
+
+    /** Trained every week for [weeks] weeks in a row: worth celebrating (most quit before month 3). */
+    data class Milestone(val weeks: Int) : TrainingInsight {
+        override val group: MachineMuscleGroup? get() = null
+    }
+
+    /** Today's session is done: the groups that will be most rested for the next one. */
+    data class NextSession(val restedGroups: List<MachineMuscleGroup>) : TrainingInsight {
+        override val group: MachineMuscleGroup? get() = null
+    }
+
+    /** Recent sessions follow [split] although another split is configured. */
+    data class Style(val split: WorkoutSplit) : TrainingInsight {
+        override val group: MachineMuscleGroup? get() = null
+    }
 }
 
 /** Next-session load suggestion for an exercise, from the last time it was performed. */
@@ -76,10 +106,19 @@ object TrainingInsights {
     const val WEEKLY_DAY_LIMIT = 4
     const val PLATEAU_SESSIONS = 4
     const val NEGLECT_DAYS = 10
+    const val HIGH_LOAD_MIN_SETS = 10
+    const val BEGINNER_DAYS = 8
+    const val BEGINNER_SESSION_SETS = 10
+    const val NEXT_SESSION_MIN_SETS = 6
+    const val STYLE_MIN_DAYS = 6
+    val MILESTONE_WEEKS = setOf(2, 4, 6, 8, 12, 16, 26, 52)
     private const val LOAD_STEP_KG = 2.5
 
     private val pushGroups = setOf(MachineMuscleGroup.CHEST, MachineMuscleGroup.SHOULDERS, MachineMuscleGroup.TRICEPS)
     private val pullGroups = setOf(MachineMuscleGroup.BACK, MachineMuscleGroup.BICEPS)
+    private val legGroups = setOf(
+        MachineMuscleGroup.LEGS, MachineMuscleGroup.HAMSTRINGS, MachineMuscleGroup.GLUTES, MachineMuscleGroup.CALVES
+    )
     private val majorGroups = listOf(
         MachineMuscleGroup.LEGS, MachineMuscleGroup.BACK, MachineMuscleGroup.CHEST, MachineMuscleGroup.SHOULDERS
     )
@@ -268,11 +307,112 @@ object TrainingInsights {
         today: LocalDate,
         defaultUnit: WorkoutWeightUnit
     ): List<TrainingInsight> = buildList {
-        addAll(overuse(state, today))
+        milestone(state, today)?.let(::add)
+        nextSession(state, today)?.let(::add)
+        beginnerVolume(state, today)?.let(::add)
+        val overused = overuse(state, today)
+        addAll(overused)
+        addAll(highLoad(state, today).filter { load -> overused.none { it.group == load.group } })
         neglected(state, today)?.let(::add)
         imbalance(state, today)?.let(::add)
+        style(state, today)?.let(::add)
         addAll(plateaus(state, today, defaultUnit))
     }
+
+    /**
+     * Groups with at least [HIGH_LOAD_MIN_SETS] sets in the last 7 days and more than 1.5× their
+     * weekly average over the three weeks before (each of which must have had training).
+     */
+    fun highLoad(state: WorkoutPersistedState, today: LocalDate): List<TrainingInsight.HighLoad> {
+        val days = trainedDays(state, today)
+        fun weeksAgo(date: LocalDate) = (ChronoUnit.DAYS.between(date, today) / 7).toInt()
+        if ((1..3).any { week -> days.none { weeksAgo(it.first) == week } }) return emptyList()
+        val thisWeek = mutableMapOf<MachineMuscleGroup, Double>()
+        val before = mutableMapOf<MachineMuscleGroup, Double>()
+        for ((date, plan) in days) {
+            val target = when (weeksAgo(date)) {
+                0 -> thisWeek
+                1, 2, 3 -> before
+                else -> break
+            }
+            groupSets(plan).forEach { (group, sets) -> target[group] = (target[group] ?: 0.0) + sets }
+        }
+        return thisWeek.mapNotNull { (group, sets) ->
+            val usual = (before[group] ?: 0.0) / 3
+            if (sets >= HIGH_LOAD_MIN_SETS && usual > 0 && sets > usual * 1.5) {
+                TrainingInsight.HighLoad(group, sets.roundToInt(), usual.roundToInt())
+            } else {
+                null
+            }
+        }.sortedByDescending { it.weeklySets }
+    }
+
+    /** In the first [BEGINNER_DAYS] training days, a group above [BEGINNER_SESSION_SETS] sets in the latest session (today or yesterday). */
+    fun beginnerVolume(state: WorkoutPersistedState, today: LocalDate): TrainingInsight.BeginnerVolume? {
+        val days = trainedDays(state, today)
+        if (days.size > BEGINNER_DAYS) return null
+        val (date, plan) = days.firstOrNull() ?: return null
+        if (ChronoUnit.DAYS.between(date, today) > 1) return null
+        return groupSets(plan).entries
+            .filter { it.value > BEGINNER_SESSION_SETS }
+            .maxByOrNull { it.value }
+            ?.let { TrainingInsight.BeginnerVolume(it.key, it.value.roundToInt()) }
+    }
+
+    /** Weeks in a row (Monday to Sunday, this week included) with training, when that count is a milestone. */
+    fun milestone(state: WorkoutPersistedState, today: LocalDate): TrainingInsight.Milestone? {
+        val monday = today.with(DayOfWeek.MONDAY)
+        val weeks = trainedDays(state, today)
+            .map { ChronoUnit.WEEKS.between(it.first.with(DayOfWeek.MONDAY), monday).toInt() }
+            .toSet()
+        var streak = 0
+        while (streak in weeks) streak++
+        return if (streak in MILESTONE_WEEKS) TrainingInsight.Milestone(streak) else null
+    }
+
+    /** After [NEXT_SESSION_MIN_SETS]+ sets today, the groups most rested for the next session. */
+    fun nextSession(state: WorkoutPersistedState, today: LocalDate): TrainingInsight.NextSession? {
+        val plan = state.dayPlans[WorkoutDate.key(today)] ?: return null
+        val sets = plan.exercises.filter { !it.isCardio }.sumOf { WorkoutVolume.performedSets(it).size }
+        if (sets < NEXT_SESSION_MIN_SETS) return null
+        val trainedToday = groupSets(plan).filterValues { it >= RECOVERY_SETS }.keys
+        val rested = restedAlternatives(state, today.plusDays(1), exclude = trainedToday)
+        return rested.takeIf { it.isNotEmpty() }?.let { TrainingInsight.NextSession(it) }
+    }
+
+    /**
+     * The split the last four weeks follow, when it differs from the configured one: needs
+     * [STYLE_MIN_DAYS] sessions, mostly single push / pull / legs days (all three present) or
+     * upper / lower days (both present).
+     */
+    fun style(state: WorkoutPersistedState, today: LocalDate): TrainingInsight.Style? {
+        val days = trainedDays(state, today).filter { ChronoUnit.DAYS.between(it.first, today) < 28 }
+        if (days.size < STYLE_MIN_DAYS) return null
+        val kinds = days.map { (_, plan) ->
+            val groups = groupSets(plan).filterValues { it >= RECOVERY_SETS }.keys
+            val push = groups.any { it in pushGroups }
+            val pull = groups.any { it in pullGroups }
+            val legs = groups.any { it in legGroups }
+            when {
+                push && !pull && !legs -> DayKind.PUSH
+                pull && !push && !legs -> DayKind.PULL
+                legs && !push && !pull -> DayKind.LEGS
+                (push || pull) && !legs -> DayKind.UPPER
+                else -> DayKind.OTHER
+            }
+        }
+        val majority = days.size * 0.6
+        val singles = setOf(DayKind.PUSH, DayKind.PULL, DayKind.LEGS)
+        val detected = when {
+            kinds.count { it in singles } >= majority && kinds.containsAll(singles) -> WorkoutSplit.PUSH_PULL_LEGS
+            kinds.count { it == DayKind.UPPER || it == DayKind.LEGS } >= majority &&
+                DayKind.LEGS in kinds && kinds.count { it == DayKind.UPPER } >= 2 -> WorkoutSplit.UPPER_LOWER
+            else -> return null
+        }
+        return if (detected != state.preferences.split) TrainingInsight.Style(detected) else null
+    }
+
+    private enum class DayKind { PUSH, PULL, LEGS, UPPER, OTHER }
 
     /**
      * Load for the next session from the most recent earlier session of [itemId]: when every

@@ -341,7 +341,7 @@ internal fun WorkoutDiaryScreen(
             if (smartSuggestions) {
                 state.insights.take(2).forEach { insight ->
                     val detail = (insight as? com.apoorvdarshan.calorietracker.models.TrainingInsight.Plateau)?.exerciseId
-                        ?: insight.group.name
+                        ?: insight.group?.name.orEmpty()
                     item(key = "workout-insight-${insight::class.simpleName}-$detail") {
                         TrainingInsightCard(
                             insight = insight,
@@ -350,7 +350,8 @@ internal fun WorkoutDiaryScreen(
                                 dismissKeyboard()
                                 viewModel.openMachineCoach(it)
                             },
-                            onDismiss = { viewModel.dismissInsight(insight) }
+                            onDismiss = { viewModel.dismissInsight(insight) },
+                            onApplySplit = { viewModel.applySplit(it) }
                         )
                     }
                 }

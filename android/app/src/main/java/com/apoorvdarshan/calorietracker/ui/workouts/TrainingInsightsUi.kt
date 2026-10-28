@@ -15,10 +15,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingFlat
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Balance
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -41,6 +45,7 @@ import com.apoorvdarshan.calorietracker.models.GroupFatigue
 import com.apoorvdarshan.calorietracker.models.MachineMuscleGroup
 import com.apoorvdarshan.calorietracker.models.ProgressionHint
 import com.apoorvdarshan.calorietracker.models.TrainingInsight
+import com.apoorvdarshan.calorietracker.models.WorkoutSplit
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import java.text.NumberFormat
 
@@ -72,6 +77,11 @@ internal fun insightTitle(insight: TrainingInsight): String = when (insight) {
     )
     is TrainingInsight.Imbalance -> stringResource(R.string.insight_imbalance_title)
     is TrainingInsight.Neglected -> stringResource(R.string.insight_neglected_title, stringResource(insight.group.titleRes))
+    is TrainingInsight.HighLoad -> stringResource(R.string.insight_high_load_title, stringResource(insight.group.titleRes))
+    is TrainingInsight.BeginnerVolume -> stringResource(R.string.insight_beginner_volume_title, groupInSentence(insight.group))
+    is TrainingInsight.Milestone -> stringResource(R.string.insight_milestone_title, insight.weeks)
+    is TrainingInsight.NextSession -> stringResource(R.string.insight_next_session_title)
+    is TrainingInsight.Style -> stringResource(R.string.insight_style_title, workoutSplitLabel(insight.split))
 }
 
 @Composable
@@ -90,6 +100,11 @@ internal fun insightBody(insight: TrainingInsight, unit: WorkoutWeightUnit): Str
     is TrainingInsight.Neglected -> insight.daysSince
         ?.let { stringResource(R.string.insight_neglected_body, groupInSentence(insight.group), it) }
         ?: stringResource(R.string.insight_neglected_body_never, groupInSentence(insight.group))
+    is TrainingInsight.HighLoad -> stringResource(R.string.insight_high_load_body, insight.weeklySets, insight.usualSets)
+    is TrainingInsight.BeginnerVolume -> stringResource(R.string.insight_beginner_volume_body, insight.sets, groupInSentence(insight.group))
+    is TrainingInsight.Milestone -> stringResource(R.string.insight_milestone_body)
+    is TrainingInsight.NextSession -> stringResource(R.string.insight_next_session_body)
+    is TrainingInsight.Style -> stringResource(R.string.insight_style_body, workoutSplitLabel(insight.split))
 }
 
 private fun insightIcon(insight: TrainingInsight): ImageVector = when (insight) {
@@ -98,6 +113,11 @@ private fun insightIcon(insight: TrainingInsight): ImageVector = when (insight) 
     is TrainingInsight.Plateau -> Icons.AutoMirrored.Filled.TrendingFlat
     is TrainingInsight.Imbalance -> Icons.Filled.Balance
     is TrainingInsight.Neglected -> Icons.Filled.EventBusy
+    is TrainingInsight.HighLoad -> Icons.Filled.Spa
+    is TrainingInsight.BeginnerVolume -> Icons.Filled.Spa
+    is TrainingInsight.Milestone -> Icons.Filled.EmojiEvents
+    is TrainingInsight.NextSession -> Icons.Filled.Event
+    is TrainingInsight.Style -> Icons.Filled.AutoAwesome
 }
 
 /** Diary card for one tip, with a shortcut to the machine coach for the suggested group. */
@@ -107,7 +127,8 @@ internal fun TrainingInsightCard(
     unit: WorkoutWeightUnit,
     onOpenGroup: (MachineMuscleGroup) -> Unit,
     onDismiss: (() -> Unit)?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onApplySplit: (WorkoutSplit) -> Unit = {}
 ) {
     val colors = workoutsColors()
     Column(
@@ -139,10 +160,18 @@ internal fun TrainingInsightCard(
             }
         }
         Text(insightBody(insight, unit), color = colors.charcoal.copy(alpha = 0.85f), fontSize = 13.sp, lineHeight = 18.sp)
-        if (insight is TrainingInsight.Recovery) {
-            GroupChoiceRow(groups = insight.restedGroups, onPick = onOpenGroup)
-        } else {
-            InsightAction(text = stringResource(R.string.insight_action_machines), onClick = { onOpenGroup(insight.group) })
+        when (insight) {
+            is TrainingInsight.Recovery -> GroupChoiceRow(groups = insight.restedGroups, onPick = onOpenGroup)
+            is TrainingInsight.NextSession -> GroupChoiceRow(groups = insight.restedGroups, onPick = onOpenGroup)
+            is TrainingInsight.Style -> InsightAction(
+                text = stringResource(R.string.insight_style_action, workoutSplitLabel(insight.split)),
+                onClick = { onApplySplit(insight.split) }
+            )
+            // Advice to rest or celebrate: nothing to open.
+            is TrainingInsight.HighLoad, is TrainingInsight.BeginnerVolume, is TrainingInsight.Milestone -> Unit
+            else -> insight.group?.let { group ->
+                InsightAction(text = stringResource(R.string.insight_action_machines), onClick = { onOpenGroup(group) })
+            }
         }
     }
 }
