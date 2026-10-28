@@ -14,7 +14,7 @@ Lee también `PLAN_ENTRENADOR_IA.md` y **`PLAN_ENTRENADOR_AMIGABLE.md`** (plan d
 | `EntrenadorIA-beta-2026-10-28b.apk` (oficina) | `e6786f39d` | Catálogo nuevo de 1.368 ejercicios, buscador tolerante |
 | `EntrenadorIA-beta-2026-10-28c.apk` (oficina) | `95b9221de` | + imágenes para los 44 sin foto, caducidad por alimento (FoodKeeper), aviso de calentamiento |
 | `EntrenadorIA-beta-2026-10-28d.apk` (oficina) | `eb84338a6` | + Fase 1: rutinas de inicio, ✓ por serie, peso de la última vez, glosario |
-| `EntrenadorIA-beta-2026-10-28e.apk` (oficina) | último commit de la rama | + reglas del coach (descarga, inicio suave, logros, próxima sesión, estilo), progresiones. **Es la que está en el teléfono** (firmada con el `debug.keystore` de casa, ya copiado a la oficina) |
+| `EntrenadorIA-beta-2026-10-28e.apk` (oficina) | `a345b0351` | + reglas del coach (descarga, inicio suave, logros, próxima sesión, estilo), progresiones. **Es la que está en el teléfono** (firmada con el `debug.keystore` de casa, ya copiado a la oficina) |
 
 Las APK viven en la carpeta `APK` junto al repo en casa y en `C:\EntrenadorIA\` en la oficina (no en Git).
 
@@ -49,6 +49,23 @@ Eso regenera el catálogo y convierte solo los medios que falten.
 - Progresiones de peso corporal en el detalle del ejercicio.
 - Se quitó el permiso de pulso (`READ_HEART_RATE`), que nada usaba.
 - `PLAYSTORE.md` tiene los textos para declarar sueño y ciclo en Google Play.
+
+**Hecho al final de la tarde del 28 (`EntrenadorIA-beta-2026-10-28f.apk`, commits `b8dee95a5` y `7ecb4cda7`, NO instalada aún):**
+- Chat del coach: el borrador, la foto y la respuesta en curso viven en `CoachSession` (AppContainer), así que girar
+  el teléfono o cambiar de pestaña ya no los borra.
+- Despensa: "Foto de factura" y "Foto de nevera" con Tomar foto / Galería, casilla "Guardar automáticamente, sin
+  revisar", botón "Contarle al coach lo que tengo". La herramienta del coach `update_pantry` (reemplaza a
+  `add_pantry_items`) aplica add/set/used_up/discard sin preguntar y junta lo repetido (`PantryEditor` en `Pantry.kt`).
+
+**SIGUIENTE (pedido el 28 al cerrar, en este orden):**
+1. Aviso al añadir comida en un día que no es hoy (la tira de días de arriba en Inicio): que se note en qué día
+   estás añadiendo, sin bloquear.
+2. Despensa y mercado con más diseño, inspirado en whats-in-the-fridge (MIT: semáforo de frescura, etc.) y grocy
+   (MIT: historial de precios por tienda). Solo ideas, no copiar código ajeno sin revisar licencia.
+3. Histórico de compras: registro de cada vez que se hace el mercado (fecha, tienda, total, qué se compró) y un botón
+   para verlo. Hoy solo las facturas guardan `GroceryPurchase`; también deberían contar el stock de la lista de compras,
+   la foto de nevera no.
+4. Instalar la 28f (o la siguiente) en el teléfono. iOS: el usuario dijo que todavía no.
 
 **Pendiente:**
 - Probar en el teléfono: factura real, código de barras, importación de Flo, despensa por voz.
