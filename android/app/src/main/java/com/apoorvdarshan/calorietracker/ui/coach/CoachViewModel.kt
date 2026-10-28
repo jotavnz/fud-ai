@@ -81,7 +81,20 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
     /** Log cards whose estimation runs in this ViewModel, so one card is never estimated twice. */
     private val preparingLogIds = mutableSetOf<String>()
 
+    private val session = container.coachSession
+
     init {
+        // A reply started before a rotation or a tab change is still "sending" here.
+        combine(session.sending, session.error) { sending, error -> sending to error }
+            .onEach { (sending, error) ->
+                _ui.value = _ui.value.copy(
+                    sending = sending,
+                    error = (error as? CoachError.Literal)?.message,
+                    errorRes = (error as? CoachError.FromResource)?.resId
+                )
+            }
+            .launchIn(viewModelScope)
+
         container.chatRepository.messages
             .onEach { messages ->
                 _ui.value = _ui.value.copy(messages = messages)
@@ -139,24 +152,22 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
 
     fun send(userText: String, imageBytes: ByteArray? = null, thumbnailBytes: ByteArray? = null) {
         val trimmed = userText.trim()
-        if ((trimmed.isBlank() && imageBytes == null) || _ui.value.sending) return
+        if ((trimmed.isBlank() && imageBytes == null) || session.sending.value) return
         val text = trimmed.ifEmpty { container.appContext.getString(R.string.st_coach_analyze_image) }
-        viewModelScope.launch {
+        session.sending.value = true
+        session.error.value = null
+        session.scope.launch {
             val userMsg = ChatMessage(
                 role = ChatMessage.Role.USER,
                 content = text,
                 attachmentImageBase64 = thumbnailBytes?.let { Base64.getEncoder().encodeToString(it) }
             )
-            container.chatRepository.append(userMsg)
-            _ui.value = _ui.value.copy(sending = true, error = null, errorRes = null)
             try {
+                container.chatRepository.append(userMsg)
                 val history = container.chatRepository.contextMessages(limit = 20).dropLast(1) // exclude the just-appended user msg — it's passed separately
                 val profile = container.profileRepository.current()
                     ?: return@launch run {
-                        _ui.value = _ui.value.copy(
-                            sending = false,
-                            errorRes = R.string.coach_no_profile_error
-                        )
+                        session.error.value = CoachError.FromResource(R.string.coach_no_profile_error)
                     }
                 val weights = container.weightRepository.entries.first()
                 val bodyFats = container.bodyFatRepository.entries.first()
@@ -198,7 +209,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     pantryItems = container.pantryRepository.snapshot(),
                     groceryPurchases = container.pantryRepository.purchaseSnapshot(),
                     shoppingList = container.pantryRepository.shoppingSnapshot(),
-                    pantryWriter = { items -> viewModelScope.launch { items.forEach { container.pantryRepository.add(it) } } },
+                    pantryWriter = { changes -> session.scope.launch { container.pantryRepository.applyChanges(changes) } },
                     cycle = container.cycleRepository.coachSnapshot()
                 )
                 val logCards = logProposals.proposals
@@ -219,21 +230,18 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                         goalProposals = goalCards
                     )
                 )
-                _ui.value = _ui.value.copy(sending = false)
             } catch (e: AiError) {
                 logFailure(e)
                 // Hosted quota / no-plan errors open the paywall flow; others show localized text.
                 val routed = container.hostedUi.handle(e)
-                _ui.value = _ui.value.copy(sending = false, error = if (routed) null else e.userMessage(container.appContext))
+                if (!routed) session.error.value = CoachError.Literal(e.userMessage(container.appContext))
             } catch (e: Throwable) {
-                // Leaving the screen cancels the send; that is not a chat failure.
                 ensureActive()
                 logFailure(e)
-                _ui.value = _ui.value.copy(
-                    sending = false,
-                    error = e.localizedMessage,
-                    errorRes = if (e.localizedMessage.isNullOrBlank()) R.string.coach_chat_failed else null
-                )
+                session.error.value = e.localizedMessage?.takeIf { it.isNotBlank() }?.let { CoachError.Literal(it) }
+                    ?: CoachError.FromResource(R.string.coach_chat_failed)
+            } finally {
+                session.sending.value = false
             }
         }
     }
@@ -481,7 +489,10 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { container.chatRepository.clear() }
     }
 
-    fun dismissError() { _ui.value = _ui.value.copy(error = null, errorRes = null) }
+    fun dismissError() {
+        session.error.value = null
+        _ui.value = _ui.value.copy(error = null, errorRes = null)
+    }
 
     private fun logFailure(error: Throwable) {
         // Log is a stub in JVM unit tests; logging must never change the send's outcome.

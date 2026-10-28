@@ -170,8 +170,10 @@ import kotlinx.coroutines.withContext
 fun CoachScreen(container: AppContainer) {
     val vm: CoachViewModel = viewModel(factory = CoachViewModel.Factory(container))
     val ui by vm.ui.collectAsState()
-    var input by remember { mutableStateOf("") }
-    var attachedImageBytes by remember { mutableStateOf<ByteArray?>(null) }
+    // The draft lives in the app-wide session so rotating or leaving the tab keeps it.
+    val session = container.coachSession
+    var input by session::draft
+    var attachedImageBytes by session::attachment
     var showCameraCapture by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     var showResetConfirm by remember { mutableStateOf(false) }
@@ -247,7 +249,7 @@ fun CoachScreen(container: AppContainer) {
         hideKeyboard()
         input = ""
         attachedImageBytes = null
-        scope.launch {
+        session.scope.launch {
             val imageForAi = image?.let { resizedJpeg(it, maxDimension = 1600, quality = 78) ?: it }
             val thumbnail = image?.let { resizedJpeg(it, maxDimension = 700, quality = 68) ?: it }
             vm.send(trimmed, imageBytes = imageForAi, thumbnailBytes = thumbnail)

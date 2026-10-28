@@ -319,6 +319,8 @@ class AppContainer(app: FudAIApp) {
     val pantryRepository = com.apoorvdarshan.calorietracker.data.PantryRepository(prefs)
     val cycleRepository = com.apoorvdarshan.calorietracker.data.CycleRepository(prefs)
     val chatRepository = ChatRepository(prefs)
+    /** Coach's draft and in-flight reply, which outlive the Coach screen. */
+    val coachSession = com.apoorvdarshan.calorietracker.ui.coach.CoachSession()
     val waterRepository = WaterRepository(prefs)
     val fastingRepository = FastingRepository(prefs)
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
