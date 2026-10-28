@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.data
 
+import java.text.Normalizer
+
 /**
  * Lowercased word lists precomputed once per exercise so library search does not
  * re-tokenize every item on each keystroke. Mirrors iOS `ExerciseSearchIndex`.
@@ -36,6 +38,18 @@ object ExerciseSearch {
         "triceps cable pushdown" to "Triceps_Pushdown",
         "tricep cable pushdown" to "Triceps_Pushdown",
         "tricep pushdown" to "Triceps_Pushdown",
+        // The catalog's plain Bulgarian split squat (rear foot on a bench, dumbbells).
+        "bulgarian split squat" to "Split_Squat_with_Dumbbells",
+        "bulgarian squat" to "Split_Squat_with_Dumbbells",
+        "sentadilla bulgara" to "Split_Squat_with_Dumbbells",
+    )
+
+    /**
+     * Gym names that never appear in catalog titles, swapped for a word that does, so
+     * "bulgarian split squat smith" still finds "Smith Single-Leg Split Squat".
+     */
+    private val tokenSynonyms = mapOf(
+        "bulgarian" to "split",
     )
 
     /**
@@ -66,9 +80,18 @@ object ExerciseSearch {
     // them (Swift's Character-based split already keeps those graphemes whole).
     private val wordSeparators = Regex("[^\\p{L}\\p{M}\\p{N}]+")
 
+    // Latin accents only, so "bulgara" finds "búlgara"; other scripts keep their marks.
+    private val latinAccents = Regex("[\\u0300-\\u036f]")
+
+    /** Lowercase without Latin accents ("Búlgara" → "bulgara"). */
+    fun fold(text: String): String =
+        Normalizer.normalize(text.lowercase(), Normalizer.Form.NFD)
+            .replace(latinAccents, "")
+            .let { Normalizer.normalize(it, Normalizer.Form.NFC) }
+
     /** Lowercased runs of letters and digits; punctuation and whitespace separate words. */
     fun words(text: String): List<String> =
-        text.lowercase().split(wordSeparators).filter { it.isNotEmpty() }
+        fold(text).split(wordSeparators).filter { it.isNotEmpty() }
 
     fun tokens(query: String): List<String> = words(query)
 
@@ -77,12 +100,14 @@ object ExerciseSearch {
      * An empty query matches everything with rank 0.
      */
     fun relevance(index: ExerciseSearchIndex, query: String, exerciseId: String): Int? {
-        val queryTokens = tokens(query)
-        if (queryTokens.isEmpty()) return 0
+        val rawTokens = tokens(query)
+        if (rawTokens.isEmpty()) return 0
+        if (aliases[rawTokens.joinToString(" ")] == exerciseId) return 0
+        val queryTokens = rawTokens.map { tokenSynonyms[it] ?: it }
 
         val compactQuery = queryTokens.joinToString("")
         val compactName = index.nameSuffixes.firstOrNull().orEmpty()
-        if (aliases[queryTokens.joinToString(" ")] == exerciseId || compactName == compactQuery) return 0
+        if (compactName == compactQuery) return 0
         if (compactName.startsWith(compactQuery)) return 1
         if (index.nameSuffixes.drop(1).any { it.startsWith(compactQuery) }) return 2
         if (queryTokens.all { token -> index.nameWords.any { wordMatches(it, token) } }) return 3

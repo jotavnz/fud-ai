@@ -186,6 +186,31 @@ class CoachProposalToolsTest {
         assertTrue(catalog.any { it.equipment == proposal.equipment })
     }
 
+    @Test
+    fun bulgarianSplitSquatResolvesToTheTranslatedCatalogExercise() {
+        val smith = item("Smith_Single-Leg_Split_Squat", "Smith Single-Leg Split Squat", "Strength", listOf("Quadriceps"))
+            .copy(name = "Sentadilla búlgara a una pierna en máquina Smith")
+        val press = item("Smith_Machine_Bench_Press", "Smith Machine Bench Press", "Strength", listOf("Chest"))
+            .copy(name = "Press de banca en máquina Smith")
+        val library = listOf(press, smith)
+
+        for (query in listOf("bulgarian split squat smith", "sentadilla bulgara smith", "Sentadilla búlgara en máquina Smith")) {
+            assertEquals(query, "Smith_Single-Leg_Split_Squat", CoachTools.rankedLibraryMatches(library, query).first().id)
+        }
+
+        val tools = CoachTools(
+            weights = emptyList(), bodyFats = emptyList(), foods = emptyList(),
+            exerciseLibrary = library, proposals = CoachProposalCollector(), clock = clock
+        )
+        val copy = json(
+            tools.execute(
+                "propose_custom_exercise",
+                mapOf("name" to "Sentadilla búlgara en máquina Smith", "primary_muscles" to listOf("quadriceps"))
+            )
+        )
+        assertTrue(copy["error"].asString.contains("Smith_Single-Leg_Split_Squat"))
+    }
+
     private fun tools(collector: CoachProposalCollector) = CoachTools(
         weights = emptyList(),
         bodyFats = emptyList(),

@@ -218,6 +218,8 @@ class HealthConnectManager(
     private val heartRateRead = HealthPermission.getReadPermission(HeartRateRecord::class)
     /** Optional: imports other apps' workouts (Garmin Connect, Strava, …) read-only. */
     private val exerciseRead = HealthPermission.getReadPermission(ExerciseSessionRecord::class)
+    /** Optional and opt-in (cycle tracking): periods other apps share. Read only. */
+    private val menstruationRead = HealthPermission.getReadPermission(androidx.health.connect.client.records.MenstruationPeriodRecord::class)
     private val backgroundRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
     private val historyRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
 
@@ -238,6 +240,44 @@ class HealthConnectManager(
     /** What Settings' optional Exercise access row requests: only the Exercise read, so
      *  granting it never re-asks for permissions the user declined in the connect flow. */
     val exerciseImportPermissions: Set<String> = setOf(exerciseRead)
+
+    /** What the cycle screen's import requests: only the menstruation read. */
+    val cyclePermissions: Set<String> = setOf(menstruationRead)
+
+    suspend fun hasMenstruationRead(): Boolean = menstruationRead in granted()
+
+    /**
+     * Periods other apps (Flo, Samsung Health, Clue, …) wrote to Health Connect between [from]
+     * and [to], as local start/end dates. Null when they cannot be read.
+     */
+    suspend fun readMenstruationPeriods(from: Instant, to: Instant): List<com.apoorvdarshan.calorietracker.models.CyclePeriod>? {
+        if (!hasMenstruationRead()) return null
+        val c = client ?: return null
+        return try {
+            readAllPages { pageToken ->
+                val response = c.readRecords(
+                    ReadRecordsRequest(
+                        recordType = androidx.health.connect.client.records.MenstruationPeriodRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(from, to),
+                        pageToken = pageToken
+                    )
+                )
+                response.records.map { record ->
+                    val zone = java.time.ZoneId.systemDefault()
+                    com.apoorvdarshan.calorietracker.models.CyclePeriod(
+                        start = record.startTime.atZone(zone).toLocalDate().toString(),
+                        end = record.endTime.atZone(zone).toLocalDate().toString(),
+                        source = record.metadata.dataOrigin.packageName
+                    )
+                } to response.pageToken
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Health Connect menstruation read failed", e)
+            null
+        }
+    }
 
     /** Requested only when Daily Summary is enabled. Keeping it out of [permissions]
      *  avoids asking every Health Connect user for background access. */

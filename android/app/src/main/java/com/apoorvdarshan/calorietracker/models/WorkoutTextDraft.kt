@@ -110,13 +110,14 @@ data class WorkoutTextDraft(val date: String, val exercises: List<WorkoutTextExe
         // Keep the catalog within small on-device context windows. Exact token matches
         // rank first; cardio and common movements provide useful fallback candidates.
         fun candidates(description: String, library: List<ExerciseItem>): List<ExerciseItem> {
-            val expanded = description.lowercase(java.util.Locale.ROOT)
+            val expanded = com.apoorvdarshan.calorietracker.data.ExerciseSearch.fold(description)
                 .replace("skipping", "rope jumping").replace("jogging", "running")
+                .replace("bulgarian", "split").replace("bulgara", "split")
             val words = Regex("[\\p{L}]{3,}").findAll(expanded).map { it.value }.toSet() -
                 setOf("the", "and", "sets", "reps", "minutes", "hours", "yesterday", "today")
             val common = listOf("bench press", "squat", "deadlift", "push-up", "pull-up", "lunge", "plank", "dumbbell curl")
             return library.map { item ->
-                val name = "${item.name} ${item.id.replace('_', ' ')} ${item.equipment} ${item.primaryMuscles.joinToString(" ")}".lowercase(java.util.Locale.ROOT)
+                val name = com.apoorvdarshan.calorietracker.data.ExerciseSearch.fold("${item.name} ${item.id.replace('_', ' ')} ${item.equipment} ${item.primaryMuscles.joinToString(" ")}")
                 val matches = words.sumOf { if (name.contains(it)) it.length * 10 else 0 }
                 val fallback = if (item.category.equals("cardio", true)) 2 else if (common.any(name::contains)) 1 else 0
                 item to matches + fallback

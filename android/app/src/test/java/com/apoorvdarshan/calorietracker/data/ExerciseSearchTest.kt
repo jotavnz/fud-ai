@@ -214,6 +214,25 @@ class ExerciseSearchTest {
         assertTrue(delts.contains("Arnold Dumbbell Press"))
     }
 
+    @Test
+    fun accentsAreIgnored() {
+        val bulgarian = exercise(id = "Split_Squat_with_Dumbbells", name = "Sentadilla búlgara con mancuernas")
+        assertTrue(ExerciseSearch.matches(bulgarian, "sentadilla bulgara"))
+        assertTrue(ExerciseSearch.matches(bulgarian, "SENTADILLA BÚLGARA"))
+    }
+
+    @Test
+    fun bundledCatalogFindsBulgarianSplitSquats() {
+        val repository = bundledRepository()
+
+        val plain = repository.filtered(searchText = "bulgarian split squat").map { it.id }
+        assertEquals("Split_Squat_with_Dumbbells", plain.first())
+        assertTrue(plain.contains("Smith_Single-Leg_Split_Squat"))
+
+        val smith = repository.filtered(searchText = "bulgarian split squat smith").map { it.id }
+        assertEquals(listOf("Smith_Single-Leg_Split_Squat"), smith)
+    }
+
     private fun exercise(
         id: String = "id",
         name: String,

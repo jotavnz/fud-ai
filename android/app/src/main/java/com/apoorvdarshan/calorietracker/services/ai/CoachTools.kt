@@ -2,6 +2,7 @@ package com.apoorvdarshan.calorietracker.services.ai
 
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
+import com.apoorvdarshan.calorietracker.models.ExerciseRoles
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
 import com.apoorvdarshan.calorietracker.models.CoachGoalCollector
 import com.apoorvdarshan.calorietracker.models.CoachLogCollector
@@ -59,7 +60,13 @@ class CoachTools(
      */
     private val logProposals: CoachLogCollector? = null,
     /** Set only by Coach chat, which shows the goal plan card. Without it `propose_goal_plan` is not offered. */
-    private val goalProposals: CoachGoalCollector? = null
+    private val goalProposals: CoachGoalCollector? = null,
+    /** Food the user has at home and their recent grocery shops (Pantry). */
+    private val pantryItems: List<com.apoorvdarshan.calorietracker.models.PantryItem> = emptyList(),
+    private val groceryPurchases: List<com.apoorvdarshan.calorietracker.models.GroceryPurchase> = emptyList(),
+    private val shoppingList: List<com.apoorvdarshan.calorietracker.models.ShoppingItem> = emptyList(),
+    /** Null while cycle tracking is off; the tool then says so and shares nothing. */
+    private val cycle: com.apoorvdarshan.calorietracker.data.CycleRepository.Snapshot? = null
 ) {
 
     /** The tools this instance offers: the data tools, plus the proposal tools for Coach chat. */
@@ -86,6 +93,14 @@ class CoachTools(
                 query = args.optString("query").takeIf { it.isNotBlank() },
                 muscle = args.optString("muscle").takeIf { it.isNotBlank() },
                 equipment = args.optString("equipment").takeIf { it.isNotBlank() },
+                kind = args.optString("kind").takeIf { it.isNotBlank() },
+                muscles = when (val value = args.opt("muscles")) {
+                    is JSONArray -> List(value.length()) { value.optString(it) }.joinToString(",")
+                    is String -> value
+                    else -> null
+                },
+                gentle = if (args.has("gentle")) args.optBoolean("gentle") else null,
+                heavyLegs = if (args.has("heavy_legs")) args.optBoolean("heavy_legs") else null,
                 // Proposal arguments stay raw (strings, numbers, lists) and are validated per tool.
                 proposal = PROPOSAL_ARGUMENT_KEYS.associateWith { key ->
                     val value: Any? = args.opt(key)
@@ -118,7 +133,15 @@ class CoachTools(
                 query = args["query"] as? String,
                 muscle = args["muscle"] as? String,
                 equipment = args["equipment"] as? String,
-                proposal = PROPOSAL_ARGUMENT_KEYS.associateWith { args[it] }
+                proposal = PROPOSAL_ARGUMENT_KEYS.associateWith { args[it] },
+                kind = args["kind"] as? String,
+                muscles = when (val value = args["muscles"]) {
+                    is List<*> -> value.joinToString(",")
+                    is String -> value
+                    else -> null
+                },
+                gentle = args["gentle"] as? Boolean,
+                heavyLegs = args["heavy_legs"] as? Boolean
             )
         )
     }
@@ -130,12 +153,15 @@ class CoachTools(
         "get_calorie_totals" -> getCalorieTotals(args)
         "get_food_entries" -> getFoodEntries(args)
         "get_fasting_history" -> getFastingHistory(args)
+        "get_pantry" -> getPantry()
+        "get_cycle" -> getCycle()
         "get_workout_history" -> getWorkoutHistory(args)
         "get_workout_plans" -> getWorkoutPlans(args)
         "get_workout_preferences" -> getWorkoutPreferences()
         "get_training_summary" -> getTrainingSummary(args)
         "get_exercise_lift_history" -> getExerciseLiftHistory(args)
         "search_exercise_library" -> searchExerciseLibrary(args)
+        "get_session_extras" -> getSessionExtras(args)
         "propose_custom_exercise", "propose_add_exercise_to_day" -> propose(name, args.proposal)
         CoachLogTool.TOOL_NAME -> proposeLog(emptyMap())
         CoachGoalTool.TOOL_NAME -> CoachGoalTool.propose(emptyMap(), goalProposals)
@@ -395,6 +421,87 @@ class CoachTools(
                             }
                         }
                     )
+                }
+            )
+        )
+    }
+
+    // MARK: - Cycle
+
+    private fun getCycle(): String {
+        val snapshot = cycle ?: return json(
+            linkedMapOf(
+                "enabled" to false,
+                "note" to "Cycle tracking is off. If relevant, mention the user can turn it on (Home + > Cycle); never ask for cycle details otherwise."
+            )
+        )
+        val today = LocalDate.now(clock)
+        val status = com.apoorvdarshan.calorietracker.models.CycleMath.status(snapshot.periods, snapshot.settings.mode, today)
+        val todaySymptoms = snapshot.symptoms.firstOrNull { it.date == today.toString() }
+        val recent = snapshot.symptoms.filter { it.date >= today.minusDays(6).toString() }.sortedBy { it.date }
+        return json(
+            linkedMapOf(
+                "enabled" to true,
+                "mode" to snapshot.settings.mode.name.lowercase(),
+                "cycle_day" to status.cycleDay,
+                "estimated_phase" to status.phase?.name?.lowercase(),
+                "phase_confidence" to status.confidence,
+                "on_period" to status.onPeriod,
+                "average_cycle_days" to status.averageLength,
+                "next_period_estimate" to status.nextPeriod?.toString(),
+                "today_symptoms" to todaySymptoms?.let { s ->
+                    linkedMapOf(
+                        "cramps" to s.cramps, "fatigue" to s.fatigue, "headache" to s.headache,
+                        "low_mood" to s.lowMood, "bloating" to s.bloating, "heavy_flow" to s.heavyFlow
+                    )
+                },
+                "recent_symptom_days" to recent.size,
+                "training_adjustments" to com.apoorvdarshan.calorietracker.models.CycleMath.trainingAdjustments(todaySymptoms),
+                "note" to "Adapt today's training to the symptoms first; use the phase only as context and never forbid training or promise phase-based performance. With hormonal contraception, (peri)menopause or pregnancy there are no phase estimates. Refer to a doctor for disabling pain, very heavy bleeding, missed periods or bleeding after menopause."
+            )
+        )
+    }
+
+    // MARK: - Pantry
+
+    private fun getPantry(): String {
+        val today = LocalDate.now(clock)
+        val recentShops = groceryPurchases
+            .filter { purchase -> runCatching { !LocalDate.parse(purchase.date).isBefore(today.minusDays(90)) }.getOrDefault(true) }
+        val spending = recentShops.filter { it.total != null }
+            .groupBy { it.currency.ifBlank { "?" } }
+            .mapValues { (_, shops) -> shops.sumOf { it.total ?: 0.0 } }
+        return json(
+            linkedMapOf(
+                "today" to today.toString(),
+                "item_count" to pantryItems.size,
+                "items" to pantryItems.take(150).map { item ->
+                    linkedMapOf<String, Any?>(
+                        "name" to item.name,
+                        "location" to item.location.name.lowercase()
+                    ).apply {
+                        if (item.quantity.isNotBlank()) put("quantity", item.quantity)
+                        item.expiresOn?.let { put("best_before", it) }
+                        item.daysLeft(today)?.let { put("days_left", it) }
+                    }
+                },
+                "recent_shops" to recentShops.take(10).map { shop ->
+                    linkedMapOf<String, Any?>(
+                        "date" to shop.date,
+                        "store" to shop.store,
+                        "total" to shop.total,
+                        "currency" to shop.currency,
+                        "items" to shop.items.map { it.name }
+                    )
+                },
+                "spending_last_90_days" to spending,
+                "shopping_list" to shoppingList.filter { !it.checked }.map { item ->
+                    if (item.quantity.isBlank()) item.name else "${item.name} (${item.quantity})"
+                },
+                "note" to if (pantryItems.isEmpty()) {
+                    "The pantry is empty. Suggest the user add what they have (Home + > Pantry), or ask what is in their fridge."
+                } else {
+                    "Best-before dates are estimates unless the user typed them. Prefer items with few days_left."
                 }
             )
         )
@@ -687,6 +794,39 @@ class CoachTools(
 
     // MARK: - Exercise library
 
+    private fun getSessionExtras(args: ToolArguments): String {
+        val kind = ExerciseRoles.parseKind(args.kind)
+            ?: return jsonError("kind must be one of: ${ExerciseRoles.Kind.entries.joinToString { it.name.lowercase() }}.")
+        val muscles = args.muscles.orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        val byId = exerciseLibrary.associateBy { it.id }
+        val picks = ExerciseRoles.picks(kind, muscles, gentle = args.gentle == true, heavyLegs = args.heavyLegs == true)
+            .mapNotNull { pick ->
+                val item = byId[pick.id] ?: return@mapNotNull null
+                linkedMapOf<String, Any?>(
+                    "catalog_id" to item.id,
+                    "name" to item.name,
+                    "dose" to pick.dose,
+                    "primary_muscles" to item.primaryMuscles
+                )
+            }
+        val guidance = when (kind) {
+            ExerciseRoles.Kind.WARMUP -> "Do these in order (about 5–10 min), then 1–2 lighter ramp-up sets of the first exercise at roughly 40–60% of the working weight."
+            ExerciseRoles.Kind.COOLDOWN -> "Present it as calming down and comfort. Evidence does not show cool-downs or stretching prevent soreness, cramps or injury; do not promise that."
+            ExerciseRoles.Kind.HYPOPRESSIVE -> "Not a treatment. Avoid in pregnancy, high blood pressure, heart or lung disease and hernias; with leaks, prolapse or after birth refer to a pelvic floor physiotherapist."
+            ExerciseRoles.Kind.BALANCE -> "For beginners, sedentary people and older adults: 2–3 days a week, use support at first, progress by removing support or adding reps."
+            ExerciseRoles.Kind.CALISTHENICS -> "Steps are a progression: stay on a step until the target is easy for two sessions, then move to the next."
+            else -> "Short, low-effort work; fine before training, on rest days or as desk breaks."
+        }
+        return json(
+            linkedMapOf(
+                "kind" to kind.name.lowercase(),
+                "exercises" to picks,
+                "guidance" to guidance,
+                "note" to "Every catalog_id can be proposed with propose_add_exercise_to_day."
+            )
+        )
+    }
+
     private fun searchExerciseLibrary(args: ToolArguments): String {
         val query = args.query?.trim().orEmpty()
         if (query.isEmpty()) return jsonError("query is required.")
@@ -760,6 +900,17 @@ class CoachTools(
             throw ProposalArgumentError(
                 "\"${existing.name}\" is already in the exercise library (catalog_id ${existing.id}). Use propose_add_exercise_to_day with that catalog_id instead."
             )
+        }
+        // A near-identical library exercise ("Sentadilla búlgara en máquina Smith" vs the catalog's
+        // "Sentadilla búlgara a una pierna en máquina Smith") has an image and history; a copy has neither.
+        rankedLibraryMatches(exerciseLibrary, name).firstOrNull()?.let { similar ->
+            val terms = significantWords(searchWords(name))
+            val similarWords = searchWords("${similar.name} ${similar.englishName}")
+            if (terms.all { wordsMatch(it, similarWords) }) {
+                throw ProposalArgumentError(
+                    "\"${similar.name}\" (catalog_id ${similar.id}) is already in the exercise library and matches \"$name\". Use propose_add_exercise_to_day with that catalog_id instead."
+                )
+            }
         }
         val category = libraryChoice(args["category"], LIBRARY_CATEGORIES, "category", LIBRARY_CATEGORY_NAMES) ?: "Strength"
         val equipment = libraryChoice(args["equipment"], LIBRARY_EQUIPMENT, "equipment", LIBRARY_EQUIPMENT_NAMES)
@@ -935,7 +1086,11 @@ class CoachTools(
         val query: String? = null,
         val muscle: String? = null,
         val equipment: String? = null,
-        val proposal: Map<String, Any?> = emptyMap()
+        val proposal: Map<String, Any?> = emptyMap(),
+        val kind: String? = null,
+        val muscles: String? = null,
+        val gentle: Boolean? = null,
+        val heavyLegs: Boolean? = null
     ) {
         fun boundedLimit(default: Int, maximum: Int): Int = limit?.coerceIn(1, maximum) ?: default
     }
@@ -968,7 +1123,9 @@ class CoachTools(
             "get_body_fat_history",
             "get_calorie_totals",
             "get_food_entries",
-            "get_fasting_history"
+            "get_fasting_history",
+            "get_pantry",
+            "get_cycle"
         )
 
         val WORKOUT_TOOL_NAMES = listOf(
@@ -977,7 +1134,8 @@ class CoachTools(
             "get_workout_preferences",
             "get_training_summary",
             "get_exercise_lift_history",
-            "search_exercise_library"
+            "search_exercise_library",
+            "get_session_extras"
         )
 
         /** Workout tools are deliberately always available, even before the first session. */
@@ -1007,6 +1165,9 @@ class CoachTools(
             "get_fasting_history" to "Fetch explicitly tracked fasting sessions between two dates, including start/end timestamps, duration, goal, and whether the goal was reached. Never infer fasting from missing food logs.",
             "get_workout_history" to "Fetch completed workouts between two dates, including calculated calorie burn, saved exercise durations and intensity, and logged sets with weight, reps, and RPE. A timed exercise can be performed without any reps or sets. For one specific lift across many dates, prefer get_exercise_lift_history.",
             "get_workout_plans" to "Fetch dated workout diary plans, set targets, saved exercise durations, and current timer state. Running or paused timer time is unsaved. Optional ISO from/to dates narrow the result; without them it returns recent and upcoming plans around today.",
+            "get_session_extras" to "Get catalog exercises (with catalog_id, dose and guidance) for the parts of training beyond the main lifts: kind=warmup (dynamic warm-up for the given muscles; gentle=true for beginners, seniors or higher body weight), cooldown (after a session; heavy_legs=true after hard leg work), mobility, posture (desk workers, rounded shoulders), deep_core, hypopressive, balance (joint stability, seniors, sedentary starters) or calisthenics (push/pull progressions). Use it before suggesting a session, after a hard session, or when the user asks for these styles.",
+            "get_cycle" to "Fetch the user's menstrual cycle summary when they turned cycle tracking on: cycle day, estimated phase with confidence, whether they are on their period, the next period estimate, today's symptoms (cramps, fatigue, headache, low mood, bloating, heavy flow) and suggested training adjustments. Call it before planning or adjusting a session for a user who tracks their cycle, or when they mention their period. Returns enabled=false otherwise.",
+            "get_pantry" to "Fetch the food the user has at home (fridge, freezer, pantry) with quantities and best-before dates, plus recent grocery shops and spending. Use it to suggest meals from what is available (use soon-to-expire items first and fit the remaining calories and macros), to build the next weekly, biweekly or monthly shopping list from what is missing and what they eat, or to summarize grocery spending. If the user is travelling, mention local names for ingredients.",
             "get_workout_preferences" to "Fetch workout-only preferences such as target muscles, injuries or issues, equipment, schedule, split, RPE scale, and strength numbers.",
             "get_training_summary" to "Summarize workouts between two dates: calculated calorie burn plus sessions, saved exercise duration, sets, reps, volume, best load, and average RPE by exercise. Timed cardio does not require reps or sets.",
             "get_exercise_lift_history" to "Fetch per-exercise lift history from the local workout diary: dated sessions with logged weight × reps sets, the most recent session, and best load in kg. Use for questions like \"what did I bench last?\" or trends for one lift. Optional catalog_id narrows matching; otherwise exercise name is used.",
@@ -1040,7 +1201,7 @@ class CoachTools(
         fun parameterSchemaFor(toolName: String): Map<String, Any> {
             if (toolName == CoachLogTool.TOOL_NAME) return CoachLogTool.parameterSchema()
             if (toolName == CoachGoalTool.TOOL_NAME) return CoachGoalTool.parameterSchema()
-            if (toolName == "get_data_summary" || toolName == "get_workout_preferences") {
+            if (toolName == "get_data_summary" || toolName == "get_workout_preferences" || toolName == "get_pantry" || toolName == "get_cycle") {
                 return linkedMapOf("type" to "object", "properties" to emptyMap<String, Any>())
             }
             if (toolName == "get_workout_plans") {
@@ -1064,6 +1225,24 @@ class CoachTools(
                         "limit" to linkedMapOf("type" to "integer", "description" to "Optional max dated sessions to return")
                     ),
                     "required" to listOf("exercise")
+                )
+            }
+            if (toolName == "get_session_extras") {
+                return linkedMapOf(
+                    "type" to "object",
+                    "properties" to linkedMapOf(
+                        "kind" to linkedMapOf(
+                            "type" to "string",
+                            "description" to "warmup, cooldown, mobility, posture, deep_core, hypopressive, balance or calisthenics"
+                        ),
+                        "muscles" to linkedMapOf(
+                            "type" to "string",
+                            "description" to "Comma-separated muscles trained or planned (catalog names like quadriceps, chest, lats); used by warmup and cooldown"
+                        ),
+                        "gentle" to linkedMapOf("type" to "boolean", "description" to "Low-impact warm-up for beginners, seniors or higher body weight"),
+                        "heavy_legs" to linkedMapOf("type" to "boolean", "description" to "The session had hard leg work (adds an easy walk to the cool-down)")
+                    ),
+                    "required" to listOf("kind")
                 )
             }
             if (toolName == "search_exercise_library") {
@@ -1146,7 +1325,8 @@ class CoachTools(
             val scored = library.mapNotNull { item ->
                 if (!passesFilters(item)) return@mapNotNull null
                 val muscleWords = searchWords((item.primaryMuscles + item.secondaryMuscles).joinToString(" "))
-                val nameWords = searchWords(item.name)
+                // The shown (translated) name plus the English one, so English queries still match.
+                val nameWords = searchWords("${item.name} ${item.englishName}")
                 val metadataWords = muscleWords + searchWords("${item.category} ${item.equipment}")
                 var nameHits = 0
                 var metadataHits = 0
@@ -1162,7 +1342,7 @@ class CoachTools(
                 var score = nameHits * 10 + metadataHits * 3
                 if (allMatched) score += 20
                 if (nameHits == terms.size) score += 30
-                if (significantWords(nameWords) == terms) score += 100
+                if (significantWords(searchWords(item.name)) == terms) score += 100
                 LibraryMatch(item, score, allMatched)
             }
             return scored.filter { it.allMatched }.ifEmpty { scored }
@@ -1266,8 +1446,9 @@ class CoachTools(
 
         private val NON_WORD = Regex("[^\\p{L}\\p{M}\\p{N}]+")
 
+        // Accent-folded, so "bulgara" finds "búlgara".
         private fun searchWords(text: String): List<String> =
-            text.lowercase().split(NON_WORD).filter { it.isNotEmpty() }
+            com.apoorvdarshan.calorietracker.data.ExerciseSearch.fold(text).split(NON_WORD).filter { it.isNotEmpty() }
 
         private fun wordsMatch(term: String, words: List<String>): Boolean {
             val variants = termVariants(term)
@@ -1278,6 +1459,11 @@ class CoachTools(
             add(term)
             if (term.length > 3 && term.endsWith("es")) add(term.dropLast(2))
             if (term.length > 3 && term.endsWith("s")) add(term.dropLast(1))
+            // "Bulgarian" is "búlgara" in Spanish titles and only "split squat" in English ones.
+            if (term.startsWith("bulgar")) {
+                add("bulgar")
+                add("split")
+            }
         }
 
         private fun libraryMetadata(value: String): String? =

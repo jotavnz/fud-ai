@@ -114,6 +114,7 @@ data class SettingsUiState(
     val workoutRpeScale: WorkoutRpeScale = WorkoutRpeScale.STRENGTH,
     /** Rest countdown after a logged set, in seconds; 0 = off. */
     val workoutRestTimerSeconds: Int = com.apoorvdarshan.calorietracker.models.WorkoutRestTimerSetting.DEFAULT_SECONDS,
+    val workoutSimpleLogging: Boolean = true,
     val userContext: String = "",
     val fallbackEnabled: Boolean = false,
     val fallbackProvider: AIProvider = AIProvider.GEMINI,
@@ -193,7 +194,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 _ui.value = _ui.value.copy(
                     workoutSplit = preferences.split,
                     workoutRpeScale = preferences.rpeScale,
-                    workoutRestTimerSeconds = preferences.restTimerSeconds
+                    workoutRestTimerSeconds = preferences.restTimerSeconds,
+                    workoutSimpleLogging = preferences.simpleLogging
                 )
             }
         }
@@ -410,6 +412,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     workoutSplit = workoutPreferences.split,
                     workoutRpeScale = workoutPreferences.rpeScale,
                     workoutRestTimerSeconds = workoutPreferences.restTimerSeconds,
+                    workoutSimpleLogging = workoutPreferences.simpleLogging,
                     localModelStates = container.localModels.states.value,
                     goalsNeedRecalc = needsRecalc(profile),
                     settingsLoaded = true
@@ -525,6 +528,12 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun selectWorkoutRpeScale(scale: WorkoutRpeScale) {
         viewModelScope.launch {
             container.workoutRepository.updatePreferences { it.copy(rpeScale = scale) }
+        }
+    }
+
+    fun setWorkoutSimpleLogging(enabled: Boolean) {
+        viewModelScope.launch {
+            container.workoutRepository.updatePreferences { it.copy(simpleLogging = enabled, loggingGuideDismissed = false) }
         }
     }
 

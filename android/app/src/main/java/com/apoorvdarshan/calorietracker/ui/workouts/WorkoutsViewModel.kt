@@ -404,6 +404,16 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         else -> "${insight::class.simpleName}:${insight.group.name}"
     }
 
+    /** Adds a suggested warm-up (first) or cool-down (last) to the selected day, one empty set each. */
+    fun addSessionExtras(items: List<ExerciseItem>, atStart: Boolean) {
+        val dateKey = WorkoutDate.key(diaryUiState.selectedDate)
+        val exercises = items.map { item ->
+            val planned = PlannedExercise.from(item)
+            if (planned.isCardio) planned else planned.copy(sets = listOf(PlannedSet()))
+        }
+        viewModelScope.launch { workoutRepository?.addPlannedExercises(exercises, dateKey, atStart) }
+    }
+
     /** Adds a suggested machine to today's plan with the prescribed number of empty sets. */
     fun addSuggestedExercise(item: ExerciseItem, sets: Int) {
         val today = LocalDate.now()
@@ -562,6 +572,16 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun updateRpe(exerciseId: UUID, setId: UUID, value: String) {
         updateSet(exerciseId, setId, rpe = value)
+    }
+
+    fun setSimpleLogging(enabled: Boolean) {
+        viewModelScope.launch {
+            workoutRepository?.updatePreferences { it.copy(simpleLogging = enabled, loggingGuideDismissed = false) }
+        }
+    }
+
+    fun dismissLoggingGuide() {
+        viewModelScope.launch { workoutRepository?.updatePreferences { it.copy(loggingGuideDismissed = true) } }
     }
 
     private fun updateSet(

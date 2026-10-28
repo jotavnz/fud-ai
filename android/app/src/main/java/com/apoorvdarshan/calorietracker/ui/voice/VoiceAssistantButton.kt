@@ -21,7 +21,7 @@ import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 
 /** The shared floating entry point on Home and the workout diary. */
 @Composable
-fun VoiceAssistantButton(onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp = 60.dp) {
+fun VoiceAssistantButton(onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp = 60.dp, paused: Boolean = false) {
     val label = stringResource(R.string.voice_talk_to_fud_ai)
     Box(
         modifier
@@ -42,7 +42,8 @@ fun VoiceAssistantButton(onClick: () -> Unit, modifier: Modifier = Modifier, siz
                 scaleX = 1f / 0.56f
                 scaleY = 1f / 0.56f
             },
-            clearBackground = true
+            clearBackground = true,
+            paused = paused
         )
     }
 }

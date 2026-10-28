@@ -402,6 +402,10 @@ fun SettingsScreen(
     val latestMeasurement by container.bodyMeasurementRepository.latest.collectAsState(initial = null)
 
     var sheet by remember { mutableStateOf<SettingsSheet?>(null) }
+    var showCycle by remember { mutableStateOf(false) }
+    if (showCycle) {
+        com.apoorvdarshan.calorietracker.ui.cycle.CycleScreen(container = container, onDismiss = { showCycle = false })
+    }
     var showNutritionImport by remember { mutableStateOf(false) }
     if (showNutritionImport) {
         HealthNutritionImportDialog(container) { showNutritionImport = false }
@@ -1208,6 +1212,26 @@ fun SettingsScreen(
                     icon = Icons.Outlined.FitnessCenter,
                     inlineMenu = true
                 ) { sheet = SettingsSheet.WORKOUT_SPLIT }
+                HorizontalDivider()
+                ToggleRow(
+                    stringResource(R.string.settings_simple_logging),
+                    ui.workoutSimpleLogging,
+                    icon = Icons.Outlined.Speed,
+                    onChange = vm::setWorkoutSimpleLogging
+                )
+                Text(
+                    stringResource(R.string.settings_simple_logging_footer),
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.cycle_menu),
+                    "",
+                    icon = Icons.Outlined.Favorite
+                ) { showCycle = true }
                 HorizontalDivider()
                 SettingRow(
                     stringResource(R.string.settings_rpe_scale),

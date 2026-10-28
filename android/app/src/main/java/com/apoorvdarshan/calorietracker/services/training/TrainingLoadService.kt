@@ -134,6 +134,11 @@ class TrainingAlertsWorker(context: Context, params: WorkerParameters) : Corouti
                 if (it is kotlinx.coroutines.CancellationException) throw it
                 Log.w("FudAITrainingAlerts", "Overreaching check failed: ${it.javaClass.simpleName}")
             }
+        runCatching { CoachNudges.checkAndNotify(container) }
+            .onFailure {
+                if (it is kotlinx.coroutines.CancellationException) throw it
+                Log.w("FudAITrainingAlerts", "Coach nudges failed: ${it.javaClass.simpleName}")
+            }
         return Result.success()
     }
 

@@ -313,6 +313,8 @@ class AppContainer(app: FudAIApp) {
     val weightRepository = WeightRepository(prefs, profileRepository, health)
     val bodyFatRepository = BodyFatRepository(prefs, profileRepository, health)
     val bodyMeasurementRepository = BodyMeasurementRepository(prefs)
+    val pantryRepository = com.apoorvdarshan.calorietracker.data.PantryRepository(prefs)
+    val cycleRepository = com.apoorvdarshan.calorietracker.data.CycleRepository(prefs)
     val chatRepository = ChatRepository(prefs)
     val waterRepository = WaterRepository(prefs)
     val fastingRepository = FastingRepository(prefs)

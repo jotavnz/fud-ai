@@ -28,6 +28,8 @@
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <!-- Sleep from any watch or ring app (Samsung Health, Oura, ...) and heart rate for fatigue. -->
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <!-- Opt-in cycle tracking: periods other apps (Flo, Samsung Health, …) share. Read only. -->
+    <uses-permission android:name="android.permission.health.READ_MENSTRUATION" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <!-- Optional: imports workouts other apps (Garmin Connect, Strava, …) shared with Health Connect. -->
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pantry_title">Pantry</string>
+    <string name="pantry_subtitle">What you have at home. Coach uses it to suggest meals and your shopping list.</string>
+    <string name="pantry_menu">Pantry &amp; groceries</string>
+    <string name="pantry_close">Close</string>
+    <string name="pantry_add">Add</string>
+    <string name="pantry_scan">Scan barcode</string>
+    <string name="pantry_receipt">Receipt photo</string>
+    <string name="pantry_coach_cook">What can I cook with this?</string>
+    <string name="pantry_coach_shop">What should I buy next?</string>
+    <string name="pantry_coach_cook_prompt">Look at what I have in my pantry and suggest 3 meals I can make now that fit what I still have left of my calories and macros today. Use first what expires soonest, and say what I would be missing, if anything.</string>
+    <string name="pantry_coach_shop_prompt">Look at my pantry, my recent grocery shops and what I usually eat, and build my shopping list for the next shop. Group it by store section, keep it in line with my goals and budget, and summarize what I spent recently.</string>
+    <string name="pantry_all">All · %1$d</string>
+    <string name="pantry_fridge">Fridge</string>
+    <string name="pantry_freezer">Freezer</string>
+    <string name="pantry_pantry">Cupboard</string>
+    <string name="pantry_empty">Nothing here yet. Add what you have, scan a barcode, or upload a grocery receipt.</string>
+    <string name="pantry_expired">Expired</string>
+    <string name="pantry_today">Today</string>
+    <string name="pantry_days_left">%1$d d</string>
+    <string name="pantry_used">Used up</string>
+    <string name="pantry_spending_title">Groceries, last 30 days</string>
+    <string name="pantry_spending_none">No totals yet</string>
+    <string name="pantry_add_title">Add to pantry</string>
+    <string name="pantry_edit_title">Edit item</string>
+    <string name="pantry_name">Name</string>
+    <string name="pantry_quantity">Quantity (e.g. 6, 500 g, 1 bottle)</string>
+    <string name="pantry_where">Where is it?</string>
+    <string name="pantry_best_before">Eat within</string>
+    <string name="pantry_in_days">%1$d days</string>
+    <string name="pantry_no_date">No date</string>
+    <string name="pantry_reading_receipt">Reading the receipt…</string>
+    <string name="pantry_looking_up">Looking up the product…</string>
+    <string name="pantry_receipt_failed">Could not read that receipt. Try a sharper, flat photo with the whole receipt visible.</string>
+    <string name="pantry_receipt_review">Check the receipt</string>
+    <string name="pantry_receipt_empty">No food lines were found on this receipt.</string>
+    <string name="pantry_receipt_save">Add to pantry</string>
+    <string name="pantry_shopping_title">Shopping list</string>
+    <string name="pantry_shopping_hint">Things marked as used up land here. Tick what you bought and move it to the pantry.</string>
+    <string name="pantry_shopping_add_hint">Add something to buy</string>
+    <string name="pantry_shopping_stock">Move bought items to the pantry</string>
+    <string name="nudge_pantry_title">Use these soon</string>
+    <string name="nudge_pantry_text">%1$s should be eaten by tomorrow. Ask Coach for a quick meal with them.</string>
+    <string name="nudge_comeback_title">Shall we get back to it, gently?</string>
+    <string name="nudge_comeback_text">It has been %1$d days since your last workout. A 15-minute session counts. Coach can plan an easy one for today.</string>
+</resources>

@@ -483,7 +483,11 @@ class AndroidVoiceAppPorts(
                 ExerciseRepository.get(container.appContext)
                     .includingActivities(workouts.customActivities + workouts.userExercises)
                     .exercises
-            }
+            },
+            pantryItems = container.pantryRepository.snapshot(),
+            groceryPurchases = container.pantryRepository.purchaseSnapshot(),
+            shoppingList = container.pantryRepository.shoppingSnapshot(),
+            cycle = container.cycleRepository.coachSnapshot()
         )
     }
 

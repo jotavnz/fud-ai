@@ -54,6 +54,9 @@ class AppNavigator {
     /** Coach should start the goal conversation when it next shows. */
     val pendingCoachGoalInterview = MutableStateFlow(false)
 
+    /** A message Coach sends as the user when it next shows (e.g. "build me a beginner routine"). */
+    val pendingCoachMessage = MutableStateFlow<String?>(null)
+
     /** Settings asked to replay the app tour; the nav host shows Home and starts it. */
     val tourRequested = MutableStateFlow(false)
 
@@ -77,6 +80,12 @@ class AppNavigator {
     /** Opens Coach and starts the conversation where the user explains their goal. */
     fun showCoachGoalInterview() {
         pendingCoachGoalInterview.value = true
+        showTab(FudAIRoutes.COACH)
+    }
+
+    /** Opens Coach and sends [text] as the user's message. */
+    fun showCoachMessage(text: String) {
+        pendingCoachMessage.value = text
         showTab(FudAIRoutes.COACH)
     }
 

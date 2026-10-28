@@ -149,6 +149,14 @@ class WorkoutRepository(
         }
     }
 
+    /** Adds several exercises to a day, before the others (a warm-up) or after them (a cool-down). */
+    suspend fun addPlannedExercises(exercises: List<PlannedExercise>, dateKey: String, atStart: Boolean) {
+        updatePlan(WorkoutDate.requireKey(dateKey)) { plan ->
+            val fresh = exercises.filter { new -> plan.exercises.none { it.itemId == new.itemId } }
+            plan.copy(exercises = if (atStart) fresh + plan.exercises else plan.exercises + fresh)
+        }
+    }
+
     /** Appends a prepared diary entry (a confirmed Coach proposal); its id makes a repeat a no-op. */
     suspend fun addPlannedExercise(exercise: PlannedExercise, dateKey: String) {
         updatePlan(WorkoutDate.requireKey(dateKey)) { plan ->

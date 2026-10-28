@@ -188,6 +188,13 @@ fun CoachScreen(container: AppContainer) {
             vm.startGoalInterview()
         }
     }
+    val pendingMessage by container.navigator.pendingCoachMessage.collectAsState()
+    LaunchedEffect(pendingMessage) {
+        pendingMessage?.let { text ->
+            container.navigator.pendingCoachMessage.value = null
+            vm.send(text)
+        }
+    }
 
     // Dismiss the keyboard when the USER drags the chat (DragInteraction only —
     // the auto-scroll after sending a message must not steal focus).

@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Kitchen
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import java.util.UUID
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -233,6 +235,7 @@ fun HomeScreen(
 ) {
     val vm: HomeViewModel = viewModel(factory = HomeViewModel.Factory(container))
     val ui by vm.ui.collectAsState()
+    val homeListState = androidx.compose.foundation.lazy.rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
 DisposableEffect(lifecycleOwner, vm) {
         val observer = LifecycleEventObserver { _, event ->
@@ -277,6 +280,8 @@ DisposableEffect(lifecycleOwner, vm) {
     var showNutritionDetail by remember { mutableStateOf(false) }
     var showCustomWaterLog by remember { mutableStateOf(false) }
     var showFastingStart by remember { mutableStateOf(false) }
+    var showPantry by remember { mutableStateOf(false) }
+    var showCycle by remember { mutableStateOf(false) }
     var editingFast by remember { mutableStateOf<FastingSession?>(null) }
     var pendingDiaryDeletion by remember { mutableStateOf<HomeDiaryItem?>(null) }
     var showFastingQuickActionDisabled by remember { mutableStateOf(false) }
@@ -511,7 +516,8 @@ DisposableEffect(lifecycleOwner, vm) {
     val actionSize = 60.dp
     val actionGap = 12.dp
     val actionBottom = 100.dp
-    val diaryBottomClearance = actionBottom + actionSize + actionGap +
+    // The add button plus the 48 dp voice orb stacked above it.
+    val diaryBottomClearance = actionBottom + actionSize + actionGap + 48.dp + actionGap +
         WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     // No topBar: the empty TopAppBar used to act as the status-bar spacer, but the
@@ -589,6 +595,7 @@ DisposableEffect(lifecycleOwner, vm) {
             modifier = Modifier.fillMaxSize().padding(padding)
         ) {
         LazyColumn(
+            state = homeListState,
             modifier = Modifier
                 .fillMaxSize().testTag("home.diary"),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
@@ -801,17 +808,22 @@ DisposableEffect(lifecycleOwner, vm) {
         // Transparent floating controls preserve the full scrolling diary. Extra end
         // padding lets its final card scroll clear of both buttons and the docked tabs.
         if (!selectionMode) {
-        Row(
+        // The voice orb sits above the add button, out of the way of the cards' content.
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
                 .padding(end = 24.dp, bottom = actionBottom),
-            horizontalArrangement = Arrangement.spacedBy(actionGap),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(actionGap),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (!voiceUi.visible) {
                 Box(Modifier.tourTarget(TourTarget.VOICE)) {
-                    VoiceAssistantButton(onClick = container.voiceAssistant::requestStart)
+                    VoiceAssistantButton(
+                        onClick = container.voiceAssistant::requestStart,
+                        size = 48.dp,
+                        paused = homeListState.isScrollInProgress
+                    )
                 }
             }
             Box {
@@ -900,6 +912,24 @@ DisposableEffect(lifecycleOwner, vm) {
                                 ) { addMenuDestination = AddMenuDestination.Fasting }
                             }
                         }
+                        SheetHairline()
+                        SheetGlassDropdownMenuItem(
+                            label = stringResource(R.string.pantry_menu),
+                            leadingIcon = Icons.Filled.Kitchen
+                        ) {
+                            showAddMenu = false
+                            showPantry = true
+                        }
+                        // Cycle tracking is offered unless the profile says male.
+                        if (ui.profile?.gender != com.apoorvdarshan.calorietracker.models.Gender.MALE) {
+                            SheetGlassDropdownMenuItem(
+                                label = stringResource(R.string.cycle_menu),
+                                leadingIcon = Icons.Filled.Favorite
+                            ) {
+                                showAddMenu = false
+                                showCycle = true
+                            }
+                        }
                     }
 
                     is AddMenuDestination.FoodGroup -> {
@@ -943,6 +973,14 @@ DisposableEffect(lifecycleOwner, vm) {
         }
         }
         }
+    }
+
+    if (showCycle) {
+        com.apoorvdarshan.calorietracker.ui.cycle.CycleScreen(container = container, onDismiss = { showCycle = false })
+    }
+
+    if (showPantry) {
+        com.apoorvdarshan.calorietracker.ui.pantry.PantryScreen(container = container, onDismiss = { showPantry = false })
     }
 
     if (showText) {

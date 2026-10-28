@@ -81,7 +81,11 @@ class ChatService(
         /** The app language's English name ("Spanish"), so replies match the app. */
         appLanguage: String? = null,
         /** The card's Log button as the user sees it ("Registrar"), so the reply can point at it. */
-        logButtonLabel: String? = null
+        logButtonLabel: String? = null,
+        pantryItems: List<com.apoorvdarshan.calorietracker.models.PantryItem> = emptyList(),
+        groceryPurchases: List<com.apoorvdarshan.calorietracker.models.GroceryPurchase> = emptyList(),
+        shoppingList: List<com.apoorvdarshan.calorietracker.models.ShoppingItem> = emptyList(),
+        cycle: com.apoorvdarshan.calorietracker.data.CycleRepository.Snapshot? = null
     ): String {
         val energyUnit = prefs.energyUnit.first()
         val userContext = prefs.userContext.first()
@@ -139,7 +143,11 @@ class ChatService(
             exerciseLibrary = exerciseLibrary,
             proposals = proposals,
             logProposals = logProposals,
-            goalProposals = goalProposals
+            goalProposals = goalProposals,
+            pantryItems = pantryItems,
+            groceryPurchases = groceryPurchases,
+            shoppingList = shoppingList,
+            cycle = cycle
         )
 
         if (hosted != null && prefs.aiAccessMode.first() == AiAccessMode.HOSTED) {
@@ -347,11 +355,22 @@ class ChatService(
         lines.add("- \"What did I bench last?\" / one-lift trends → call get_exercise_lift_history(exercise)")
         lines.add("- \"What workout do I have planned?\" → call get_workout_plans")
         lines.add("- A photo of a gym machine, or \"is this exercise in my library?\" → identify the exercise, then call search_exercise_library(query)")
+        lines.add("- \"What can I cook?\", \"what should I buy?\", or grocery spending → call get_pantry, then suggest meals from what they have that fit today's remaining calories and macros, or a shopping list")
         lines.add("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
         if (canProposeWorkoutChanges) {
             lines.add("- \"Add this to my workout\" → search_exercise_library, then propose_add_exercise_to_day. A gym machine that is not in the library → propose_custom_exercise. These only show the user a card to confirm; nothing is saved until they tap Add, so never say a change was made.")
         }
         lines.add("Do NOT call tools for questions you can answer from the profile/forecast below.")
+        lines.add("")
+        lines.add("## Coach like an attentive personal trainer, not a generic one")
+        lines.add("- Personalize: use the user's history, level, age, body weight, injuries and goals; never hand out a one-size-fits-all routine.")
+        lines.add("- Training style: even if no split is configured, infer it from recent sessions (full body, upper/lower, push/pull/legs, calisthenics, cardio-only, strength vs hypertrophy rep ranges). Name it, and point out incoherent patterns (same muscle hard twice within 48 h, much more pushing than pulling, legs skipped for two weeks, too many sets for a beginner) with a concrete fix for the next sessions.")
+        lines.add("- Before a session the user plans or asks about: suggest a short dynamic warm-up for the muscles of the day (get_session_extras kind=warmup; gentle=true for beginners, seniors, sedentary or higher body weight).")
+        lines.add("- After a hard session (many sets rated hard, unusual volume, heavy legs): suggest a cool-down (get_session_extras kind=cooldown, heavy_legs when relevant), hydration and protein, and an easy day next. Present cool-downs as comfort, not as proven injury or cramp prevention.")
+        lines.add("- Beginners, sedentary people and older adults: start gently (2–3 days a week, 1–2 sets of 10–15, machines or bodyweight, effort 'good' not 'at the limit'), add joint stability and balance work (kind=balance), progress one thing at a time, and keep sessions short so they stay consistent instead of burning out.")
+        lines.add("- Offer deep core, posture, mobility, hypopressive and calisthenics work when it fits the user's goals or what they already do (kind=deep_core, posture, mobility, hypopressive, calisthenics). Hypopressives are not a treatment; refer pelvic floor problems, pregnancy or postpartum to a physiotherapist.")
+        lines.add("- If the user has been away for over a week, welcome them back without guilt and offer a shorter, easier session.")
+        lines.add("- Women who track their cycle (get_cycle): adapt to today's symptoms (cramps, fatigue, heavy flow) with lower intensity, low-impact cardio or mobility; keep training normally when they feel fine. Phase is context only.")
         lines.add("")
         when (logMode) {
             LogMode.TOOL -> {

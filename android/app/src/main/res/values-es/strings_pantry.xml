@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pantry_title">Despensa</string>
+    <string name="pantry_subtitle">Lo que tienes en casa. El Coach lo usa para sugerirte comidas y tu lista del mercado.</string>
+    <string name="pantry_menu">Despensa y mercado</string>
+    <string name="pantry_close">Cerrar</string>
+    <string name="pantry_add">Añadir</string>
+    <string name="pantry_scan">Escanear código</string>
+    <string name="pantry_receipt">Foto de factura</string>
+    <string name="pantry_coach_cook">¿Qué cocino con esto?</string>
+    <string name="pantry_coach_shop">¿Qué compro en el próximo mercado?</string>
+    <string name="pantry_coach_cook_prompt">Mira lo que tengo en mi despensa y sugiéreme 3 comidas que pueda hacer ahora y que encajen con las calorías y macros que me quedan hoy. Usa primero lo que vence antes y dime qué me faltaría, si falta algo.</string>
+    <string name="pantry_coach_shop_prompt">Mira mi despensa, mis últimas compras y lo que suelo comer, y arma mi lista para el próximo mercado. Agrúpala por sección del supermercado, que vaya con mis objetivos y presupuesto, y resúmeme lo que gasté últimamente.</string>
+    <string name="pantry_all">Todo · %1$d</string>
+    <string name="pantry_fridge">Nevera</string>
+    <string name="pantry_freezer">Congelador</string>
+    <string name="pantry_pantry">Alacena</string>
+    <string name="pantry_empty">Aún no hay nada. Añade lo que tienes, escanea un código o sube la foto de una factura del mercado.</string>
+    <string name="pantry_expired">Vencido</string>
+    <string name="pantry_today">Hoy</string>
+    <string name="pantry_days_left">%1$d d</string>
+    <string name="pantry_used">Se acabó</string>
+    <string name="pantry_spending_title">Mercado, últimos 30 días</string>
+    <string name="pantry_spending_none">Aún sin totales</string>
+    <string name="pantry_add_title">Añadir a la despensa</string>
+    <string name="pantry_edit_title">Editar</string>
+    <string name="pantry_name">Nombre</string>
+    <string name="pantry_quantity">Cantidad (ej. 6, 500 g, 1 botella)</string>
+    <string name="pantry_where">¿Dónde está?</string>
+    <string name="pantry_best_before">Consumir en</string>
+    <string name="pantry_in_days">%1$d días</string>
+    <string name="pantry_no_date">Sin fecha</string>
+    <string name="pantry_reading_receipt">Leyendo la factura…</string>
+    <string name="pantry_looking_up">Buscando el producto…</string>
+    <string name="pantry_receipt_failed">No pude leer esa factura. Prueba con una foto más nítida, plana y con la factura completa.</string>
+    <string name="pantry_receipt_review">Revisa la factura</string>
+    <string name="pantry_receipt_empty">No encontré alimentos en esta factura.</string>
+    <string name="pantry_receipt_save">Añadir a la despensa</string>
+    <string name="pantry_shopping_title">Lista de compras</string>
+    <string name="pantry_shopping_hint">Lo que marcas como "se acabó" llega aquí. Marca lo que compraste y pásalo a la despensa.</string>
+    <string name="pantry_shopping_add_hint">Añade algo que comprar</string>
+    <string name="pantry_shopping_stock">Pasar lo comprado a la despensa</string>
+    <string name="nudge_pantry_title">Úsalos pronto</string>
+    <string name="nudge_pantry_text">%1$s conviene comerlo antes de mañana. Pídele al Coach una comida rápida con eso.</string>
+    <string name="nudge_comeback_title">¿Volvemos, con calma?</string>
+    <string name="nudge_comeback_text">Han pasado %1$d días desde tu último entrenamiento. Una sesión de 15 minutos cuenta. El Coach puede armarte una suave para hoy.</string>
+</resources>

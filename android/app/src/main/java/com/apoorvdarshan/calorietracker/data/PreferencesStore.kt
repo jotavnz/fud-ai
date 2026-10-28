@@ -22,6 +22,12 @@ import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
+import com.apoorvdarshan.calorietracker.models.GroceryPurchase
+import com.apoorvdarshan.calorietracker.models.CyclePeriod
+import com.apoorvdarshan.calorietracker.models.CycleSettings
+import com.apoorvdarshan.calorietracker.models.CycleSymptoms
+import com.apoorvdarshan.calorietracker.models.PantryItem
+import com.apoorvdarshan.calorietracker.models.ShoppingItem
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
@@ -1654,6 +1660,63 @@ class PreferencesStore(
         transform(current, parseIdList(prefs[Keys.DELETED_BODY_FAT_ENTRY_IDS]).toSet())
     }
 
+    // -- Pantry (food at home) and grocery purchases ----------------------
+    val pantryItems: Flow<List<PantryItem>> = jsonListFlow(Keys.PANTRY_ITEMS, PantryItem.serializer())
+
+    suspend fun updatePantryItems(transform: (List<PantryItem>) -> List<PantryItem>): List<PantryItem> =
+        updateJsonList(Keys.PANTRY_ITEMS, PantryItem.serializer(), transform)
+
+    val shoppingList: Flow<List<ShoppingItem>> = jsonListFlow(Keys.SHOPPING_LIST, ShoppingItem.serializer())
+
+    suspend fun updateShoppingList(transform: (List<ShoppingItem>) -> List<ShoppingItem>): List<ShoppingItem> =
+        updateJsonList(Keys.SHOPPING_LIST, ShoppingItem.serializer(), transform)
+
+    /** Last day (ISO) each coach nudge notification was shown, so each fires at most once a day/week. */
+    val coachNudgeDates: Flow<Map<String, String>> = ds.data.map { prefs ->
+        prefs[Keys.COACH_NUDGE_DATES]?.let {
+            runCatching { json.decodeFromString<Map<String, String>>(it) }.getOrNull()
+        } ?: emptyMap()
+    }
+
+    suspend fun setCoachNudgeDate(kind: String, date: String) {
+        ds.edit { prefs ->
+            val current = prefs[Keys.COACH_NUDGE_DATES]?.let {
+                runCatching { json.decodeFromString<Map<String, String>>(it) }.getOrNull()
+            } ?: emptyMap()
+            prefs[Keys.COACH_NUDGE_DATES] = json.encodeToString(
+                kotlinx.serialization.builtins.MapSerializer(
+                    kotlinx.serialization.serializer<String>(),
+                    kotlinx.serialization.serializer<String>()
+                ),
+                current + (kind to date)
+            )
+        }
+    }
+
+    val groceryPurchases: Flow<List<GroceryPurchase>> = jsonListFlow(Keys.GROCERY_PURCHASES, GroceryPurchase.serializer())
+
+    suspend fun updateGroceryPurchases(transform: (List<GroceryPurchase>) -> List<GroceryPurchase>): List<GroceryPurchase> =
+        updateJsonList(Keys.GROCERY_PURCHASES, GroceryPurchase.serializer(), transform)
+
+    // -- Menstrual cycle (opt-in, local only) -----------------------------
+    val cycleSettings: Flow<CycleSettings> = ds.data.map { prefs ->
+        prefs[Keys.CYCLE_SETTINGS]?.let { runCatching { json.decodeFromString<CycleSettings>(it) }.getOrNull() } ?: CycleSettings()
+    }
+
+    suspend fun setCycleSettings(settings: CycleSettings) {
+        ds.edit { it[Keys.CYCLE_SETTINGS] = json.encodeToString(CycleSettings.serializer(), settings) }
+    }
+
+    val cyclePeriods: Flow<List<CyclePeriod>> = jsonListFlow(Keys.CYCLE_PERIODS, CyclePeriod.serializer())
+
+    suspend fun updateCyclePeriods(transform: (List<CyclePeriod>) -> List<CyclePeriod>): List<CyclePeriod> =
+        updateJsonList(Keys.CYCLE_PERIODS, CyclePeriod.serializer(), transform)
+
+    val cycleSymptoms: Flow<List<CycleSymptoms>> = jsonListFlow(Keys.CYCLE_SYMPTOMS, CycleSymptoms.serializer())
+
+    suspend fun updateCycleSymptoms(transform: (List<CycleSymptoms>) -> List<CycleSymptoms>): List<CycleSymptoms> =
+        updateJsonList(Keys.CYCLE_SYMPTOMS, CycleSymptoms.serializer(), transform)
+
     // -- Body measurement (circumference) entries --------------------------
     val bodyMeasurements: Flow<List<BodyMeasurement>> = jsonListFlow(Keys.BODY_MEASUREMENTS, BodyMeasurement.serializer())
 
@@ -1865,6 +1928,13 @@ class PreferencesStore(
         val WEIGHT_ENTRIES = stringPreferencesKey("weightEntries")
         val BODY_FAT_ENTRIES = stringPreferencesKey("bodyFatEntries")
         val BODY_MEASUREMENTS = stringPreferencesKey("bodyMeasurements")
+        val PANTRY_ITEMS = stringPreferencesKey("pantryItems")
+        val SHOPPING_LIST = stringPreferencesKey("shoppingList")
+        val COACH_NUDGE_DATES = stringPreferencesKey("coachNudgeDates")
+        val CYCLE_SETTINGS = stringPreferencesKey("cycleSettings")
+        val CYCLE_PERIODS = stringPreferencesKey("cyclePeriods")
+        val CYCLE_SYMPTOMS = stringPreferencesKey("cycleSymptoms")
+        val GROCERY_PURCHASES = stringPreferencesKey("groceryPurchases")
         val CHAT_HISTORY = stringPreferencesKey("coachChatHistory")
         val WIDGET_SNAPSHOT = stringPreferencesKey("widget_snapshot_v1")
         val VOICE_PROVIDER = stringPreferencesKey("voiceAssistantProvider")

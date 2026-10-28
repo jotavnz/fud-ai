@@ -56,7 +56,9 @@ fun LiveOrb(
     tint: Color,
     modifier: Modifier = Modifier,
     level: () -> Float = { 0f },
-    clearBackground: Boolean = false
+    clearBackground: Boolean = false,
+    /** Holds the orb still, e.g. while the list behind it scrolls, so the shader does not compete for frames. */
+    paused: Boolean = false
 ) {
     val currentMode by rememberUpdatedState(mode)
     val currentLevel by rememberUpdatedState(level)
@@ -64,7 +66,7 @@ fun LiveOrb(
     var frame by remember { mutableStateOf(motion.still(mode)) }
     val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val visible = lifecycle.isAtLeast(Lifecycle.State.STARTED)
-    val animate = visible && ValueAnimator.areAnimatorsEnabled()
+    val animate = visible && !paused && ValueAnimator.areAnimatorsEnabled()
 
     LaunchedEffect(animate) {
         if (!animate) {

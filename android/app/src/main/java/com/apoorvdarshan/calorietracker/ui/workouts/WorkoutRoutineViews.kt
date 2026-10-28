@@ -219,10 +219,13 @@ private fun WorkoutRestPill(
  * Starts (or restarts) rest after one set, for sets whose reps were already filled in, such as
  * those planned by a routine.
  */
+/** Width of the per-set rest button, shared with the set header's "Rest" column. */
+internal val WorkoutRestSetButtonWidth = 44.dp
+
 @Composable
 internal fun WorkoutRestSetButton(setNumber: Int, isResting: Boolean, onClick: () -> Unit) {
     val description = stringResource(R.string.workout_rest_start_after_set, setNumber)
-    IconButton(onClick = onClick, modifier = Modifier.size(32.dp).semantics { contentDescription = description }) {
+    IconButton(onClick = onClick, modifier = Modifier.size(WorkoutRestSetButtonWidth).semantics { contentDescription = description }) {
         Icon(
             if (isResting) Icons.Outlined.HourglassTop else Icons.Outlined.HourglassEmpty,
             contentDescription = null,

@@ -131,6 +131,8 @@ import com.apoorvdarshan.calorietracker.models.PlannedExercise
 import com.apoorvdarshan.calorietracker.models.importedWorkoutsOn
 import com.apoorvdarshan.calorietracker.models.ExerciseTimerAction
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
+import com.apoorvdarshan.calorietracker.models.WorkoutSetFeel
+import com.apoorvdarshan.calorietracker.models.ExerciseRoles
 import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
 import com.apoorvdarshan.calorietracker.models.WorkoutBurnEstimator
 import com.apoorvdarshan.calorietracker.models.WorkoutSetInput
@@ -225,6 +227,24 @@ internal fun WorkoutDiaryScreen(
     val moveUpLabel = stringResource(R.string.workout_move_up)
     val moveDownLabel = stringResource(R.string.workout_move_down)
     val addWorkoutLabel = stringResource(R.string.wk_cd_add_workout)
+    val beginnerRoutinePrompt = stringResource(R.string.wk_coach_beginner_prompt)
+    var dismissedExtras by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(setOf<String>()) }
+    var guidedVisible by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    if (guidedVisible) {
+        GuidedWorkoutScreen(
+            exercises = state.exercises,
+            weightUnit = state.weightUnit,
+            rpeScale = state.preferences.rpeScale,
+            restTimer = restTimer,
+            visualFor = { exerciseRepository.visualFor(it.asExerciseItem(), state.visualGender) },
+            onWeight = { exerciseId, setId, value -> viewModel.updateWeight(exerciseId, setId, value) },
+            onReps = { exerciseId, setId, value -> viewModel.updateReps(exerciseId, setId, value) },
+            onRpe = { exerciseId, setId, value -> viewModel.updateRpe(exerciseId, setId, value) },
+            onStartRest = if (restAvailable) { exerciseId, setId -> viewModel.startRest(exerciseId, setId) } else null,
+            onSkipRest = { viewModel.skipRest() },
+            onDismiss = { guidedVisible = false }
+        )
+    }
 
     fun dismissKeyboard() {
         focusManager.clearFocus()
@@ -397,11 +417,49 @@ internal fun WorkoutDiaryScreen(
                 )
             }
 
+            if (state.preferences.simpleLogging && state.exercises.any { !it.isCardio } &&
+                state.selectedDate == java.time.LocalDate.now()
+            ) {
+                item(key = "workout-guided-entry") {
+                    com.apoorvdarshan.calorietracker.ui.components.FudGlassPrimaryButton(
+                        text = stringResource(R.string.wk_guided_start),
+                        onClick = { guidedVisible = true }
+                    )
+                }
+            }
+            // Warm-up before the day's lifts and a cool-down after a hard session, from the catalog.
+            val sessionExtras = sessionExtrasFor(state.exercises, gentle = state.preferences.simpleLogging, rpeScale = state.preferences.rpeScale)
+            sessionExtras?.let { extras ->
+                val extrasKey = "${state.selectedDate}-${extras.kind}"
+                if (extrasKey !in dismissedExtras) {
+                    val items = extras.picks.mapNotNull { exerciseRepository.byId[it.id] }
+                    if (items.isNotEmpty()) item(key = "workout-session-extras") {
+                        WorkoutSessionExtrasCard(
+                            kind = extras.kind,
+                            names = items.map { it.name },
+                            onAdd = {
+                                viewModel.addSessionExtras(items, atStart = extras.kind == ExerciseRoles.Kind.WARMUP)
+                                dismissedExtras = dismissedExtras + extrasKey
+                            },
+                            onDismiss = { dismissedExtras = dismissedExtras + extrasKey }
+                        )
+                    }
+                }
+            }
+            if (state.preferences.simpleLogging && !state.preferences.loggingGuideDismissed &&
+                state.exercises.any { !it.isCardio }
+            ) {
+                item(key = "workout-logging-guide") {
+                    WorkoutLoggingGuide(onDismiss = { viewModel.dismissLoggingGuide() })
+                }
+            }
             if (state.exercises.isEmpty()) {
                 item(key = "workout-empty") {
                     WorkoutEmptyState(
                         splitTitle = workoutSplitLabel(state.preferences.split),
+                        simpleLogging = state.preferences.simpleLogging,
                         onAdd = { addMenuExpanded = true },
+                        onAskCoach = { container.navigator.showCoachMessage(beginnerRoutinePrompt) },
                         modifier = Modifier.workoutDaySwipe(
                             selectedDate = state.selectedDate,
                             onMove = { viewModel.moveDate(it) }
@@ -454,6 +512,7 @@ internal fun WorkoutDiaryScreen(
                             visual = exerciseRepository.visualFor(exercise.asExerciseItem(), state.visualGender),
                             weightUnit = state.weightUnit,
                             rpeScale = state.preferences.rpeScale,
+                            simpleLogging = state.preferences.simpleLogging,
                             editingDate = state.selectedDate,
                             isSaved = isSaved,
                             lastTimeSummary = viewModel.lastExerciseLiftSummary(exercise.itemId, exercise.name),
@@ -481,7 +540,7 @@ internal fun WorkoutDiaryScreen(
 
             // Real scrollable space lets the final set move clear of the IME.
             item(key = "workout-extra-space") {
-                Spacer(Modifier.height(BottomNavScrollPadding + 100.dp))
+                Spacer(Modifier.height(BottomNavScrollPadding + 160.dp))
             }
         }
 
@@ -514,19 +573,24 @@ internal fun WorkoutDiaryScreen(
                 .padding(top = 8.dp, end = 16.dp)
         )
 
-        Row(
+        // The voice orb sits above the add button, out of the way of the cards' content.
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
                 .padding(end = 24.dp, bottom = 100.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (!voiceUi.visible) {
-                VoiceAssistantButton(onClick = {
-                    dismissKeyboard()
-                    container.voiceAssistant.requestStart()
-                })
+                VoiceAssistantButton(
+                    onClick = {
+                        dismissKeyboard()
+                        container.voiceAssistant.requestStart()
+                    },
+                    size = 48.dp,
+                    paused = listState.isScrollInProgress
+                )
             }
             Box {
                 Box(
@@ -1160,7 +1224,9 @@ private fun WorkoutMoveButton(
 @Composable
 private fun WorkoutEmptyState(
     splitTitle: String,
+    simpleLogging: Boolean,
     onAdd: () -> Unit,
+    onAskCoach: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     FudGlassSurface(
@@ -1180,11 +1246,15 @@ private fun WorkoutEmptyState(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    stringResource(R.string.wk_empty_hint, splitTitle),
+                    if (simpleLogging) stringResource(R.string.wk_empty_hint_simple)
+                    else stringResource(R.string.wk_empty_hint, splitTitle),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
                 )
+                if (simpleLogging) {
+                    FudGlassTextButton(text = stringResource(R.string.wk_ask_coach_routine), onClick = onAskCoach)
+                }
             }
         }
     }
@@ -1254,7 +1324,7 @@ private fun BoxScope.WorkoutExerciseSwipeBackground(offsetPx: Float, isSaved: Bo
     val icon = when {
         trailing -> Icons.Filled.DeleteOutline
         isSaved -> Icons.Filled.Bookmark
-        else -> Icons.Filled.Save
+        else -> Icons.Filled.BookmarkBorder
     }
     val label = when {
         trailing -> stringResource(R.string.action_delete)
@@ -1292,6 +1362,7 @@ private fun WorkoutExerciseCard(
     modifier: Modifier = Modifier,
     weightUnit: WorkoutWeightUnit,
     rpeScale: WorkoutRpeScale,
+    simpleLogging: Boolean = false,
     editingDate: LocalDate,
     isSaved: Boolean,
     lastTimeSummary: String?,
@@ -1408,7 +1479,16 @@ private fun WorkoutExerciseCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!exercise.isCardio) {
-                    Icon(Icons.Filled.Checklist, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(17.dp))
+                    if (simpleLogging) {
+                        Text(
+                            stringResource(R.string.wk_sets_label),
+                            color = AppColors.Calorie,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Icon(Icons.Filled.Checklist, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(17.dp))
+                    }
                     Spacer(Modifier.weight(1f))
                     IconButton(
                         onClick = { onSetCount(exercise.sets.size - 1) },
@@ -1442,7 +1522,7 @@ private fun WorkoutExerciseCard(
                         )
                     }
                 }
-                WorkoutExerciseTimer(exercise, onTimerAction)
+                WorkoutExerciseTimer(exercise, onTimerAction, showLabel = simpleLogging)
                 IconButton(onClick = onToggleSaved, modifier = Modifier.size(36.dp)) {
                     Icon(
                         if (isSaved) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
@@ -1462,6 +1542,7 @@ private fun WorkoutExerciseCard(
             }
 
             if (!exercise.isCardio) Column {
+                if (simpleLogging) WorkoutSetHeader(weightUnit = weightUnit, hasRest = onStartRest != null)
                 exercise.sets.forEachIndexed { index, set ->
                     key(editingDate, set.id) {
                         WorkoutSetRow(
@@ -1472,6 +1553,7 @@ private fun WorkoutExerciseCard(
                             onWeight = { onWeight(set.id, it) },
                             onReps = { onReps(set.id, it) },
                             onRpe = { onRpe(set.id, it) },
+                            simpleLogging = simpleLogging,
                             isResting = restingSetId == set.id,
                             onStartRest = onStartRest?.let { start -> { start(set.id) } }
                         )
@@ -1545,7 +1627,9 @@ private fun WorkoutEffortChip(
 @Composable
 private fun WorkoutExerciseTimer(
     exercise: PlannedExercise,
-    onAction: (ExerciseTimerAction) -> Unit
+    onAction: (ExerciseTimerAction) -> Unit,
+    /** Simple view names the stopwatch "Duration" before it starts. */
+    showLabel: Boolean = false
 ) {
     // Choosing an effort first stores an empty timer; it still reads as "Start timer".
     val timer = exercise.timer?.takeIf { it.hasStarted }
@@ -1587,7 +1671,16 @@ private fun WorkoutExerciseTimer(
                     tint = if (timer == null) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f) else AppColors.Calorie,
                     modifier = Modifier.size(19.dp)
                 )
-                if (timer != null) Text(time, color = AppColors.Calorie, fontSize = 9.sp, maxLines = 1)
+                if (timer != null) {
+                    Text(time, color = AppColors.Calorie, fontSize = if (showLabel) 10.sp else 9.sp, maxLines = 1)
+                } else if (showLabel) {
+                    Text(
+                        stringResource(R.string.wk_timer_label),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
+                        fontSize = 10.sp,
+                        maxLines = 1
+                    )
+                }
             }
         }
         SheetGlassDropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }, menuWidth = 200.dp) {
@@ -1645,6 +1738,7 @@ internal fun WorkoutSetRow(
     onWeight: (String) -> Unit,
     onReps: (String) -> Unit,
     onRpe: (String) -> Unit,
+    simpleLogging: Boolean = false,
     isResting: Boolean = false,
     onStartRest: (() -> Unit)? = null
 ) {
@@ -1679,6 +1773,18 @@ internal fun WorkoutSetRow(
             keyboardType = KeyboardType.Number,
             modifier = Modifier.weight(1f)
         )
+        if (simpleLogging) {
+            WorkoutSetFeelPicker(
+                setNumber = index + 1,
+                feel = WorkoutSetFeel.from(set.rpe, rpeScale),
+                onSelect = { feel ->
+                    onRpe(feel?.rpe(rpeScale).orEmpty())
+                    // Rating a finished set is the beginner's "done": start its rest too.
+                    if (feel != null && set.reps.isNotBlank()) onStartRest?.invoke()
+                },
+                modifier = Modifier.weight(1f)
+            )
+        } else {
         val rpeHelp = stringResource(when (rpeScale) {
             WorkoutRpeScale.STRENGTH -> R.string.workout_rpe_help_strength
             WorkoutRpeScale.CR10 -> R.string.workout_rpe_help_cr10
@@ -1695,8 +1801,216 @@ internal fun WorkoutSetRow(
             imeAction = ImeAction.Done,
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
+        }
         if (onStartRest != null) {
             WorkoutRestSetButton(setNumber = index + 1, isResting = isResting, onClick = onStartRest)
+        }
+    }
+}
+
+/** Column titles over the set rows, so "Set 1  60  10" reads as weight and reps. */
+@Composable
+private fun WorkoutSetHeader(weightUnit: WorkoutWeightUnit, hasRest: Boolean) {
+    val color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+        WorkoutSetHeaderTitle(stringResource(R.string.wk_header_set), color, Modifier.width(52.dp))
+        WorkoutSetHeaderTitle(stringResource(R.string.wk_header_weight, weightUnit.storageValue), color, Modifier.weight(1f))
+        WorkoutSetHeaderTitle(stringResource(R.string.wk_header_reps), color, Modifier.weight(1f))
+        WorkoutSetHeaderTitle(stringResource(R.string.wk_header_effort), color, Modifier.weight(1f))
+        if (hasRest) WorkoutSetHeaderTitle(stringResource(R.string.wk_header_rest), color, Modifier.width(WorkoutRestSetButtonWidth))
+    }
+}
+
+@Composable
+private fun WorkoutSetHeaderTitle(text: String, color: Color, modifier: Modifier) {
+    Text(
+        text,
+        color = color,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+    )
+}
+
+/** Easy / Good / Hard instead of a numeric RPE; the choice is stored as an RPE (see [WorkoutSetFeel]). */
+@Composable
+private fun WorkoutSetFeelPicker(
+    setNumber: Int,
+    feel: WorkoutSetFeel?,
+    onSelect: (WorkoutSetFeel?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = feel?.let { stringResource(it.labelRes) }
+    val description = stringResource(R.string.wk_cd_set_feel, setNumber, label ?: stringResource(R.string.wk_feel_question))
+    val tint = when (feel) {
+        null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f)
+        WorkoutSetFeel.EASY -> Color(0xFF2E7D32)
+        WorkoutSetFeel.GOOD -> AppColors.Calorie
+        WorkoutSetFeel.HARD -> Color(0xFFD32F2F)
+    }
+    Box(modifier) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .clip(RoundedCornerShape(11.dp))
+                .background(tint.copy(alpha = if (feel == null) 0.08f else 0.16f))
+                .clickable(role = Role.DropdownList) { expanded = true }
+                .semantics { contentDescription = description },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                label ?: stringResource(R.string.wk_feel_placeholder),
+                color = tint,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        SheetGlassDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, menuWidth = 280.dp) {
+            WorkoutSetFeel.entries.forEach { option ->
+                SheetGlassDropdownMenuItem(
+                    label = stringResource(option.labelRes) + " · " + stringResource(option.detailRes),
+                    selected = option == feel,
+                    reserveSelectionSlot = true,
+                    onClick = {
+                        expanded = false
+                        onSelect(option)
+                    }
+                )
+            }
+            if (feel != null) {
+                SheetGlassDropdownMenuItem(
+                    label = stringResource(R.string.wk_feel_clear),
+                    onClick = {
+                        expanded = false
+                        onSelect(null)
+                    }
+                )
+            }
+        }
+    }
+}
+
+private val WorkoutSetFeel.labelRes: Int
+    get() = when (this) {
+        WorkoutSetFeel.EASY -> R.string.wk_feel_easy
+        WorkoutSetFeel.GOOD -> R.string.wk_feel_good
+        WorkoutSetFeel.HARD -> R.string.wk_feel_hard
+    }
+
+private val WorkoutSetFeel.detailRes: Int
+    get() = when (this) {
+        WorkoutSetFeel.EASY -> R.string.wk_feel_easy_detail
+        WorkoutSetFeel.GOOD -> R.string.wk_feel_good_detail
+        WorkoutSetFeel.HARD -> R.string.wk_feel_hard_detail
+    }
+
+private class SessionExtras(val kind: ExerciseRoles.Kind, val picks: List<ExerciseRoles.Pick>)
+
+/**
+ * A warm-up for days with lifts planned but nothing done yet, or a cool-down once the session
+ * was hard (3+ sets rated hard, or 6+ logged leg sets). Null when the day already has one.
+ */
+private fun sessionExtrasFor(exercises: List<PlannedExercise>, gentle: Boolean, rpeScale: WorkoutRpeScale): SessionExtras? {
+    val lifts = exercises.filter { !it.isCardio }
+    if (lifts.isEmpty()) return null
+    val muscles = lifts.flatMap { it.primaryMuscles }.map { it.lowercase() }
+    val performed = lifts.flatMap { exercise -> exercise.sets.filter { it.reps.isNotBlank() }.map { exercise to it } }
+    val ids = exercises.map { it.itemId }.toSet()
+    if (performed.isEmpty()) {
+        val picks = ExerciseRoles.warmup(muscles, gentle)
+        return if (picks.any { it.id in ids }) null else SessionExtras(ExerciseRoles.Kind.WARMUP, picks)
+    }
+    val hardSets = performed.count { (_, set) -> WorkoutSetFeel.from(set.rpe, set.rpeScale ?: rpeScale) == WorkoutSetFeel.HARD }
+    val legSets = performed.count { (exercise, _) ->
+        exercise.primaryMuscles.any { it.lowercase() in setOf("quadriceps", "hamstrings", "glutes") }
+    }
+    if (hardSets < 3 && legSets < 6) return null
+    val picks = ExerciseRoles.cooldown(muscles, heavyLegs = legSets >= 6)
+    return if (picks.any { it.id in ids && it.id != "Walking_Treadmill" }) null else SessionExtras(ExerciseRoles.Kind.COOLDOWN, picks)
+}
+
+@Composable
+private fun WorkoutSessionExtrasCard(
+    kind: ExerciseRoles.Kind,
+    names: List<String>,
+    onAdd: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val warmup = kind == ExerciseRoles.Kind.WARMUP
+    FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 16.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(if (warmup) R.string.wk_extras_warmup_title else R.string.wk_extras_cooldown_title),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.wk_extras_dismiss), modifier = Modifier.size(18.dp))
+                }
+            }
+            Text(
+                stringResource(if (warmup) R.string.wk_extras_warmup_body else R.string.wk_extras_cooldown_body),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f),
+                fontSize = 14.sp,
+                lineHeight = 20.sp
+            )
+            names.forEachIndexed { index, name ->
+                Text(
+                    "${index + 1}. $name",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            FudGlassTextButton(
+                text = stringResource(if (warmup) R.string.wk_extras_warmup_add else R.string.wk_extras_cooldown_add),
+                onClick = onAdd
+            )
+        }
+    }
+}
+
+/** One-time card explaining set, reps, weight, effort and the two timers. */
+@Composable
+private fun WorkoutLoggingGuide(onDismiss: () -> Unit) {
+    FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 16.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                stringResource(R.string.wk_guide_title),
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            listOf(
+                R.string.wk_guide_set,
+                R.string.wk_guide_reps,
+                R.string.wk_guide_weight,
+                R.string.wk_guide_effort,
+                R.string.wk_guide_rest
+            ).forEach { line ->
+                Text(
+                    "• " + stringResource(line),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f),
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp
+                )
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                FudGlassTextButton(text = stringResource(R.string.wk_guide_dismiss), onClick = onDismiss)
+            }
         }
     }
 }

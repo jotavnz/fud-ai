@@ -1,0 +1,468 @@
+[
+ {
+  "id": "Fud_Leg_Swings",
+  "name": "Leg Swings (Front to Back)",
+  "force": "static",
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "hamstrings"
+  ],
+  "secondaryMuscles": [
+   "glutes",
+   "quadriceps"
+  ],
+  "instructions": [
+   "Stand side-on to a wall or rack and hold it with one hand. Stand tall on one leg with a soft knee.",
+   "Swing the free leg forward and back like a pendulum, starting small and getting a bit bigger each swing.",
+   "Keep your trunk still and do 10–15 swings, then switch legs."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Marching_In_Place",
+  "name": "Marching in Place",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "quadriceps"
+  ],
+  "secondaryMuscles": [
+   "calves",
+   "glutes"
+  ],
+  "instructions": [
+   "Stand tall with feet hip-width apart. Hold a chair or wall if you need balance.",
+   "Lift one knee toward hip height, lower it and lift the other, swinging your arms naturally.",
+   "March for 1–3 minutes at a pace that raises your breathing but still lets you talk."
+  ],
+  "category": "cardio",
+  "images": []
+ },
+ {
+  "id": "Fud_Jumping_Jacks",
+  "name": "Jumping Jacks",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "quadriceps"
+  ],
+  "secondaryMuscles": [
+   "calves",
+   "shoulders"
+  ],
+  "instructions": [
+   "Stand with feet together and arms by your sides.",
+   "Jump the feet apart while raising the arms overhead, then jump back to the start.",
+   "Land softly. For a low-impact version, step one foot out at a time instead of jumping."
+  ],
+  "category": "plyometrics",
+  "images": []
+ },
+ {
+  "id": "Fud_Cat_Cow",
+  "name": "Cat-Cow",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "lower back"
+  ],
+  "secondaryMuscles": [
+   "middle back",
+   "abdominals"
+  ],
+  "instructions": [
+   "Start on hands and knees, hands under shoulders and knees under hips.",
+   "Breathe in as you let the belly drop and lift the chest and tailbone (cow).",
+   "Breathe out as you round the spine up toward the ceiling and tuck chin and tailbone (cat). Repeat slowly 8–10 times."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Open_Book_Rotation",
+  "name": "Open Book Thoracic Rotation",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "middle back"
+  ],
+  "secondaryMuscles": [
+   "chest",
+   "shoulders"
+  ],
+  "instructions": [
+   "Lie on your side with hips and knees bent to 90 degrees and both arms straight in front of you.",
+   "Keeping the knees together, open the top arm in an arc and rotate your upper back until the arm points to the other side.",
+   "Follow the hand with your eyes, breathe out at the end, return and repeat 8 times per side."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Chin_Tuck",
+  "name": "Chin Tuck",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "neck"
+  ],
+  "secondaryMuscles": [
+   "traps"
+  ],
+  "instructions": [
+   "Sit or stand tall with shoulders relaxed and eyes looking straight ahead.",
+   "Glide your head straight back, making a double chin, without tilting it up or down.",
+   "Hold 3–5 seconds and release. Do 10 reps; useful several times a day if you work at a desk."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Wall_Angel",
+  "name": "Wall Angel",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "shoulders"
+  ],
+  "secondaryMuscles": [
+   "middle back",
+   "traps"
+  ],
+  "instructions": [
+   "Stand with your back, head and buttocks against a wall, feet a little in front of it.",
+   "Raise your arms in a goalpost shape with elbows and the backs of the hands touching the wall if you can.",
+   "Slide the arms up and down slowly, keeping your lower back gently against the wall. Do 8–12 reps."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Bird_Dog",
+  "name": "Bird Dog",
+  "force": "static",
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [
+   "lower back",
+   "glutes",
+   "shoulders"
+  ],
+  "instructions": [
+   "Start on hands and knees with a neutral spine.",
+   "Brace your belly lightly and reach one arm forward and the opposite leg back until both are level with your body.",
+   "Hold 2–3 seconds without rotating the hips, return and switch sides. Do 8–10 per side."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Hollow_Body_Hold",
+  "name": "Hollow Body Hold",
+  "force": "static",
+  "level": "intermediate",
+  "mechanic": "isolation",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Lie on your back, press the lower back into the floor and lift head and shoulders slightly.",
+   "Lift the legs and reach the arms overhead, keeping the lower back down. Bend the knees to make it easier.",
+   "Hold 15–30 seconds while breathing; stop if your lower back lifts."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Diaphragmatic_Breathing",
+  "name": "360° Diaphragmatic Breathing",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Lie on your back with knees bent, one hand on the chest and one on the belly.",
+   "Breathe in through the nose so the belly, sides and lower back expand while the chest stays quiet.",
+   "Breathe out slowly through the mouth, letting the ribs come down. Do 5–10 slow breaths; great to start or finish a session."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Pelvic_Floor_Activation",
+  "name": "Pelvic Floor Activation",
+  "force": "static",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Lie on your back with knees bent or sit tall, breathing normally.",
+   "Gently squeeze and lift the pelvic floor, as if stopping the flow of urine, without holding your breath or squeezing the buttocks.",
+   "Hold 3–5 seconds and fully relax for the same time. Do 8–10 reps. With leaks, pain, pregnancy or after birth, see a pelvic floor physiotherapist."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Side_Plank_Knees",
+  "name": "Side Plank on Knees",
+  "force": "static",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [
+   "glutes",
+   "shoulders"
+  ],
+  "instructions": [
+   "Lie on your side with the elbow under the shoulder and knees bent behind you.",
+   "Lift your hips so the body forms a straight line from head to knees.",
+   "Hold 15–30 seconds breathing normally, then switch sides. Straighten the legs when it gets easy."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Hypopressive_Standing",
+  "name": "Hypopressive Breathing (Standing)",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Stand with feet hip-width apart, knees soft, weight slightly forward and arms out in front at waist height.",
+   "Take 2–3 calm breaths. Then breathe all the air out slowly.",
+   "With empty lungs, hold your breath and open the ribs as if breathing in without letting air in; the belly draws in. Hold 5–10 seconds.",
+   "Release, breathe in gently and rest for 3 breaths. Repeat 3–5 times. Avoid during pregnancy, with high blood pressure, heart or lung problems, or hernias; learn it with a qualified instructor or pelvic floor physiotherapist."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Hypopressive_Kneeling",
+  "name": "Hypopressive Breathing (Kneeling)",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Kneel tall with knees hip-width apart, lean slightly forward and bring the hands in front at chest height, wrists flexed.",
+   "Take 2–3 calm breaths, then breathe all the air out slowly.",
+   "Hold your breath with empty lungs and open the ribs without letting air in, drawing the belly in. Hold 5–10 seconds.",
+   "Release and recover for 3 breaths. Repeat 3–5 times. Avoid during pregnancy, with high blood pressure, heart or lung problems, or hernias; learn it with a qualified instructor or pelvic floor physiotherapist."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Hypopressive_Lying",
+  "name": "Hypopressive Breathing (Lying)",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Lie on your back with knees bent, feet flat, arms by your sides with palms down.",
+   "Take 2–3 calm breaths, then breathe all the air out slowly.",
+   "Hold your breath with empty lungs and expand the ribs without letting air in. Hold 5–10 seconds. This is the easiest position to learn.",
+   "Release and recover for 3 breaths. Repeat 3–5 times. Avoid during pregnancy, with high blood pressure, heart or lung problems, or hernias; learn it with a qualified instructor or pelvic floor physiotherapist."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Sit_To_Stand",
+  "name": "Sit-to-Stand from a Chair",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "quadriceps"
+  ],
+  "secondaryMuscles": [
+   "glutes",
+   "hamstrings"
+  ],
+  "instructions": [
+   "Sit near the front of a sturdy chair with feet flat and hip-width apart.",
+   "Lean slightly forward and stand up by pushing through your feet, using your hands only if needed.",
+   "Sit back down slowly and with control. Do 8–12 reps; it builds the strength used every day."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Wall_Push_Up",
+  "name": "Wall Push-Up",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "chest"
+  ],
+  "secondaryMuscles": [
+   "triceps",
+   "shoulders"
+  ],
+  "instructions": [
+   "Stand an arm's length from a wall and place your hands on it at shoulder height and width.",
+   "Keeping the body straight, bend the elbows and bring your chest toward the wall.",
+   "Push back to the start. Do 10–15 reps; step further back to make it harder, then progress to a bench and the floor."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Knee_Push_Up",
+  "name": "Knee Push-Up",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "compound",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "chest"
+  ],
+  "secondaryMuscles": [
+   "triceps",
+   "shoulders",
+   "abdominals"
+  ],
+  "instructions": [
+   "Start in a push-up position with your knees on the floor and a straight line from head to knees.",
+   "Lower your chest toward the floor with elbows at about 45 degrees from the body.",
+   "Push back up. When 15 reps feel easy, move to full push-ups."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Single_Leg_Stand",
+  "name": "Single-Leg Balance",
+  "force": "static",
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "calves"
+  ],
+  "secondaryMuscles": [
+   "glutes",
+   "abdominals"
+  ],
+  "instructions": [
+   "Stand next to a counter or chair and hold it lightly.",
+   "Lift one foot off the floor and balance on the other leg, standing tall.",
+   "Hold up to 30 seconds, then switch. Use fewer fingers, then no hands, as balance improves."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Tandem_Walk",
+  "name": "Heel-to-Toe Walk",
+  "force": null,
+  "level": "beginner",
+  "mechanic": null,
+  "equipment": "body only",
+  "primaryMuscles": [
+   "calves"
+  ],
+  "secondaryMuscles": [
+   "abdominals"
+  ],
+  "instructions": [
+   "Stand tall near a wall for support if needed.",
+   "Walk in a straight line placing the heel of one foot right in front of the toes of the other.",
+   "Look ahead, not at your feet. Take 10–20 steps, turn and come back."
+  ],
+  "category": "stretching",
+  "images": []
+ },
+ {
+  "id": "Fud_Supported_Heel_Raises",
+  "name": "Supported Heel Raises",
+  "force": "push",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "equipment": "body only",
+  "primaryMuscles": [
+   "calves"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Stand behind a chair or counter, holding it lightly, feet hip-width apart.",
+   "Rise up onto the balls of your feet as high as you can.",
+   "Lower slowly. Do 10–15 reps; good for ankles, balance and walking."
+  ],
+  "category": "strength",
+  "images": []
+ },
+ {
+  "id": "Fud_Dead_Hang",
+  "name": "Dead Hang",
+  "force": "pull",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "equipment": "other",
+  "primaryMuscles": [
+   "forearms"
+  ],
+  "secondaryMuscles": [
+   "lats",
+   "shoulders"
+  ],
+  "instructions": [
+   "Grip a pull-up bar with hands shoulder-width apart, using a box to reach it if needed.",
+   "Hang with arms straight and shoulders active (slightly pulled down), feet off the floor or lightly touching for help.",
+   "Hold 10–30 seconds. It is the first step toward pull-ups."
+  ],
+  "category": "strength",
+  "images": []
+ }
+]

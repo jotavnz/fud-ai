@@ -194,7 +194,11 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     goalProposals = goalProposals,
                     extraContext = coachExtraContext(),
                     appLanguage = appContext.getString(R.string.cl_prompt_language),
-                    logButtonLabel = appContext.getString(R.string.cl_action_log)
+                    logButtonLabel = appContext.getString(R.string.cl_action_log),
+                    pantryItems = container.pantryRepository.snapshot(),
+                    groceryPurchases = container.pantryRepository.purchaseSnapshot(),
+                    shoppingList = container.pantryRepository.shoppingSnapshot(),
+                    cycle = container.cycleRepository.coachSnapshot()
                 )
                 val logCards = logProposals.proposals
                 val goalCards = goalProposals.proposals

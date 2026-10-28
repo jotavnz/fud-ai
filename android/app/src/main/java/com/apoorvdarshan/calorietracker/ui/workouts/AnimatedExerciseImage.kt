@@ -33,6 +33,7 @@ import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.imageLoader
 import coil.request.ImageRequest
+import com.apoorvdarshan.calorietracker.FudAIApp
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.ExerciseVisual
 import com.apoorvdarshan.calorietracker.data.ExerciseVisualFormat
@@ -84,7 +85,9 @@ fun AnimatedExerciseImage(
     }
 
     val context = LocalContext.current
-    val imageStore = remember(context) { FoodImageStore(context) }
+    // The app-wide store: constructing one per list row did directory I/O on the main
+    // thread for every exercise scrolled into view, which made the Training list stutter.
+    val imageStore = remember(context) { (context.applicationContext as FudAIApp).container.imageStore }
     val frameStore = remember(context) { WorkoutFrameStore.get(context) }
     val imageLoader = if (visual.isAuthored) frameStore.imageLoader else context.imageLoader
     val animationsEnabled = remember {

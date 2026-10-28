@@ -523,6 +523,14 @@ class FoodAnalysisService(
         return UserExerciseAiFill.parse(callAi(UserExerciseAiFill.prompt(options), imageBytes), options)
     }
 
+    /** Reads a grocery receipt photo into a purchase the user reviews before it stocks the pantry. */
+    suspend fun analyzeReceipt(imageBytes: ByteArray): com.apoorvdarshan.calorietracker.models.GroceryPurchase {
+        if (imageBytes.isEmpty()) throw AiError.ImageConversionFailed
+        return com.apoorvdarshan.calorietracker.models.ReceiptParser.parse(
+            callAi(com.apoorvdarshan.calorietracker.models.ReceiptParser.prompt(), imageBytes)
+        )
+    }
+
     // -- Internal dispatch ------------------------------------------------
 
     private suspend fun callAi(

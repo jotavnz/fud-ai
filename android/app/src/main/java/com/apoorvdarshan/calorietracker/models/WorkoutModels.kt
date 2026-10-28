@@ -41,6 +41,40 @@ object WorkoutDate {
 }
 
 @Serializable
+/**
+ * Plain-language effort for the simple logger, stored as an RPE on the set's scale so burn
+ * estimates, history and Coach keep reading one number. Easy ≈ 4+ reps left, good ≈ 2–3,
+ * hard ≈ 0–1 (reps in reserve).
+ */
+enum class WorkoutSetFeel {
+    EASY,
+    GOOD,
+    HARD;
+
+    fun rpe(scale: WorkoutRpeScale): String = when (scale) {
+        WorkoutRpeScale.STRENGTH -> listOf("6", "8", "9.5")
+        WorkoutRpeScale.CR10 -> listOf("4", "7", "9")
+        WorkoutRpeScale.BORG -> listOf("12", "15", "18")
+    }[ordinal]
+
+    companion object {
+        /** The feel a stored RPE reads as, or null when the set has no RPE. */
+        fun from(rpe: String, scale: WorkoutRpeScale): WorkoutSetFeel? {
+            val value = rpe.replace(',', '.').toDoubleOrNull() ?: return null
+            val (easyMax, goodMax) = when (scale) {
+                WorkoutRpeScale.STRENGTH -> 7.0 to 8.5
+                WorkoutRpeScale.CR10 -> 5.0 to 8.0
+                WorkoutRpeScale.BORG -> 13.0 to 16.0
+            }
+            return when {
+                value <= easyMax -> EASY
+                value <= goodMax -> GOOD
+                else -> HARD
+            }
+        }
+    }
+}
+
 enum class WorkoutRpeScale {
     STRENGTH,
     CR10,
@@ -193,7 +227,14 @@ data class WorkoutPreferences(
     val rpeScale: WorkoutRpeScale = WorkoutRpeScale.STRENGTH,
     val strength: WorkoutStrengthNumbers = WorkoutStrengthNumbers(),
     /** Rest countdown after a logged set, in seconds (0 = off). Older diaries use the default. */
-    val restTimerSeconds: Int = WorkoutRestTimerSetting.DEFAULT_SECONDS
+    val restTimerSeconds: Int = WorkoutRestTimerSetting.DEFAULT_SECONDS,
+    /**
+     * Beginner-friendly logging: sets ask "how did it feel?" (easy / good / hard) instead of
+     * a numeric RPE field. On by default; Settings switches back to the RPE field.
+     */
+    val simpleLogging: Boolean = true,
+    /** The "how to fill in a set" guide card was dismissed. */
+    val loggingGuideDismissed: Boolean = false
 ) {
     /** Keeps legacy fields decodable while enforcing the final selectable settings. */
     fun sanitized(): WorkoutPreferences = copy(
