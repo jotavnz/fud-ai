@@ -19,7 +19,9 @@
    "Keep your trunk still and do 10–15 swings, then switch legs."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/0795.jpg"
+  ]
  },
  {
   "id": "Fud_Marching_In_Place",
@@ -41,7 +43,9 @@
    "March for 1–3 minutes at a pace that raises your breathing but still lets you talk."
   ],
   "category": "cardio",
-  "images": []
+  "images": [
+   "exercise-media/3221.jpg"
+  ]
  },
  {
   "id": "Fud_Jumping_Jacks",
@@ -63,7 +67,10 @@
    "Land softly. For a low-impact version, step one foot out at a time instead of jumping."
   ],
   "category": "plyometrics",
-  "images": []
+  "images": [
+   "exercise-media/3224.jpg",
+   "exercise-media/3224.webp"
+  ]
  },
  {
   "id": "Fud_Cat_Cow",
@@ -85,7 +92,9 @@
    "Breathe out as you round the spine up toward the ceiling and tuck chin and tailbone (cat). Repeat slowly 8–10 times."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/1512.jpg"
+  ]
  },
  {
   "id": "Fud_Open_Book_Rotation",
@@ -107,7 +116,9 @@
    "Follow the hand with your eyes, breathe out at the end, return and repeat 8 times per side."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/1358.jpg"
+  ]
  },
  {
   "id": "Fud_Chin_Tuck",
@@ -128,7 +139,9 @@
    "Hold 3–5 seconds and release. Do 10 reps; useful several times a day if you work at a desk."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/1403.jpg"
+  ]
  },
  {
   "id": "Fud_Wall_Angel",
@@ -150,7 +163,9 @@
    "Slide the arms up and down slowly, keeping your lower back gently against the wall. Do 8–12 reps."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/1355.jpg"
+  ]
  },
  {
   "id": "Fud_Bird_Dog",
@@ -173,7 +188,9 @@
    "Hold 2–3 seconds without rotating the hips, return and switch sides. Do 8–10 per side."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/1512.jpg"
+  ]
  },
  {
   "id": "Fud_Hollow_Body_Hold",
@@ -192,7 +209,9 @@
    "Hold 15–30 seconds while breathing; stop if your lower back lifts."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/0276.jpg"
+  ]
  },
  {
   "id": "Fud_Diaphragmatic_Breathing",
@@ -211,7 +230,9 @@
    "Breathe out slowly through the mouth, letting the ribs come down. Do 5–10 slow breaths; great to start or finish a session."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/3147.jpg"
+  ]
  },
  {
   "id": "Fud_Pelvic_Floor_Activation",
@@ -230,7 +251,9 @@
    "Hold 3–5 seconds and fully relax for the same time. Do 8–10 reps. With leaks, pain, pregnancy or after birth, see a pelvic floor physiotherapist."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/3147.jpg"
+  ]
  },
  {
   "id": "Fud_Side_Plank_Knees",
@@ -252,7 +275,9 @@
    "Hold 15–30 seconds breathing normally, then switch sides. Straighten the legs when it gets easy."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/0705.jpg"
+  ]
  },
  {
   "id": "Fud_Hypopressive_Standing",
@@ -272,7 +297,9 @@
    "Release, breathe in gently and rest for 3 breaths. Repeat 3–5 times. Avoid during pregnancy, with high blood pressure, heart or lung problems, or hernias; learn it with a qualified instructor or pelvic floor physiotherapist."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/1364.jpg"
+  ]
  },
  {
   "id": "Fud_Hypopressive_Kneeling",
@@ -292,7 +319,9 @@
    "Release and recover for 3 breaths. Repeat 3–5 times. Avoid during pregnancy, with high blood pressure, heart or lung problems, or hernias; learn it with a qualified instructor or pelvic floor physiotherapist."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/1346.jpg"
+  ]
  },
  {
   "id": "Fud_Hypopressive_Lying",
@@ -312,7 +341,9 @@
    "Release and recover for 3 breaths. Repeat 3–5 times. Avoid during pregnancy, with high blood pressure, heart or lung problems, or hernias; learn it with a qualified instructor or pelvic floor physiotherapist."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/3147.jpg"
+  ]
  },
  {
   "id": "Fud_Sit_To_Stand",
@@ -334,7 +365,9 @@
    "Sit back down slowly and with control. Do 8–12 reps; it builds the strength used every day."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/3132.jpg"
+  ]
  },
  {
   "id": "Fud_Wall_Push_Up",
@@ -356,7 +389,10 @@
    "Push back to the start. Do 10–15 reps; step further back to make it harder, then progress to a bench and the floor."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/0659.jpg",
+   "exercise-media/0659.webp"
+  ]
  },
  {
   "id": "Fud_Knee_Push_Up",
@@ -379,7 +415,10 @@
    "Push back up. When 15 reps feel easy, move to full push-ups."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/3211.jpg",
+   "exercise-media/3211.webp"
+  ]
  },
  {
   "id": "Fud_Single_Leg_Stand",
@@ -401,7 +440,9 @@
    "Hold up to 30 seconds, then switch. Use fewer fingers, then no hands, as balance improves."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/1374.jpg"
+  ]
  },
  {
   "id": "Fud_Tandem_Walk",
@@ -422,7 +463,9 @@
    "Look ahead, not at your feet. Take 10–20 steps, turn and come back."
   ],
   "category": "stretching",
-  "images": []
+  "images": [
+   "exercise-media/3671.jpg"
+  ]
  },
  {
   "id": "Fud_Supported_Heel_Raises",
@@ -441,7 +484,10 @@
    "Lower slowly. Do 10–15 reps; good for ankles, balance and walking."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/1373.jpg",
+   "exercise-media/1373.webp"
+  ]
  },
  {
   "id": "Fud_Dead_Hang",
@@ -463,6 +509,8 @@
    "Hold 10–30 seconds. It is the first step toward pull-ups."
   ],
   "category": "strength",
-  "images": []
+  "images": [
+   "exercise-media/0688.jpg"
+  ]
  }
 ]

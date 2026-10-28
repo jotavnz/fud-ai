@@ -10,6 +10,7 @@
 //   exercises_es.json            id -> { name, instructions } in Spanish
 //   exercise-id-migration.json   old free-exercise-db id -> new id, so saved history,
 //                                routines and favorites keep pointing at an exercise
+//   exercises_extra.json         only the images of the app's own exercises (borrowed media)
 //
 // With --media it also fills android/app/src/exercisemedia/assets/exercise-media (committed)
 // with <id>.jpg and the GIF converted to animated <id>.webp (gif2webp from Google's libwebp,
@@ -114,20 +115,38 @@ for (const record of dataset) {
   };
 }
 
+// Exercises the dataset lacks borrow the media of a close dataset exercise
+// (scripts/exercise-borrowed-media.json): the animation when the movement is the same,
+// only the still photo when just the position matches.
+const borrowed = readJson(path.join(repo, "scripts/exercise-borrowed-media.json"));
+const datasetIds = new Set(dataset.map((record) => record.id));
+function borrowedImages(id) {
+  const animated = borrowed.animated[id];
+  const still = animated ?? borrowed.still[id];
+  if (!still) {
+    problems.push(`${id}: no borrowed media`);
+    return [];
+  }
+  if (!datasetIds.has(still)) problems.push(`${id}: borrowed media ${still} is not in the dataset`);
+  return animated ? [`exercise-media/${still}.jpg`, `exercise-media/${still}.webp`] : [`exercise-media/${still}.jpg`];
+}
+
 // Exercises the dataset lacks: cardio activities (outdoor walk/run quick log, treadmill,
 // bike...) and warm-up basics (bodyweight squat, arm circles, superman...). They keep their
 // free-exercise-db ids, which burn estimates, voice commands and ExerciseRoles use.
 for (const { record, es } of readJson(path.join(repo, "scripts/exercise-kept-activities.json"))) {
-  records.push(record);
+  records.push({ ...record, images: borrowedImages(record.id) });
   spanish[record.id] = es;
 }
 
 // The app's own exercises (exercises_extra.json, android/scripts/build_extra_exercises.py)
 // keep the Spanish copy that script wrote.
 const previousSpanish = readJson(path.join(assets, "exercises_es.json"));
-for (const { id } of readJson(path.join(assets, "exercises_extra.json"))) {
-  if (previousSpanish[id]) spanish[id] = previousSpanish[id];
-  else problems.push(`${id}: own exercise lost its Spanish copy`);
+const extras = readJson(path.join(assets, "exercises_extra.json"));
+for (const extra of extras) {
+  extra.images = borrowedImages(extra.id);
+  if (previousSpanish[extra.id]) spanish[extra.id] = previousSpanish[extra.id];
+  else problems.push(`${extra.id}: own exercise lost its Spanish copy`);
 }
 
 // Old free-exercise-db ids -> new ids. Same name (ignoring word order and plurals)
@@ -173,5 +192,6 @@ const write = (file, value) => fs.writeFileSync(path.join(assets, file), JSON.st
 write("exercises.json", records);
 write("exercises_es.json", spanish);
 write("exercise-id-migration.json", migration);
+fs.writeFileSync(path.join(assets, "exercises_extra.json"), JSON.stringify(extras, null, 1));
 const translatedSteps = Object.values(spanish).filter((entry) => entry.instructions).length;
 console.log(`exercises=${records.length} spanishSteps=${translatedSteps} migrated=${Object.keys(migration).length}/${oldCatalog.length}`);

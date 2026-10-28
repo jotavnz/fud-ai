@@ -176,7 +176,8 @@ private fun CatalogMediaImage(
     val animationsEnabled = remember {
         Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
     }
-    val plays = animates && animationsEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+    val plays = animates && animationsEnabled && visual.framePaths.size > 1 &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
     val path = if (plays) visual.framePaths.last() else visual.framePaths.first()
     val request = remember(path) {
         ImageRequest.Builder(context)

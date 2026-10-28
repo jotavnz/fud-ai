@@ -17,8 +17,8 @@ enum class ExerciseVisualFormat {
  * - [ExerciseVisualFormat.JPEG]: [framePaths] are bundled asset paths or user photo
  *   filenames, loaded directly.
  * - [ExerciseVisualFormat.ANIMATED]: bundled catalog media. [framePaths] holds the still
- *   photo (index 0, the representative frame) and the animated WebP (index 1); the image
- *   plays the WebP when it animates and shows the still otherwise.
+ *   photo (index 0, the representative frame) and, when there is one, the animated WebP
+ *   (index 1); the image plays the WebP when it animates and shows the still otherwise.
  * - [ExerciseVisualFormat.PNG] / [ExerciseVisualFormat.SVG]: authored frames. [framePaths]
  *   are flat filenames (`<name>.png`) that are *not* bundled in release builds; they are
  *   resolved through [com.apoorvdarshan.calorietracker.services.WorkoutFrameStore]
@@ -45,13 +45,18 @@ data class ExerciseVisual(
             representativeFrameIndex = 0
         )
 
-        /** Catalog media (still + animated WebP) when present, else the plain photo set. */
+        private const val CATALOG_MEDIA_DIR = "exercise-media/"
+
+        /**
+         * Catalog media (still, plus the animated WebP when the movement matches; own
+         * exercises may borrow just a still) when present, else the plain photo set.
+         */
         fun fromImagePaths(paths: List<String>): ExerciseVisual {
+            if (paths.none { it.startsWith(CATALOG_MEDIA_DIR) }) return jpeg(paths)
             val animation = paths.firstOrNull { it.endsWith(".webp", ignoreCase = true) }
-                ?: return jpeg(paths)
-            val still = paths.firstOrNull { it != animation } ?: animation
+            val still = paths.firstOrNull { it != animation } ?: animation!!
             return ExerciseVisual(
-                framePaths = listOf(still, animation),
+                framePaths = listOfNotNull(still, animation).distinct(),
                 format = ExerciseVisualFormat.ANIMATED,
                 representativeFrameIndex = 0
             )

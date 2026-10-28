@@ -35,6 +35,19 @@ class ExerciseVisualResolverTest {
     }
 
     @Test
+    fun catalogMediaIsAnimatedOrABorrowedStillAndOtherPhotosStayJpeg() {
+        val animated = ExerciseVisual.fromImagePaths(listOf("exercise-media/0659.jpg", "exercise-media/0659.webp"))
+        assertEquals(ExerciseVisualFormat.ANIMATED, animated.format)
+        assertEquals(listOf("exercise-media/0659.jpg", "exercise-media/0659.webp"), animated.framePaths)
+
+        val still = ExerciseVisual.fromImagePaths(listOf("exercise-media/1512.jpg"))
+        assertEquals(ExerciseVisualFormat.ANIMATED, still.format)
+        assertEquals(listOf("exercise-media/1512.jpg"), still.framePaths)
+
+        assertEquals(ExerciseVisualFormat.JPEG, ExerciseVisual.fromImagePaths(listOf("photo_1.jpg")).format)
+    }
+
+    @Test
     fun twoOrSixFrameManifestEntriesFallBackToDatasetJpegs() {
         listOf(2, 6).forEach { frameCount ->
             val frames = ExerciseVisualResolver.parseManifest(

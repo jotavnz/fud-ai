@@ -205,11 +205,17 @@ ex("Fud_Dead_Hang", "Dead Hang", "Colgarse de la barra (dead hang)", "strength",
 if __name__ == "__main__":
     asset_dir = sys.argv[1]
     records, es = [], {}
+    # Same borrowed dataset media that scripts/import_exercises_dataset.mjs assigns.
+    borrowed = json.load(open(asset_dir + "/../../../../../scripts/exercise-borrowed-media.json", encoding="utf-8"))
+    def images(id):
+        if id in borrowed["animated"]:
+            return ["exercise-media/%s.jpg" % borrowed["animated"][id], "exercise-media/%s.webp" % borrowed["animated"][id]]
+        return ["exercise-media/%s.jpg" % borrowed["still"][id]] if id in borrowed["still"] else []
     for e in E:
         records.append({
             "id": e["id"], "name": e["name"], "force": e["force"], "level": e["level"], "mechanic": e["mechanic"],
             "equipment": e["equipment"], "primaryMuscles": e["primaryMuscles"], "secondaryMuscles": e["secondaryMuscles"],
-            "instructions": [s[0] for s in e["steps"]], "category": e["category"], "images": []
+            "instructions": [s[0] for s in e["steps"]], "category": e["category"], "images": images(e["id"])
         })
         es[e["id"]] = {"name": e["es"], "instructions": [s[1] for s in e["steps"]]}
     json.dump(records, open(asset_dir + "/exercises_extra.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
