@@ -67,9 +67,9 @@ class CoachTools(
     private val shoppingList: List<com.apoorvdarshan.calorietracker.models.ShoppingItem> = emptyList(),
     /**
      * Saves pantry items Coach or the voice assistant heard the user list. Null where nothing
-     * may be written; `add_pantry_items` is then not offered.
+     * may be written; `update_pantry` is then not offered.
      */
-    private val pantryWriter: ((List<com.apoorvdarshan.calorietracker.models.PantryItem>) -> Unit)? = null,
+    private val pantryWriter: ((List<com.apoorvdarshan.calorietracker.models.PantryChange>) -> Unit)? = null,
     /** Null while cycle tracking is off; the tool then says so and shares nothing. */
     private val cycle: com.apoorvdarshan.calorietracker.data.CycleRepository.Snapshot? = null
 ) {
@@ -161,7 +161,7 @@ class CoachTools(
         "get_fasting_history" -> getFastingHistory(args)
         "get_pantry" -> getPantry()
         "get_cycle" -> getCycle()
-        "add_pantry_items" -> addPantryItems(args.proposal)
+        "update_pantry" -> updatePantry(args.proposal)
         "get_workout_history" -> getWorkoutHistory(args)
         "get_workout_plans" -> getWorkoutPlans(args)
         "get_workout_preferences" -> getWorkoutPreferences()
@@ -435,14 +435,12 @@ class CoachTools(
 
     // MARK: - Pantry writes
 
-    /** Items added during this conversation, so a repeat in the same chat is caught too. */
-    private val pantryAddedThisSession = mutableListOf<com.apoorvdarshan.calorietracker.models.PantryItem>()
+    /** The pantry as this conversation left it, so a later call in the same reply sees earlier changes. */
+    private var pantryWorking: List<com.apoorvdarshan.calorietracker.models.PantryItem> = pantryItems
 
-    private fun addPantryItems(args: Map<String, Any?>): String {
+    private fun updatePantry(args: Map<String, Any?>): String {
         val writer = pantryWriter ?: return jsonError("Pantry changes are not available here.")
-        val raw = (args["items"] as? List<*>).orEmpty()
-        val today = LocalDate.now(clock)
-        val items = raw.mapNotNull { entry ->
+        val changes = (args["items"] as? List<*>).orEmpty().mapNotNull { entry ->
             val map = when (entry) {
                 is Map<*, *> -> entry
                 is org.json.JSONObject -> CoachLogTool.plain(entry)
@@ -450,46 +448,39 @@ class CoachTools(
             } ?: return@mapNotNull null
             val name = (map["name"] as? String)?.trim()?.take(80).orEmpty()
             if (name.isEmpty()) return@mapNotNull null
-            val location = com.apoorvdarshan.calorietracker.models.PantryLocation.parse(map["location"] as? String)
-                ?: com.apoorvdarshan.calorietracker.models.PantryLocation.FRIDGE
-            val days = (map["best_before_days"] as? Number)?.toLong()?.takeIf { it in 0..730 }
-                ?: com.apoorvdarshan.calorietracker.data.ShelfLife.estimateDays(name, location)
-            com.apoorvdarshan.calorietracker.models.PantryItem(
+            com.apoorvdarshan.calorietracker.models.PantryChange(
+                action = com.apoorvdarshan.calorietracker.models.PantryChange.Action.parse(map["action"] as? String)
+                    ?: com.apoorvdarshan.calorietracker.models.PantryChange.Action.ADD,
                 name = name,
-                quantity = (map["quantity"] as? String)?.trim()?.take(30).orEmpty(),
-                location = location,
-                expiresOn = today.plusDays(days).toString()
+                quantity = (map["quantity"]?.toString())?.trim()?.take(30).orEmpty(),
+                location = com.apoorvdarshan.calorietracker.models.PantryLocation.parse(map["location"] as? String),
+                bestBeforeDays = (map["best_before_days"] as? Number)?.toLong()?.takeIf { it in 0..730 }
             )
         }
-        if (items.isEmpty()) return jsonError("items needs at least one item with a name.")
-        val confirmed = args["confirmed"] == true
-        val known = pantryItems + pantryAddedThisSession
-        val duplicates = items.mapNotNull { item ->
-            val match = known.firstOrNull { com.apoorvdarshan.calorietracker.models.PantryMatching.similar(it.name, item.name) }
-                ?: return@mapNotNull null
-            linkedMapOf(
-                "new" to item.name,
-                "already_have" to match.name,
-                "quantity" to match.quantity,
-                "location" to match.location.name.lowercase()
-            )
-        }
-        if (duplicates.isNotEmpty() && !confirmed) {
-            return json(
-                linkedMapOf(
-                    "saved" to false,
-                    "possible_duplicates" to duplicates,
-                    "note" to "Nothing was saved. Ask the user whether these are new items or the same ones (maybe just more of them), then call add_pantry_items again with confirmed=true and only the items they want added."
-                )
-            )
-        }
-        writer(items)
-        pantryAddedThisSession += items
+        if (changes.isEmpty()) return jsonError("items needs at least one change with a name.")
+        val outcome = com.apoorvdarshan.calorietracker.models.PantryEditor.apply(pantryWorking, changes, LocalDate.now(clock))
+        pantryWorking = outcome.items
+        writer(changes)
         return json(
             linkedMapOf(
                 "saved" to true,
-                "added" to items.map { linkedMapOf("name" to it.name, "quantity" to it.quantity, "location" to it.location.name.lowercase(), "best_before" to it.expiresOn) },
-                "note" to "Saved to the pantry. Confirm briefly what was added; best-before dates are estimates the user can edit in Home > Pantry."
+                "changes" to outcome.lines.map { line ->
+                    linkedMapOf<String, Any?>(
+                        "said" to line.change.name,
+                        "result" to line.result.name.lowercase()
+                    ).apply {
+                        line.item?.let { item ->
+                            put("item", item.name)
+                            if (item.quantity.isNotBlank()) put("quantity", item.quantity)
+                            put("location", item.location.name.lowercase())
+                            item.expiresOn?.let { put("best_before", it) }
+                        }
+                    }
+                },
+                "pantry_now" to com.apoorvdarshan.calorietracker.models.PantryLocation.entries.associate { location ->
+                    location.name.lowercase() to outcome.items.count { it.location == location }
+                },
+                "note" to "Saved. Reply with a short summary grouped by fridge, freezer and pantry (added, joined an item already there, moved, removed). For not_found, say you did not find it at home. Finished items went on the shopping list. Best-before dates are estimates the user can edit in Home > Pantry."
             )
         )
     }
@@ -542,8 +533,8 @@ class CoachTools(
         return json(
             linkedMapOf(
                 "today" to today.toString(),
-                "item_count" to pantryItems.size,
-                "items" to pantryItems.take(150).map { item ->
+                "item_count" to pantryWorking.size,
+                "items" to pantryWorking.take(150).map { item ->
                     linkedMapOf<String, Any?>(
                         "name" to item.name,
                         "location" to item.location.name.lowercase()
@@ -566,7 +557,7 @@ class CoachTools(
                 "shopping_list" to shoppingList.filter { !it.checked }.map { item ->
                     if (item.quantity.isBlank()) item.name else "${item.name} (${item.quantity})"
                 },
-                "note" to if (pantryItems.isEmpty()) {
+                "note" to if (pantryWorking.isEmpty()) {
                     "The pantry is empty. Suggest the user add what they have (Home + > Pantry), or ask what is in their fridge."
                 } else {
                     "Best-before dates are estimates unless the user typed them. Prefer items with few days_left."
@@ -1225,7 +1216,7 @@ class CoachTools(
         )
 
         /** Pantry writes offered where a writer exists (Coach chat, voice assistant). */
-        val PANTRY_WRITE_TOOL_NAMES = listOf("add_pantry_items")
+        val PANTRY_WRITE_TOOL_NAMES = listOf("update_pantry")
 
         val TOOL_DESCRIPTIONS: Map<String, String> = mapOf(
             "get_data_summary" to "Get a quick summary of the user's available data: total counts and earliest/latest dates for weights, body-fat readings, and food entries. Call this first when the user asks anything about their history range or data spanning more than 14 days.",
@@ -1237,7 +1228,7 @@ class CoachTools(
             "get_workout_history" to "Fetch completed workouts between two dates, including calculated calorie burn, saved exercise durations and intensity, and logged sets with weight, reps, and RPE. A timed exercise can be performed without any reps or sets. For one specific lift across many dates, prefer get_exercise_lift_history.",
             "get_workout_plans" to "Fetch dated workout diary plans, set targets, saved exercise durations, and current timer state. Running or paused timer time is unsaved. Optional ISO from/to dates narrow the result; without them it returns recent and upcoming plans around today.",
             "get_session_extras" to "Get catalog exercises (with catalog_id, dose and guidance) for the parts of training beyond the main lifts: kind=warmup (dynamic warm-up for the given muscles; gentle=true for beginners, seniors or higher body weight), cooldown (after a session; heavy_legs=true after hard leg work), mobility, posture (desk workers, rounded shoulders), deep_core, hypopressive, balance (joint stability, seniors, sedentary starters) or calisthenics (push/pull progressions). Use it before suggesting a session, after a hard session, or when the user asks for these styles.",
-            "add_pantry_items" to "Save food the user says they bought or have at home into their pantry (fridge, freezer or cupboard). Use it when they list groceries, read out a shopping haul, or say what is in their fridge. Expand everyday names into clear food names in the user's language and send best_before_days only when they say a date (the app estimates it per food otherwise). If an item looks like one already in the pantry the tool does not save and returns possible_duplicates: ask the user, then call again with confirmed=true. Never invent items.",
+            "update_pantry" to "Keep the user's food at home (fridge, freezer, pantry/cupboard) up to date from what they tell you, even a long rambling story over several messages. Send every food they mention in ONE call per message as a list of changes: action=add (bought it or has it; something already there in the same place is joined, quantities summed), set (correct the quantity, or move it: location is where it is now, e.g. put the chicken in the freezer; quantity 0 means it ran out), used_up (finished; it goes on the shopping list) or discard (thrown away or spoiled). Infer the place from what they say or from the food (meat to use soon in the fridge, frozen food in the freezer, dry goods, cans and oil in the pantry). Expand everyday names into clear food names in the user's language; send best_before_days only when they say a date. Never invent items and never ask before saving: the user can edit everything in Home > Pantry.",
             "get_cycle" to "Fetch the user's menstrual cycle summary when they turned cycle tracking on: cycle day, estimated phase with confidence, whether they are on their period, the next period estimate, today's symptoms (cramps, fatigue, headache, low mood, bloating, heavy flow) and suggested training adjustments. Call it before planning or adjusting a session for a user who tracks their cycle, or when they mention their period. Returns enabled=false otherwise.",
             "get_pantry" to "Fetch the food the user has at home (fridge, freezer, pantry) with quantities and best-before dates, plus recent grocery shops and spending. Use it to suggest meals from what is available (use soon-to-expire items first and fit the remaining calories and macros), to build the next weekly, biweekly or monthly shopping list from what is missing and what they eat, or to summarize grocery spending. If the user is travelling, mention local names for ingredients.",
             "get_workout_preferences" to "Fetch workout-only preferences such as target muscles, injuries or issues, equipment, schedule, split, RPE scale, and strength numbers.",
@@ -1299,7 +1290,7 @@ class CoachTools(
                     "required" to listOf("exercise")
                 )
             }
-            if (toolName == "add_pantry_items") {
+            if (toolName == "update_pantry") {
                 return linkedMapOf(
                     "type" to "object",
                     "properties" to linkedMapOf(
@@ -1308,15 +1299,15 @@ class CoachTools(
                             "items" to linkedMapOf(
                                 "type" to "object",
                                 "properties" to linkedMapOf(
+                                    "action" to linkedMapOf("type" to "string", "description" to "add, set, used_up or discard (default add)"),
                                     "name" to linkedMapOf("type" to "string", "description" to "Food name in the user's language"),
-                                    "quantity" to linkedMapOf("type" to "string", "description" to "As said: 6, 500 g, 1 bottle"),
-                                    "location" to linkedMapOf("type" to "string", "description" to "fridge, freezer or pantry (cupboard)"),
+                                    "quantity" to linkedMapOf("type" to "string", "description" to "As said: 6, 500 g, 1 bottle. For set, what is left now (0 = ran out)"),
+                                    "location" to linkedMapOf("type" to "string", "description" to "fridge, freezer or pantry (cupboard). For add where it goes; for set where it is now"),
                                     "best_before_days" to linkedMapOf("type" to "integer", "description" to "Days until it should be eaten, only when the user says a date or how long it keeps. Omit it otherwise: the app estimates it per food from USDA FoodKeeper.")
                                 ),
                                 "required" to listOf("name")
                             )
-                        ),
-                        "confirmed" to linkedMapOf("type" to "boolean", "description" to "true after the user confirmed possible duplicates")
+                        )
                     ),
                     "required" to listOf("items")
                 )

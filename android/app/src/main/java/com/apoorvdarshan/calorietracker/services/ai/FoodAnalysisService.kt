@@ -531,6 +531,14 @@ class FoodAnalysisService(
         )
     }
 
+    /** The foods seen in a photo of the fridge, freezer or cupboard, for the user to review. */
+    suspend fun analyzeShelfPhoto(imageBytes: ByteArray): com.apoorvdarshan.calorietracker.models.GroceryPurchase {
+        if (imageBytes.isEmpty()) throw AiError.ImageConversionFailed
+        return com.apoorvdarshan.calorietracker.models.ReceiptParser.parse(
+            callAi(com.apoorvdarshan.calorietracker.models.ReceiptParser.shelfPrompt(), imageBytes)
+        )
+    }
+
     // -- Internal dispatch ------------------------------------------------
 
     private suspend fun callAi(

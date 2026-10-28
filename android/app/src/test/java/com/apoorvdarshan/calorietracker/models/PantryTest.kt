@@ -57,30 +57,72 @@ class PantryTest {
         assertTrue(!PantryMatching.similar("Leche", "Pan"))
     }
 
+    private val days: (String, PantryLocation) -> Long = { _, location -> location.defaultShelfLifeDays }
+
     @Test
-    fun coachAsksBeforeAddingLikelyDuplicates() {
-        val saved = mutableListOf<PantryItem>()
+    fun aLongStoryIsSortedIntoThePantry() {
+        val milk = PantryItem(name = "Leche", quantity = "1", location = PantryLocation.FRIDGE, expiresOn = "2026-10-29")
+        val eggs = PantryItem(name = "Huevos", quantity = "6", location = PantryLocation.FRIDGE, expiresOn = "2026-11-10")
+        val chicken = PantryItem(name = "Pechuga de pollo", quantity = "500 g", location = PantryLocation.FRIDGE, expiresOn = "2026-10-28")
+        val outcome = PantryEditor.apply(
+            listOf(milk, eggs, chicken),
+            listOf(
+                PantryChange(PantryChange.Action.ADD, "huevos blancos", "12", PantryLocation.FRIDGE),
+                PantryChange(PantryChange.Action.ADD, "Arroz", "1 kg", PantryLocation.PANTRY, bestBeforeDays = 180),
+                PantryChange(PantryChange.Action.SET, "pollo", location = PantryLocation.FREEZER),
+                PantryChange(PantryChange.Action.USED_UP, "leche"),
+                PantryChange(PantryChange.Action.DISCARD, "yogur")
+            ),
+            today,
+            days
+        )
+        assertEquals(
+            listOf(PantryEditor.Result.MERGED, PantryEditor.Result.ADDED, PantryEditor.Result.UPDATED, PantryEditor.Result.REMOVED, PantryEditor.Result.NOT_FOUND),
+            outcome.lines.map { it.result }
+        )
+        val byName = outcome.items.associateBy { it.name }
+        // Bought again: joined with the eggs already there, the sooner date kept.
+        assertEquals("18", byName.getValue("Huevos").quantity)
+        assertEquals("2026-11-01", byName.getValue("Huevos").expiresOn)
+        assertEquals("2027-04-25", byName.getValue("Arroz").expiresOn)
+        // Moved to the freezer: freezer shelf life from today.
+        assertEquals(PantryLocation.FREEZER, byName.getValue("Pechuga de pollo").location)
+        assertEquals("2027-01-25", byName.getValue("Pechuga de pollo").expiresOn)
+        assertTrue("Leche" !in byName)
+        assertEquals(listOf("Leche"), outcome.toShoppingList.map { it.name })
+    }
+
+    @Test
+    fun quantitiesAddUpWhenTheUnitsMatch() {
+        assertEquals("18", PantryEditor.mergeQuantity("6", "12"))
+        assertEquals("1.5 kg", PantryEditor.mergeQuantity("1 kg", "0,5 kg"))
+        assertEquals("500 g + 1 kg", PantryEditor.mergeQuantity("500 g", "1 kg"))
+        assertEquals("2", PantryEditor.mergeQuantity("", "2"))
+    }
+
+    @Test
+    fun coachUpdatesThePantryWithoutAsking() {
+        val saved = mutableListOf<PantryChange>()
         val tools = CoachTools(
             weights = emptyList(), bodyFats = emptyList(), foods = emptyList(),
             clock = Clock.fixed(Instant.parse("2026-10-27T12:00:00Z"), ZoneOffset.UTC),
             pantryItems = listOf(PantryItem(name = "Huevos", quantity = "6")),
             pantryWriter = { saved += it }
         )
-        assertTrue("add_pantry_items" in tools.availableToolNames)
+        assertTrue("update_pantry" in tools.availableToolNames)
         val items = listOf(
             mapOf("name" to "huevos blancos", "quantity" to "12"),
-            mapOf("name" to "Arroz", "location" to "pantry", "best_before_days" to 180)
+            mapOf("name" to "Arroz", "location" to "pantry", "best_before_days" to 180),
+            mapOf("action" to "used_up", "name" to "Huevos")
         )
-        val first = JsonParser.parseString(tools.execute("add_pantry_items", mapOf("items" to items))).asJsonObject
-        assertEquals(false, first["saved"].asBoolean)
-        assertEquals("Huevos", first["possible_duplicates"].asJsonArray[0].asJsonObject["already_have"].asString)
-        assertTrue(saved.isEmpty())
-
-        val second = JsonParser.parseString(tools.execute("add_pantry_items", mapOf("items" to items, "confirmed" to true))).asJsonObject
-        assertEquals(true, second["saved"].asBoolean)
-        assertEquals(listOf("huevos blancos", "Arroz"), saved.map { it.name })
-        assertEquals("2027-04-25", saved[1].expiresOn)
-        assertEquals(PantryLocation.PANTRY, saved[1].location)
+        val result = JsonParser.parseString(tools.execute("update_pantry", mapOf("items" to items))).asJsonObject
+        assertEquals(true, result["saved"].asBoolean)
+        val lines = result["changes"].asJsonArray.map { it.asJsonObject["result"].asString }
+        assertEquals(listOf("merged", "added", "removed"), lines)
+        assertEquals(listOf("huevos blancos", "Arroz", "Huevos"), saved.map { it.name })
+        // A second call in the same reply sees the first: the eggs are gone now.
+        val again = JsonParser.parseString(tools.execute("get_pantry", emptyMap<String, Any?>())).asJsonObject
+        assertEquals(listOf("Arroz"), again["items"].asJsonArray.map { it.asJsonObject["name"].asString })
     }
 
     @Test

@@ -27,6 +27,20 @@ class PantryRepository(private val prefs: PreferencesStore) {
         prefs.updatePantryItems { it + item.copy(name = item.name.trim()) }
     }
 
+    /** Everything Coach heard in one go: added, merged, moved, corrected or removed in one write. */
+    suspend fun applyChanges(
+        changes: List<com.apoorvdarshan.calorietracker.models.PantryChange>,
+        today: LocalDate = LocalDate.now()
+    ): com.apoorvdarshan.calorietracker.models.PantryEditor.Outcome {
+        var outcome: com.apoorvdarshan.calorietracker.models.PantryEditor.Outcome? = null
+        prefs.updatePantryItems { list ->
+            com.apoorvdarshan.calorietracker.models.PantryEditor.apply(list, changes, today).also { outcome = it }.items
+        }
+        val result = checkNotNull(outcome)
+        result.toShoppingList.forEach { addToShoppingList(it.name, location = it.location) }
+        return result
+    }
+
     suspend fun update(item: PantryItem) {
         prefs.updatePantryItems { list -> list.map { if (it.id == item.id) item else it } }
     }
@@ -83,18 +97,28 @@ class PantryRepository(private val prefs: PreferencesStore) {
 
     suspend fun shoppingSnapshot(): List<ShoppingItem> = prefs.shoppingList.first()
 
-    /** Saves a reviewed receipt and stocks its lines, with a best-before estimated per food ([ShelfLife]). */
+    /**
+     * Saves a reviewed receipt and stocks its lines, with a best-before estimated per food
+     * ([ShelfLife]); a food already in the same place is joined instead of listed twice.
+     */
     suspend fun addPurchase(purchase: GroceryPurchase, today: LocalDate = LocalDate.now()) {
         prefs.updateGroceryPurchases { it + purchase }
-        val stocked = purchase.items.map { line ->
-            PantryItem(
-                name = line.name,
-                quantity = line.quantity,
-                location = line.location,
-                expiresOn = today.plusDays(ShelfLife.estimateDays(line.name, line.location)).toString()
-            )
-        }
-        prefs.updatePantryItems { it + stocked }
+        stock(purchase.items, today)
+    }
+
+    /** Stocks foods seen in a photo (or read off a receipt) without recording a shop. */
+    suspend fun stock(lines: List<com.apoorvdarshan.calorietracker.models.GroceryLine>, today: LocalDate = LocalDate.now()) {
+        applyChanges(
+            lines.map { line ->
+                com.apoorvdarshan.calorietracker.models.PantryChange(
+                    action = com.apoorvdarshan.calorietracker.models.PantryChange.Action.ADD,
+                    name = line.name,
+                    quantity = line.quantity,
+                    location = line.location
+                )
+            },
+            today
+        )
     }
 
     suspend fun removePurchase(id: UUID) {

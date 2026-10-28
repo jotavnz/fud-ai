@@ -48,4 +48,15 @@
     <string name="pantry_home_empty">Cuéntale al Coach o añade lo que tienes en casa</string>
     <string name="pantry_home_summary">%1$d productos en casa</string>
     <string name="pantry_home_summary_expiring">%1$d productos en casa · %2$d vencen pronto</string>
+    <string name="pantry_shelf_photo">Foto de nevera</string>
+    <string name="pantry_reading_shelf">Mirando lo que hay…</string>
+    <string name="pantry_shelf_failed">No pude leer la foto. Prueba con más luz o añade los productos a mano.</string>
+    <string name="pantry_shelf_review">Lo que vi</string>
+    <string name="pantry_shelf_save">Guardar en la despensa</string>
+    <string name="pantry_take_photo">Tomar foto</string>
+    <string name="pantry_pick_photo">Elegir de la galería</string>
+    <string name="pantry_auto_save">Guardar automáticamente, sin revisar</string>
+    <string name="pantry_auto_saved">Guardé %1$d productos en tu despensa.</string>
+    <string name="pantry_tell_coach">Contarle al coach lo que tengo</string>
+    <string name="pantry_tell_coach_prompt">Te voy a contar lo que compré y lo que tengo en casa, quizá en varios mensajes. Ve actualizando mi nevera, congelador y despensa mientras te cuento: añade lo que compré, júntalo con lo que ya tenía, mueve lo que metí al congelador y quita lo que se acabó o boté. Al final, resúmelo por lugar.</string>
 </resources>

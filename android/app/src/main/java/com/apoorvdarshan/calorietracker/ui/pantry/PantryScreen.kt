@@ -73,6 +73,7 @@ import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialogActions
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassPrimaryButton
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassTextButton
+import com.apoorvdarshan.calorietracker.ui.components.InAppCameraCaptureDialog
 import com.apoorvdarshan.calorietracker.ui.home.BarcodeScannerSheet
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.coroutines.Dispatchers
@@ -99,20 +100,26 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
     var scanning by remember { mutableStateOf(false) }
     var busyMessage by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var receipt by remember { mutableStateOf<GroceryPurchase?>(null) }
-    val readingReceipt = stringResource(R.string.pantry_reading_receipt)
-    val receiptFailed = stringResource(R.string.pantry_receipt_failed)
+    // What a photo was read into, and whether it was a receipt (a shop) or a shelf (just stock).
+    var review by remember { mutableStateOf<Pair<PantryPhoto, GroceryPurchase>?>(null) }
+    var choosingSource by remember { mutableStateOf<PantryPhoto?>(null) }
+    var cameraFor by remember { mutableStateOf<PantryPhoto?>(null) }
+    var pickFor by remember { mutableStateOf(PantryPhoto.RECEIPT) }
+    val uiPrefs = remember { context.getSharedPreferences(UI_PREFS, android.content.Context.MODE_PRIVATE) }
+    var autoSave by remember { mutableStateOf(uiPrefs.getBoolean(KEY_AUTO_SAVE, false)) }
     val cookPrompt = stringResource(R.string.pantry_coach_cook_prompt)
     val shopPrompt = stringResource(R.string.pantry_coach_shop_prompt)
+    val tellPrompt = stringResource(R.string.pantry_tell_coach_prompt)
 
-    val receiptPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
-        if (uri == null) return@rememberLauncherForActivityResult
+    suspend fun save(kind: PantryPhoto, purchase: GroceryPurchase) {
+        if (kind == PantryPhoto.RECEIPT) container.pantryRepository.addPurchase(purchase)
+        else container.pantryRepository.stock(purchase.items)
+    }
+
+    fun analyze(kind: PantryPhoto, bytes: ByteArray) {
         scope.launch {
-            busyMessage = readingReceipt
+            busyMessage = context.getString(kind.readingRes)
             try {
-                val bytes = withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                } ?: error("unreadable")
                 val upload = withContext(Dispatchers.Default) {
                     FoodImageDecoder.decode(bytes, 2000)?.let { bitmap ->
                         ByteArrayOutputStream().use { out ->
@@ -121,17 +128,40 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                         }
                     } ?: bytes
                 }
-                receipt = container.foodAnalysis.analyzeReceipt(upload)
+                val read = if (kind == PantryPhoto.RECEIPT) container.foodAnalysis.analyzeReceipt(upload)
+                else container.foodAnalysis.analyzeShelfPhoto(upload)
+                if (autoSave && read.items.isNotEmpty()) {
+                    save(kind, read)
+                    errorMessage = context.getString(R.string.pantry_auto_saved, read.items.size)
+                } else {
+                    review = kind to read
+                }
             } catch (error: Exception) {
                 if (error is kotlinx.coroutines.CancellationException) throw error
-                errorMessage = receiptFailed
+                errorMessage = context.getString(kind.failedRes)
             } finally {
                 busyMessage = null
             }
         }
     }
+
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val kind = pickFor
+        scope.launch {
+            val bytes = withContext(Dispatchers.IO) {
+                runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull()
+            }
+            if (bytes == null) errorMessage = context.getString(kind.failedRes) else analyze(kind, bytes)
+        }
+    }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) scanning = true
+    }
+    var cameraAfterPermission by remember { mutableStateOf<PantryPhoto?>(null) }
+    val photoCameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) cameraFor = cameraAfterPermission
+        cameraAfterPermission = null
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -166,10 +196,19 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                                         cameraPermission.launch(Manifest.permission.CAMERA)
                                     }
                                 }
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 PantryActionChip(stringResource(R.string.pantry_receipt), Modifier.weight(1f)) {
-                                    receiptPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                    choosingSource = PantryPhoto.RECEIPT
+                                }
+                                PantryActionChip(stringResource(R.string.pantry_shelf_photo), Modifier.weight(1f)) {
+                                    choosingSource = PantryPhoto.SHELF
                                 }
                             }
+                            FudGlassTextButton(text = stringResource(R.string.pantry_tell_coach), onClick = {
+                                onDismiss()
+                                container.navigator.showCoachMessage(tellPrompt)
+                            }, modifier = Modifier.fillMaxWidth())
                             FudGlassPrimaryButton(text = stringResource(R.string.pantry_coach_cook), onClick = {
                                 onDismiss()
                                 container.navigator.showCoachMessage(cookPrompt)
@@ -255,14 +294,53 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                 }
             )
         }
-        receipt?.let { purchase ->
+        review?.let { (kind, purchase) ->
             ReceiptReviewDialog(
                 purchase = purchase,
-                onDismiss = { receipt = null },
+                isShelf = kind == PantryPhoto.SHELF,
+                onDismiss = { review = null },
                 onSave = { reviewed ->
-                    receipt = null
-                    scope.launch { container.pantryRepository.addPurchase(reviewed) }
+                    review = null
+                    scope.launch { save(kind, reviewed) }
                 }
+            )
+        }
+        choosingSource?.let { kind ->
+            FudGlassDialog(onDismissRequest = { choosingSource = null }) {
+                Text(stringResource(kind.titleRes), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                FudGlassPrimaryButton(text = stringResource(R.string.pantry_take_photo), onClick = {
+                    choosingSource = null
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                        cameraFor = kind
+                    } else {
+                        cameraAfterPermission = kind
+                        photoCameraPermission.launch(Manifest.permission.CAMERA)
+                    }
+                })
+                FudGlassTextButton(text = stringResource(R.string.pantry_pick_photo), onClick = {
+                    choosingSource = null
+                    pickFor = kind
+                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }, modifier = Modifier.fillMaxWidth())
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        autoSave = !autoSave
+                        uiPrefs.edit().putBoolean(KEY_AUTO_SAVE, autoSave).apply()
+                    }
+                ) {
+                    Checkbox(checked = autoSave, onCheckedChange = null)
+                    Text(stringResource(R.string.pantry_auto_save), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+        }
+        cameraFor?.let { kind ->
+            InAppCameraCaptureDialog(
+                onCapture = { bytes ->
+                    cameraFor = null
+                    analyze(kind, bytes)
+                },
+                onDismiss = { cameraFor = null }
             )
         }
         errorMessage?.let { message ->
@@ -288,6 +366,15 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
         )
     }
 }
+
+/** A photo read into pantry items: a receipt records the shop too, a shelf photo only stocks. */
+private enum class PantryPhoto(val titleRes: Int, val readingRes: Int, val failedRes: Int) {
+    RECEIPT(R.string.pantry_receipt, R.string.pantry_reading_receipt, R.string.pantry_receipt_failed),
+    SHELF(R.string.pantry_shelf_photo, R.string.pantry_reading_shelf, R.string.pantry_shelf_failed)
+}
+
+private const val UI_PREFS = "pantry_ui"
+private const val KEY_AUTO_SAVE = "auto_save_photos"
 
 internal val PantryLocation.labelRes: Int
     get() = when (this) {
@@ -490,14 +577,18 @@ private fun PantryItemDialog(
 @Composable
 private fun ReceiptReviewDialog(
     purchase: GroceryPurchase,
+    isShelf: Boolean,
     onDismiss: () -> Unit,
     onSave: (GroceryPurchase) -> Unit
 ) {
     val lines = remember { mutableStateListOf(*purchase.items.toTypedArray()) }
     val keep = remember { mutableStateListOf(*Array(purchase.items.size) { true }) }
     FudGlassDialog(onDismissRequest = onDismiss) {
-        Text(stringResource(R.string.pantry_receipt_review), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Text(
+            stringResource(if (isShelf) R.string.pantry_shelf_review else R.string.pantry_receipt_review),
+            fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface
+        )
+        if (!isShelf) Text(
             listOfNotNull(purchase.store.takeIf { it.isNotBlank() }, purchase.date, purchase.total?.let { "${purchase.currency} ${String.format(Locale.getDefault(), "%.2f", it)}".trim() })
                 .joinToString(" · "),
             fontSize = 13.sp,
@@ -539,7 +630,7 @@ private fun ReceiptReviewDialog(
             }
         }
         FudGlassDialogActions(
-            primaryText = stringResource(R.string.pantry_receipt_save),
+            primaryText = stringResource(if (isShelf) R.string.pantry_shelf_save else R.string.pantry_receipt_save),
             onPrimary = { onSave(purchase.copy(items = lines.filterIndexed { index, _ -> keep[index] })) },
             dismissText = stringResource(R.string.action_cancel),
             onDismiss = onDismiss,

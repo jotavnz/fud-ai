@@ -48,4 +48,15 @@
     <string name="pantry_home_empty">Tell Coach or add what you have at home</string>
     <string name="pantry_home_summary">%1$d items at home</string>
     <string name="pantry_home_summary_expiring">%1$d items at home · %2$d expire soon</string>
+    <string name="pantry_shelf_photo">Fridge photo</string>
+    <string name="pantry_reading_shelf">Looking at what is there…</string>
+    <string name="pantry_shelf_failed">Could not read the photo. Try again with more light, or add the items by hand.</string>
+    <string name="pantry_shelf_review">What I saw</string>
+    <string name="pantry_shelf_save">Save to pantry</string>
+    <string name="pantry_take_photo">Take photo</string>
+    <string name="pantry_pick_photo">Choose from gallery</string>
+    <string name="pantry_auto_save">Save automatically, without reviewing</string>
+    <string name="pantry_auto_saved">Saved %1$d items to your pantry.</string>
+    <string name="pantry_tell_coach">Tell Coach what you have</string>
+    <string name="pantry_tell_coach_prompt">I am going to tell you what I bought and what I have at home, maybe in several messages. Keep my fridge, freezer and pantry up to date as I talk: add what I bought, join what I already had, move what I put in the freezer and take out what I finished or threw away. At the end, sum it up by place.</string>
 </resources>

@@ -491,7 +491,7 @@ class AndroidVoiceAppPorts(
             pantryItems = container.pantryRepository.snapshot(),
             groceryPurchases = container.pantryRepository.purchaseSnapshot(),
             shoppingList = container.pantryRepository.shoppingSnapshot(),
-            pantryWriter = { items -> pantryScope.launch { items.forEach { container.pantryRepository.add(it) } } },
+            pantryWriter = { changes -> pantryScope.launch { container.pantryRepository.applyChanges(changes) } },
             cycle = container.cycleRepository.coachSnapshot()
         )
     }
