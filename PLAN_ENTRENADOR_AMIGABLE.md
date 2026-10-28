@@ -2,7 +2,25 @@
 
 Fecha: 2026-10-27. Basado en la investigación de esta sesión (ciclo menstrual, contenido de ejercicios, UX para principiantes y coach).
 
-## Estado (2026-10-28, APK `28a`)
+## Estado (2026-10-28 tarde, APK `28e`)
+
+Hecho la tarde del 28 (oficina):
+- **Imágenes** para los 44 ejercicios sin foto (22 propios + 22 cardio/calentamiento), tomadas del mismo dataset.
+- **Caducidad por alimento** (USDA FoodKeeper).
+- **Aviso de calentamiento** antes de la sesión.
+- **Resto de Fase 1**: ✓ por serie, rutinas de inicio, peso de la última vez y sugerencia sin historial, glosario, tamaños mayores en modo sencillo.
+- **Fase 3**: estilo detectado, próxima sesión, semana de descarga, inicio suave, logros de constancia (semanas 2/4/6/8/12…).
+- **Fase 2.4**: progresiones.
+- **Fase 4**: se quitó el permiso de pulso sin uso; textos de declaración de sueño y ciclo en `PLAYSTORE.md`.
+
+Sigue pendiente:
+- Probar en el teléfono: factura, código de barras, Flo.
+- Enviar la declaración de Health apps en Play.
+- Fase 2.1: etiquetas por posición e impacto (las fases calentamiento/vuelta a la calma/movilidad ya están en `ExerciseRoles`).
+- Fase 2.2: 60–80 ejercicios propios con fisioterapeuta.
+- "Sesión planificada sin hacer" como aviso.
+
+## Estado anterior (2026-10-28, APK `28a`)
 
 Nuevo el 28: imágenes Gym visual para 272 ejercicios (ver RETOMAR_EN_OTRA_PC.md → sección 00), Despensa con tarjeta propia en Inicio, despensa por voz/Coach (`add_pantry_items`, pregunta ante duplicados), sueño en Mi cuerpo limitado a 5 noches.
 
@@ -19,12 +37,12 @@ Hecho e instalado:
 
 Pendiente:
 - Probar en el teléfono: foto de factura real, escáner de código, importación de Flo vía Health Connect.
-- Ilustraciones para los 22 ejercicios nuevos (Gym visual no los tiene).
+- ~~Ilustraciones para los 22 ejercicios nuevos~~ (hecho el 28 por la tarde, imágenes del dataset).
 - Hecho el 28 (oficina): la biblioteca pasó al catálogo completo de la carpeta `exercises-dataset-main` (1.324 con foto y animación); ver RETOMAR_EN_OTRA_PC.md → sección 00.
 - ~~Modo guiado~~ (botón "Entrenar paso a paso", APK `n`).
 - ~~Lista de compras~~ (en Despensa; "Se acabó" la llena) y ~~avisos~~ (comida que vence mañana, "¿volvemos?" tras 7 días sin entrenar).
-- Caducidades por alimento (USDA FoodKeeper, CC0) en lugar de días fijos por ubicación.
-- Aviso de calentamiento antes de la sesión planificada.
+- ~~Caducidades por alimento (USDA FoodKeeper)~~ (hecho el 28).
+- ~~Aviso de calentamiento antes de la sesión planificada~~ (hecho el 28).
 - Declarar READ_MENSTRUATION en Google Play antes de publicar.
 
 ## Ya hecho (inicio)

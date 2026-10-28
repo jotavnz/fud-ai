@@ -1,6 +1,6 @@
 # Retomar el proyecto en otra PC
 
-Última actualización: **2026-10-28** (PC de casa). Todo está en GitHub: **jotavnz/fud-ai**, rama **`feature/entrenador-ia-es`**.
+Última actualización: **2026-10-28** (oficina, tarde). Todo está en GitHub: **jotavnz/fud-ai**, rama **`feature/entrenador-ia-es`**.
 Lee también `PLAN_ENTRENADOR_IA.md` y **`PLAN_ENTRENADOR_AMIGABLE.md`** (plan de la tanda del 27–28 y pendientes).
 
 ## 00. Estado al 2026-10-28 (leer primero)
@@ -11,9 +11,12 @@ Lee también `PLAN_ENTRENADOR_IA.md` y **`PLAN_ENTRENADOR_AMIGABLE.md`** (plan d
 | `EntrenadorIA-beta-2026-10-27n.apk` | `83fdda6f8`, etiqueta `estable-2026-10-27n` | Estable, probada en el teléfono |
 | `EntrenadorIA-beta-2026-10-27o.apk` | `742dfbbf2` | Despensa en Inicio, despensa por voz, sueño corto |
 | `EntrenadorIA-beta-2026-10-28a.apk` | `9b6bacaba` | + imágenes Gym visual (272), ya reemplazadas |
-| `EntrenadorIA-beta-2026-10-28b.apk` (oficina) | último commit de la rama | Catálogo nuevo de 1.368 ejercicios, buscador tolerante. **Es la que está en el teléfono** (firmada con el `debug.keystore` de casa, ya copiado a la oficina) |
+| `EntrenadorIA-beta-2026-10-28b.apk` (oficina) | `e6786f39d` | Catálogo nuevo de 1.368 ejercicios, buscador tolerante |
+| `EntrenadorIA-beta-2026-10-28c.apk` (oficina) | `95b9221de` | + imágenes para los 44 sin foto, caducidad por alimento (FoodKeeper), aviso de calentamiento |
+| `EntrenadorIA-beta-2026-10-28d.apk` (oficina) | `eb84338a6` | + Fase 1: rutinas de inicio, ✓ por serie, peso de la última vez, glosario |
+| `EntrenadorIA-beta-2026-10-28e.apk` (oficina) | último commit de la rama | + reglas del coach (descarga, inicio suave, logros, próxima sesión, estilo), progresiones. **Es la que está en el teléfono** (firmada con el `debug.keystore` de casa, ya copiado a la oficina) |
 
-Las APK viven en la carpeta `APK` junto al repo (no en Git); `APK/VERSIONES.md` tiene el detalle.
+Las APK viven en la carpeta `APK` junto al repo en casa y en `C:\EntrenadorIA\` en la oficina (no en Git).
 
 **Hecho en la tanda del 27–28** (detalle en `PLAN_ENTRENADOR_AMIGABLE.md`): vista sencilla/experta (Ajustes → Entrenamiento),
 "Entrenar paso a paso", calentamiento y vuelta a la calma, 22 ejercicios propios (hipopresivos, core profundo, postura,
@@ -35,9 +38,22 @@ node scripts/import_exercises_dataset.mjs "<ruta>/exercises-dataset-main" --medi
 ```
 Eso regenera el catálogo y convierte solo los medios que falten.
 
-**Pendiente:** probar en el teléfono factura real, código de barras, importación de Flo, despensa por voz;
-caducidades por alimento (USDA FoodKeeper); aviso de calentamiento antes de la sesión; ilustraciones para
-los 22 ejercicios propios; declarar `READ_MENSTRUATION` en Google Play antes de publicar.
+**Hecho la tarde del 28 (oficina):**
+- Los 22 ejercicios propios y los 22 de cardio/calentamiento conservados usan la foto (y la animación cuando el
+  movimiento coincide) de un ejercicio parecido del dataset: `scripts/exercise-borrowed-media.json`.
+- Caducidad por alimento con USDA FoodKeeper (`scripts/build_shelf_life.mjs` → `shelf_life.json`,
+  diccionario español en `scripts/shelf-life-es.json`).
+- Aviso de calentamiento (Ajustes → Entrenamiento: días y hora habituales; avisa 30 min antes).
+- Fase 1 del diario: rutinas de inicio, ✓ por serie, peso de la última vez, glosario, controles más grandes.
+- Reglas del coach: semana de descarga, inicio suave, logros de constancia, próxima sesión, estilo detectado.
+- Progresiones de peso corporal en el detalle del ejercicio.
+- Se quitó el permiso de pulso (`READ_HEART_RATE`), que nada usaba.
+- `PLAYSTORE.md` tiene los textos para declarar sueño y ciclo en Google Play.
+
+**Pendiente:**
+- Probar en el teléfono: factura real, código de barras, importación de Flo, despensa por voz.
+- Declarar `READ_SLEEP` y `READ_MENSTRUATION` en Google Play antes de publicar (textos listos en `PLAYSTORE.md`).
+- Contenido propio nuevo (60–80 ejercicios, Otago, hipopresivos avanzados), idealmente revisado por un fisioterapeuta.
 
 **Para Claude en la otra PC:** el usuario prefiere mensajes muy cortos y que se siga el plan sin pedir confirmación
 en cada paso; ignorar las 3 pruebas que fallan solo en Windows (abajo); nunca copiar código GPL/AGPL (openGym, wger,
