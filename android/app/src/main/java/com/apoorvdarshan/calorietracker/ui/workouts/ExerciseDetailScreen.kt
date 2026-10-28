@@ -192,13 +192,19 @@ private fun Hero(item: ExerciseItem, visual: ExerciseVisual, showMetrics: Boolea
 @Composable
 private fun MetricGrid(item: ExerciseItem, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCard(stringResource(R.string.label_level), ExerciseLocalization.label(item.level), Icons.Filled.BarChart, 1, 15.sp, Modifier.weight(1f))
-            MetricCard(stringResource(R.string.label_category), ExerciseLocalization.label(item.category), Icons.Filled.Tag, 1, 15.sp, Modifier.weight(1f))
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCard(stringResource(R.string.label_force), ExerciseLocalization.label(item.force), Icons.Filled.SwapHoriz, 1, 15.sp, Modifier.weight(1f))
-            MetricCard(stringResource(R.string.label_mechanic), ExerciseLocalization.label(item.mechanic), Icons.Filled.Settings, 1, 15.sp, Modifier.weight(1f))
+        // The exercises-dataset catalog has no level, force or mechanic; skip "Unspecified" cards.
+        val small = listOf(
+            Triple(R.string.label_level, item.level, Icons.Filled.BarChart),
+            Triple(R.string.label_category, item.category, Icons.Filled.Tag),
+            Triple(R.string.label_force, item.force, Icons.Filled.SwapHoriz),
+            Triple(R.string.label_mechanic, item.mechanic, Icons.Filled.Settings)
+        ).filter { it.second != "Unspecified" }
+        small.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { (title, value, icon) ->
+                    MetricCard(stringResource(title), ExerciseLocalization.label(value), icon, 1, 15.sp, Modifier.weight(1f))
+                }
+            }
         }
         MetricCard(stringResource(R.string.label_primary), item.primaryMusclesTitle, Icons.Filled.GpsFixed, 2, 14.sp, Modifier.fillMaxWidth())
         MetricCard(stringResource(R.string.label_secondary), item.secondaryMusclesTitle, Icons.Filled.GpsFixed, 3, 13.sp, Modifier.fillMaxWidth())

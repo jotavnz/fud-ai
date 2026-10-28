@@ -285,6 +285,7 @@ internal fun WorkoutPickerSheet(
             matchesSource && matchesContext
         }
     }
+    ScrollToTopOnChange(listState, items)
     val hasUserExercises = remember(repository) {
         repository.exercises.any { UserExercise.isUserExercise(it.id) }
     }
@@ -413,7 +414,7 @@ internal fun WorkoutPickerSheet(
                         options = equipmentOptions,
                         onSelect = { selected -> updateFilter { it.copy(equipment = selected.firstOrNull()) } }
                     )
-                    FilterPill(
+                    if (repository.describesLevels) FilterPill(
                         title = stringResource(R.string.label_level),
                         icon = Icons.Filled.BarChart,
                         selected = filter.level?.let(::setOf).orEmpty(),
@@ -421,7 +422,7 @@ internal fun WorkoutPickerSheet(
                         options = repository.availableLevels,
                         onSelect = { selected -> updateFilter { it.copy(level = selected.firstOrNull()) } }
                     )
-                    FilterPill(
+                    if (repository.describesForces) FilterPill(
                         title = stringResource(R.string.label_force),
                         icon = Icons.Filled.SwapHoriz,
                         selected = filter.force?.let(::setOf).orEmpty(),
@@ -429,7 +430,7 @@ internal fun WorkoutPickerSheet(
                         options = repository.availableForces,
                         onSelect = { selected -> updateFilter { it.copy(force = selected.firstOrNull()) } }
                     )
-                    FilterPill(
+                    if (repository.describesMechanics) FilterPill(
                         title = stringResource(R.string.label_mechanic),
                         icon = Icons.Filled.Settings,
                         selected = filter.mechanic?.let(::setOf).orEmpty(),

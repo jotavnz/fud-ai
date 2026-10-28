@@ -904,7 +904,7 @@ class PreferencesStore(
     // -- Workout diary ---------------------------------------------------
     override val workoutState: Flow<WorkoutPersistedState> = ds.data.map { prefs ->
         prefs[Keys.WORKOUT_STATE]?.let {
-            runCatching { json.decodeFromString<WorkoutPersistedState>(it) }.getOrNull()
+            runCatching { json.decodeFromString<WorkoutPersistedState>(ExerciseIdMigration.migrateJson(it)) }.getOrNull()
         }?.sanitized() ?: WorkoutPersistedState()
     }
 

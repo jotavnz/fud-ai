@@ -131,12 +131,12 @@ class MuscleRecoveryTest {
             category = "strength", equipment = equipment, primaryMuscles = listOf("chest"),
             secondaryMuscles = emptyList(), instructions = emptyList()
         )
-        val catalog = listOf(item("Machine_Bench_Press", "machine"), item("Dumbbell_Press", "dumbbell"), item("Pushups", "body only"))
+        val catalog = listOf(item("ed_0577", "machine"), item("Dumbbell_Press", "dumbbell"), item("Pushups", "body only"))
             .associateBy { it.id }
         val home = MachineCoach.candidates(MachineMuscleGroup.CHEST, catalog, homeEquipment = setOf("dumbbell")).map { it.id }
         assertEquals(listOf("Dumbbell_Press", "Pushups"), home)
         val bodyOnly = MachineCoach.candidates(MachineMuscleGroup.CHEST, catalog, homeEquipment = emptySet()).map { it.id }
         assertEquals(listOf("Pushups"), bodyOnly)
-        assertEquals("Machine_Bench_Press", MachineCoach.candidates(MachineMuscleGroup.CHEST, catalog).first().id)
+        assertEquals("ed_0577", MachineCoach.candidates(MachineMuscleGroup.CHEST, catalog).first().id)
     }
 }

@@ -16,7 +16,7 @@ class ExerciseRolesTest {
         Gson().fromJson(RepoFiles.find(path).readText(), object : TypeToken<List<ExerciseRecord>>() {}.type)
 
     private val catalog: List<ExerciseItem> by lazy {
-        (records("../../ios/calorietracker/Resources/FreeExerciseDB/dist/exercises.json") +
+        (records("src/main/assets/exercises.json") +
             records("src/main/assets/exercises_extra.json")).mapNotNull { ExerciseItem.from(it) }
     }
 
@@ -57,7 +57,7 @@ class ExerciseRolesTest {
     @Test
     fun cooldownAfterHeavyLegsStartsWithAnEasyWalk() {
         val picks = ExerciseRoles.cooldown(listOf("quadriceps", "hamstrings"), heavyLegs = true).map { it.id }
-        assertEquals(listOf("Walking_Treadmill", "Quad_Stretch", "Hamstring_Stretch", "Fud_Diaphragmatic_Breathing"), picks)
+        assertEquals(listOf("Walking_Treadmill", "ed_0613", "ed_1511", "Fud_Diaphragmatic_Breathing"), picks)
     }
 
     @Test

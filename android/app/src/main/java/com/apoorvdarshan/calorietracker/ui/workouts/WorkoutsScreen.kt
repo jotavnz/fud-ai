@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -340,6 +341,8 @@ private fun WorkoutLibraryScreen(
         if (listState.isScrollInProgress) dismissKeyboard()
     }
 
+    ScrollToTopOnChange(listState, items)
+
     // Fud AI's tab bar floats over content (no Scaffold inset like Delts), so the
     // screen paints its own background and the list keeps its tail clear of the
     // floating bar. The status-bar inset is absorbed by the ad strip above this
@@ -494,9 +497,9 @@ private fun FilterRow(repo: ExerciseRepository, vm: WorkoutsViewModel) {
         FilterPill(stringResource(R.string.label_equipment), Icons.Filled.FitnessCenter, vm.equipment,
             stringResource(R.string.filter_all_count, repo.availableEquipment.size),
             repo.availableEquipment) { vm.equipment = it }
-        FilterPill(stringResource(R.string.label_level), Icons.Filled.BarChart, vm.levels, allLabel, repo.availableLevels) { vm.levels = it }
-        FilterPill(stringResource(R.string.label_force), Icons.Filled.SwapHoriz, vm.forces, allLabel, repo.availableForces) { vm.forces = it }
-        FilterPill(stringResource(R.string.label_mechanic), Icons.Filled.Settings, vm.mechanics, allLabel, repo.availableMechanics) { vm.mechanics = it }
+        if (repo.describesLevels) FilterPill(stringResource(R.string.label_level), Icons.Filled.BarChart, vm.levels, allLabel, repo.availableLevels) { vm.levels = it }
+        if (repo.describesForces) FilterPill(stringResource(R.string.label_force), Icons.Filled.SwapHoriz, vm.forces, allLabel, repo.availableForces) { vm.forces = it }
+        if (repo.describesMechanics) FilterPill(stringResource(R.string.label_mechanic), Icons.Filled.Settings, vm.mechanics, allLabel, repo.availableMechanics) { vm.mechanics = it }
         FilterPill(stringResource(R.string.label_category), Icons.Filled.Tag, vm.categories, allLabel, repo.availableCategoriesByCount) { vm.categories = it }
     }
 }
@@ -720,7 +723,7 @@ internal fun ExerciseRow(
             ) {
                 Tag(item.primaryMusclesTitle, Icons.Filled.GpsFixed)
                 Tag(ExerciseLocalization.label(item.equipment), Icons.Filled.FitnessCenter)
-                Tag(ExerciseLocalization.label(item.level), Icons.Filled.BarChart)
+                if (item.level != "Unspecified") Tag(ExerciseLocalization.label(item.level), Icons.Filled.BarChart)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 Icon(Icons.Filled.Storage, null, tint = colors.secondaryAccent, modifier = Modifier.size(13.dp))
@@ -768,6 +771,22 @@ private fun EmptyState(onCreateExercise: (() -> Unit)? = null) {
             Button(onClick = create, modifier = Modifier.padding(top = 8.dp)) {
                 Text(stringResource(R.string.workout_create_exercise))
             }
+        }
+    }
+}
+
+/**
+ * Jumps back to the first result whenever the search or a filter changes the list.
+ * Without this the list kept its old offset, so a new query landed mid-list (or past
+ * its end) and the best matches, which rank first, looked missing.
+ */
+@Composable
+internal fun ScrollToTopOnChange(listState: LazyListState, items: List<ExerciseItem>) {
+    var shown by remember { mutableStateOf(items) }
+    LaunchedEffect(items) {
+        if (items !== shown) {
+            shown = items
+            listState.scrollToItem(0)
         }
     }
 }

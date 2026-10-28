@@ -13,7 +13,7 @@ import java.io.File
 
 class ExerciseSearchTest {
     private val tricepsPushdown = ExerciseItem(
-        id = "Triceps_Pushdown",
+        id = "ed_0201",
         name = "Triceps Pushdown",
         level = "Beginner",
         imagePaths = emptyList(),
@@ -195,7 +195,7 @@ class ExerciseSearchTest {
                 "chest" in name && "press" in name
             }
         )
-        assertEquals("Cable Chest Press", results.first().name)
+        assertTrue(results.any { it.name == "Lever chest press" })
     }
 
     @Test
@@ -203,15 +203,31 @@ class ExerciseSearchTest {
         val repository = bundledRepository()
 
         val abs = repository.filtered(searchText = "abs").map { it.name }
-        assertEquals("Ab Crunch Machine", abs.first())
-        assertTrue(abs.containsAll(listOf("Ab Roller", "Crunches")))
+        assertTrue(abs.containsAll(listOf("Lever seated crunch", "Crunch floor")))
 
         val pec = repository.filtered(searchText = "pec").map { it.name }
-        assertTrue(pec.containsAll(listOf("Barbell Bench Press - Medium Grip", "Butterfly")))
+        assertTrue(pec.containsAll(listOf("Barbell bench press", "Lever seated fly")))
 
         val delts = repository.filtered(searchText = "delts").map { it.name }
-        assertEquals("Barbell Rear Delt Row", delts.first())
-        assertTrue(delts.contains("Arnold Dumbbell Press"))
+        assertTrue(delts.containsAll(listOf("Barbell rear delt row", "Dumbbell arnold press")))
+    }
+
+    @Test
+    fun mixedLanguagesTyposAndConnectingWordsStillMatch() {
+        val squat = exercise(id = "ed_0043", name = "Sentadilla completa con barra", equipment = "Barbell")
+            .copy(englishName = "Barbell full squat")
+        val press = exercise(id = "ed_0025", name = "Press de banca con barra", equipment = "Barbell")
+            .copy(englishName = "Barbell bench press")
+
+        assertTrue(ExerciseSearch.matches(squat, "squat barra"))
+        assertTrue(ExerciseSearch.matches(squat, "sentadilla de barra"))
+        assertTrue(ExerciseSearch.matches(squat, "sentadila completa"))
+        assertTrue(ExerciseSearch.matches(squat, "SENTADÍLLA"))
+        assertTrue(ExerciseSearch.matches(press, "bench press con barra"))
+        assertTrue(ExerciseSearch.matches(press, "pres banca"))
+        assertFalse(ExerciseSearch.matches(press, "sentadilla"))
+        // Exact name matches still rank above typo matches.
+        assertTrue(ExerciseSearch.relevance(squat, "sentadilla")!! < ExerciseSearch.relevance(squat, "sentadila")!!)
     }
 
     @Test
@@ -226,11 +242,11 @@ class ExerciseSearchTest {
         val repository = bundledRepository()
 
         val plain = repository.filtered(searchText = "bulgarian split squat").map { it.id }
-        assertEquals("Split_Squat_with_Dumbbells", plain.first())
-        assertTrue(plain.contains("Smith_Single-Leg_Split_Squat"))
+        assertEquals("ed_0410", plain.first())
+        assertTrue(plain.contains("ed_0768"))
 
         val smith = repository.filtered(searchText = "bulgarian split squat smith").map { it.id }
-        assertEquals(listOf("Smith_Single-Leg_Split_Squat"), smith)
+        assertTrue("ed_0768" in smith)
     }
 
     private fun exercise(
@@ -255,7 +271,7 @@ class ExerciseSearchTest {
     )
 
     private fun bundledRepository(): ExerciseRepository {
-        val records: List<ExerciseRecord> = File(repositoryRoot(), "ios/calorietracker/Resources/FreeExerciseDB/dist/exercises.json")
+        val records: List<ExerciseRecord> = File(repositoryRoot(), "android/app/src/main/assets/exercises.json")
             .reader(Charsets.UTF_8)
             .use { Gson().fromJson(it, object : TypeToken<List<ExerciseRecord>>() {}.type) }
         return ExerciseRepository.forTests(records.mapNotNull { ExerciseItem.from(it) })

@@ -8,12 +8,7 @@ enum class ExerciseVisualFormat {
     JPEG,
     SVG,
     PNG,
-    /**
-     * Gym visual animation (© Gym visual, gymvisual.com): [framePaths] holds a still JPEG then
-     * the animated GIF, both bundled assets under `gymvisual/`. Optional: absent in builds made
-     * without the licensed media, which then use the authored frames.
-     */
-    GYM_VISUAL
+    ANIMATED
 }
 
 /**
@@ -21,6 +16,9 @@ enum class ExerciseVisualFormat {
  *
  * - [ExerciseVisualFormat.JPEG]: [framePaths] are bundled asset paths or user photo
  *   filenames, loaded directly.
+ * - [ExerciseVisualFormat.ANIMATED]: bundled catalog media. [framePaths] holds the still
+ *   photo (index 0, the representative frame) and the animated WebP (index 1); the image
+ *   plays the WebP when it animates and shows the still otherwise.
  * - [ExerciseVisualFormat.PNG] / [ExerciseVisualFormat.SVG]: authored frames. [framePaths]
  *   are flat filenames (`<name>.png`) that are *not* bundled in release builds; they are
  *   resolved through [com.apoorvdarshan.calorietracker.services.WorkoutFrameStore]
@@ -33,24 +31,31 @@ data class ExerciseVisual(
     val representativeFrameIndex: Int,
     val frameDigests: List<String?> = emptyList()
 ) {
-    val isAuthored: Boolean get() = format == ExerciseVisualFormat.PNG || format == ExerciseVisualFormat.SVG
+    val isAuthored: Boolean
+        get() = format == ExerciseVisualFormat.SVG || format == ExerciseVisualFormat.PNG
 
-    val isGymVisual: Boolean get() = format == ExerciseVisualFormat.GYM_VISUAL
+    val isAnimated: Boolean get() = format == ExerciseVisualFormat.ANIMATED
 
     fun digestAt(index: Int): String? = frameDigests.getOrNull(index)
 
     companion object {
-        fun gymVisual(itemId: String): ExerciseVisual = ExerciseVisual(
-            framePaths = listOf("gymvisual/$itemId.jpg", "gymvisual/$itemId.gif"),
-            format = ExerciseVisualFormat.GYM_VISUAL,
-            representativeFrameIndex = 0
-        )
-
         fun jpeg(paths: List<String>): ExerciseVisual = ExerciseVisual(
             framePaths = paths,
             format = ExerciseVisualFormat.JPEG,
             representativeFrameIndex = 0
         )
+
+        /** Catalog media (still + animated WebP) when present, else the plain photo set. */
+        fun fromImagePaths(paths: List<String>): ExerciseVisual {
+            val animation = paths.firstOrNull { it.endsWith(".webp", ignoreCase = true) }
+                ?: return jpeg(paths)
+            val still = paths.firstOrNull { it != animation } ?: animation
+            return ExerciseVisual(
+                framePaths = listOf(still, animation),
+                format = ExerciseVisualFormat.ANIMATED,
+                representativeFrameIndex = 0
+            )
+        }
     }
 }
 
@@ -203,7 +208,7 @@ internal object ExerciseVisualResolver {
         val authoredSet = authoredFrames[resolveVisualKey(item, authoredFrames)]
         val frames = authoredSet?.forGender(gender).orEmpty()
         if (authoredSet == null || frames.isEmpty()) {
-            return ExerciseVisual.jpeg(item.imagePaths)
+            return ExerciseVisual.fromImagePaths(item.imagePaths)
         }
         return ExerciseVisual(
             framePaths = frames,

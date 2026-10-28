@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
 import android.content.Context
+import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
@@ -31,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.decode.ImageDecoderDecoder
 import coil.decode.SvgDecoder
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -78,8 +81,8 @@ fun AnimatedExerciseImage(
     animatesFrames: Boolean = true
 ) {
     val colors = workoutsColors()
-    if (visual.isGymVisual) {
-        GymVisualImage(visual, modifier, animatesFrames)
+    if (visual.isAnimated) {
+        CatalogMediaImage(visual, modifier, animatesFrames, fallbackLabel)
         return
     }
     val imagePaths = visual.framePaths
@@ -158,42 +161,47 @@ fun AnimatedExerciseImage(
 }
 
 /**
- * Gym visual media: the still JPEG in lists, the animated GIF where the exercise is shown on
- * its own. White-background art, so it sits on a light card.
+ * Catalog media: the still JPEG in lists, the animated WebP where the exercise is shown on
+ * its own (the still on Android 8.x, which has no animated WebP decoder). White-background
+ * art, so it sits on a white card. Builds made without the media show the placeholder.
  */
 @Composable
-private fun GymVisualImage(visual: ExerciseVisual, modifier: Modifier, animates: Boolean) {
+private fun CatalogMediaImage(
+    visual: ExerciseVisual,
+    modifier: Modifier,
+    animates: Boolean,
+    fallbackLabel: String?
+) {
     val context = LocalContext.current
     val animationsEnabled = remember {
         Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
     }
-    val path = if (animates && animationsEnabled) visual.framePaths.last() else visual.framePaths.first()
+    val plays = animates && animationsEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+    val path = if (plays) visual.framePaths.last() else visual.framePaths.first()
     val request = remember(path) {
         ImageRequest.Builder(context)
             .data(ExerciseRepository.imageAssetUri(path))
             .memoryCacheKey(path)
-            .apply {
-                if (path.endsWith(".gif")) {
-                    decoderFactory(
-                        if (android.os.Build.VERSION.SDK_INT >= 28) coil.decode.ImageDecoderDecoder.Factory()
-                        else coil.decode.GifDecoder.Factory()
-                    )
-                }
-            }
+            .apply { if (plays) decoderFactory(ImageDecoderDecoder.Factory()) }
             .build()
     }
-    Box(modifier.background(androidx.compose.ui.graphics.Color.White)) {
+    var unavailable by remember(path) { mutableStateOf(false) }
+    if (unavailable) {
+        ExerciseImagePlaceholder(modifier, workoutsColors(), fallbackLabel)
+        return
+    }
+    Box(modifier.background(Color.White)) {
         AsyncImage(
             model = request,
             contentDescription = null,
             contentScale = ContentScale.Fit,
+            onError = { unavailable = true },
             modifier = Modifier.fillMaxSize()
         )
-        // Attribution the media's terms require, wherever the exercise is shown large.
         if (animates) {
             Text(
-                "© Gym visual — gymvisual.com",
-                color = androidx.compose.ui.graphics.Color(0xFF8A8A8A),
+                "© tr.AI.ng Coach — All.In.One App",
+                color = Color(0xFF8A8A8A),
                 fontSize = 9.sp,
                 modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
             )

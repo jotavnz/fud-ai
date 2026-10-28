@@ -55,13 +55,14 @@ data class SetPrescription(
 )
 
 /**
- * Muscle groups a lost gym-goer can pick from. [muscles] are free-exercise-db primary
+ * Muscle groups a lost gym-goer can pick from. [muscles] are catalog primary
  * muscle titles; [curatedIds] are the machines most gyms have, best first, so the first
- * three suggestions are recognizable equipment rather than rare variations.
+ * three suggestions are recognizable equipment rather than rare variations. The ids are
+ * exercises-dataset ones; scripts/exercise-id-migration.manual.json names the machine each replaced.
  */
 enum class MachineMuscleGroup(
     @StringRes val titleRes: Int,
-    /** free-exercise-db muscle whose glyph represents the group. */
+    /** Catalog muscle whose glyph represents the group. */
     val glyphMuscle: String,
     val muscles: Set<String>,
     val curatedIds: List<String>
@@ -69,71 +70,71 @@ enum class MachineMuscleGroup(
     CHEST(
         R.string.machine_coach_group_chest, "Chest", setOf("Chest"),
         listOf(
-            "Machine_Bench_Press", "Butterfly", "Cable_Crossover",
-            "Leverage_Incline_Chest_Press", "Smith_Machine_Bench_Press", "Low_Cable_Crossover"
+            "ed_0577", "ed_0596", "ed_0227",
+            "ed_1299", "ed_0748", "ed_0179"
         )
     ),
     BACK(
         R.string.machine_coach_group_back, "Lats", setOf("Lats", "Middle Back"),
         listOf(
-            "Wide-Grip_Lat_Pulldown", "Seated_Cable_Rows", "Leverage_High_Row",
-            "V-Bar_Pulldown", "Straight-Arm_Pulldown", "Lying_T-Bar_Row"
+            "ed_2330", "ed_0861", "ed_0581",
+            "ed_2616", "ed_0238", "ed_0606"
         )
     ),
     SHOULDERS(
         R.string.machine_coach_group_shoulders, "Shoulders", setOf("Shoulders"),
         listOf(
-            "Machine_Shoulder_Military_Press", "Cable_Seated_Lateral_Raise", "Reverse_Machine_Flyes",
-            "Face_Pull", "Leverage_Shoulder_Press", "Front_Cable_Raise"
+            "ed_0587", "ed_0178", "ed_0602",
+            "ed_0203", "ed_0603", "ed_0162"
         )
     ),
     BICEPS(
         R.string.machine_coach_group_biceps, "Biceps", setOf("Biceps"),
         listOf(
-            "Machine_Bicep_Curl", "Machine_Preacher_Curls", "Standing_Biceps_Cable_Curl",
-            "Cable_Hammer_Curls_-_Rope_Attachment", "Cable_Preacher_Curl", "High_Cable_Curls"
+            "ed_0575", "ed_0592", "ed_0868",
+            "ed_0165", "ed_0195", "ed_1636"
         )
     ),
     TRICEPS(
         R.string.machine_coach_group_triceps, "Triceps", setOf("Triceps"),
         listOf(
-            "Triceps_Pushdown_-_Rope_Attachment", "Machine_Triceps_Extension", "Dip_Machine",
-            "Triceps_Pushdown", "Cable_Rope_Overhead_Triceps_Extension", "Reverse_Grip_Triceps_Pushdown"
+            "ed_0200", "ed_0607", "ed_1451",
+            "ed_0201", "ed_0194", "ed_0207"
         )
     ),
     LEGS(
         R.string.machine_coach_group_legs, "Quadriceps", setOf("Quadriceps"),
         listOf(
-            "Leg_Press", "Leg_Extensions", "Hack_Squat",
-            "Smith_Machine_Squat", "Narrow_Stance_Leg_Press", "Single-Leg_Leg_Extension"
+            "ed_0739", "ed_0585", "ed_0743",
+            "ed_0770", "ed_0760", "ed_2611"
         )
     ),
     HAMSTRINGS(
         R.string.machine_coach_group_hamstrings, "Hamstrings", setOf("Hamstrings"),
         listOf(
-            "Seated_Leg_Curl", "Lying_Leg_Curls", "Standing_Leg_Curl",
-            "Glute_Ham_Raise", "Smith_Machine_Stiff-Legged_Deadlift", "Reverse_Hyperextension"
+            "ed_0599", "ed_0586", "ed_0582",
+            "ed_3193", "ed_0752", "ed_0593"
         )
     ),
     GLUTES(
         R.string.machine_coach_group_glutes, "Glutes", setOf("Glutes", "Abductors"),
         listOf(
-            "Barbell_Hip_Thrust", "Thigh_Abductor", "One-Legged_Cable_Kickback",
-            "Pull_Through", "Barbell_Glute_Bridge", "Thigh_Adductor"
+            "ed_3562", "ed_0597", "ed_0860",
+            "ed_0196", "ed_1409", "ed_0598"
         )
     ),
     CALVES(
         R.string.machine_coach_group_calves, "Calves", setOf("Calves"),
         listOf(
-            "Standing_Calf_Raises", "Seated_Calf_Raise", "Calf_Press_On_The_Leg_Press_Machine",
-            "Smith_Machine_Calf_Raise", "Calf_Press"
+            "ed_0605", "ed_0594", "ed_1391",
+            "ed_0773", "ed_2289"
         )
     ),
     ABS(
         R.string.machine_coach_group_abs, "Abdominals", setOf("Abdominals"),
         listOf(
-            "Ab_Crunch_Machine", "Cable_Crunch", "Standing_Cable_Wood_Chop",
-            "Pallof_Press", "Rope_Crunch", "Cable_Reverse_Crunch"
+            "ed_1452", "ed_0175", "ed_0230",
+            "ed_0979", "ed_0874", "ed_0873"
         )
     )
 }

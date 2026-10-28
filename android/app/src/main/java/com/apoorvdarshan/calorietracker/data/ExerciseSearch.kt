@@ -30,18 +30,23 @@ class ExerciseSearchIndex(name: String, metadata: List<String>) {
 /**
  * Tokenized AND search over exercise names, with optional query aliases and
  * relevance ranking: exact name > name prefix > phrase inside the name >
- * every word in the name > query that names a muscle group, equipment, or category.
+ * every word in the name > query that names a muscle group, equipment, or category >
+ * every word somewhere in the Spanish or English name (mixed languages, "squat barra") >
+ * the same with small typos ("sentadila", "mancuerma"), see [TYPO_RANK].
  */
 object ExerciseSearch {
+    /** Rank of matches that need a typo fixed; shown only when nothing matches as typed. */
+    const val TYPO_RANK = 6
+
     private val aliases = mapOf(
-        "cable pushdown" to "Triceps_Pushdown",
-        "triceps cable pushdown" to "Triceps_Pushdown",
-        "tricep cable pushdown" to "Triceps_Pushdown",
-        "tricep pushdown" to "Triceps_Pushdown",
+        "cable pushdown" to "ed_0201",
+        "triceps cable pushdown" to "ed_0201",
+        "tricep cable pushdown" to "ed_0201",
+        "tricep pushdown" to "ed_0201",
         // The catalog's plain Bulgarian split squat (rear foot on a bench, dumbbells).
-        "bulgarian split squat" to "Split_Squat_with_Dumbbells",
-        "bulgarian squat" to "Split_Squat_with_Dumbbells",
-        "sentadilla bulgara" to "Split_Squat_with_Dumbbells",
+        "bulgarian split squat" to "ed_0410",
+        "bulgarian squat" to "ed_0410",
+        "sentadilla bulgara" to "ed_0410",
     )
 
     /**
@@ -119,7 +124,59 @@ object ExerciseSearch {
     fun relevance(item: ExerciseItem, query: String): Int? {
         val shown = relevance(item.searchIndex, query, item.id)
         val english = item.englishSearchIndex?.let { relevance(it, query, item.id) }
-        return listOfNotNull(shown, english).minOrNull()
+        return listOfNotNull(shown, english).minOrNull() ?: looseRelevance(item, query)
+    }
+
+    /**
+     * Connecting words ("sentadilla de barra", "press with dumbbells") that names may
+     * leave out; dropped from the query unless it is made only of them.
+     */
+    private val stopWords = setOf(
+        "a", "al", "con", "de", "del", "el", "en", "la", "las", "los", "para", "por", "sobre", "un", "una", "y",
+        "and", "for", "of", "on", "the", "to", "with"
+    )
+
+    /**
+     * Last-resort tiers: every query word matches some word of the Spanish or English
+     * name (5), or does so allowing typos ([TYPO_RANK]).
+     */
+    private fun looseRelevance(item: ExerciseItem, query: String): Int? {
+        val tokens = tokens(query).map { tokenSynonyms[it] ?: it }
+            .let { all -> all.filterNot { it in stopWords }.ifEmpty { all } }
+        if (tokens.isEmpty()) return null
+        val words = (item.searchIndex.nameWords + item.englishSearchIndex?.nameWords.orEmpty()).distinct()
+        if (tokens.all { token -> words.any { wordMatches(it, token) } }) return 5
+        if (tokens.all { token -> words.any { wordMatches(it, token) || closeTo(it, token) } }) return TYPO_RANK
+        return null
+    }
+
+    /**
+     * Whether [token] is a slightly misspelled start of [word]: one edit for tokens of
+     * 4–7 letters, two from 8. Shorter tokens must be exact, or "cur" would find "bar".
+     */
+    private fun closeTo(word: String, token: String): Boolean {
+        val allowed = when {
+            token.length >= 8 -> 2
+            token.length >= 4 -> 1
+            else -> return false
+        }
+        if (word.length < token.length - allowed) return false
+        val lengths = (token.length - allowed)..(token.length + allowed)
+        return lengths.any { length -> length <= word.length && editDistance(word.take(length), token) <= allowed }
+    }
+
+    private fun editDistance(a: String, b: String): Int {
+        var previous = IntArray(b.length + 1) { it }
+        for (i in 1..a.length) {
+            val current = IntArray(b.length + 1)
+            current[0] = i
+            for (j in 1..b.length) {
+                val substitution = previous[j - 1] + if (a[i - 1] == b[j - 1]) 0 else 1
+                current[j] = minOf(substitution, previous[j] + 1, current[j - 1] + 1)
+            }
+            previous = current
+        }
+        return previous[b.length]
     }
 
     fun matches(item: ExerciseItem, query: String): Boolean = relevance(item, query) != null

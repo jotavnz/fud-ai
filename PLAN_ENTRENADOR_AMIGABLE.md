@@ -20,7 +20,7 @@ Hecho e instalado:
 Pendiente:
 - Probar en el teléfono: foto de factura real, escáner de código, importación de Flo vía Health Connect.
 - Ilustraciones para los 22 ejercicios nuevos (Gym visual no los tiene).
-- Emparejar más ejercicios con Gym visual (272 de 899) o importar los del dataset que no existen en el catálogo (con su español nativo).
+- Hecho el 28 (oficina): la biblioteca pasó al catálogo completo de la carpeta `exercises-dataset-main` (1.324 con foto y animación); ver RETOMAR_EN_OTRA_PC.md → sección 00.
 - ~~Modo guiado~~ (botón "Entrenar paso a paso", APK `n`).
 - ~~Lista de compras~~ (en Despensa; "Se acabó" la llena) y ~~avisos~~ (comida que vence mañana, "¿volvemos?" tras 7 días sin entrenar).
 - Caducidades por alimento (USDA FoodKeeper, CC0) en lugar de días fijos por ubicación.

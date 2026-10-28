@@ -100,6 +100,8 @@ open class FudAIApp : Application() {
         // Re-apply the AndroidX per-app locale list on API 32 and below, where
         // AppCompat stores it. Empty list = follow the system language.
         AppCompatDelegate.setApplicationLocales(AppCompatDelegate.getApplicationLocales())
+        // Before anything reads saved workouts: maps old catalog ids onto the current ones.
+        com.apoorvdarshan.calorietracker.data.ExerciseIdMigration.load(this)
         // Barcode lookups from Home and the voice assistant name unknown products in the app language.
         com.apoorvdarshan.calorietracker.services.OpenFoodFactsService.barcodeFallbackName =
             { barcode -> getString(R.string.hm_barcode_name_format, barcode) }

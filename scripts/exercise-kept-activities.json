@@ -1,0 +1,768 @@
+[
+  {
+    "record": {
+      "name": "Walking",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "Walk at a comfortable pace outdoors or on a track. Keep your posture upright, land softly through your midfoot, and swing your arms naturally.",
+        "For a brisk walk, shorten your stride slightly and increase cadence rather than overstriding."
+      ],
+      "category": "cardio",
+      "images": [
+        "Walking_Treadmill_0.jpg",
+        "Walking_Treadmill_1.jpg"
+      ],
+      "id": "Walking_Outdoor"
+    },
+    "es": {
+      "name": "Caminata al aire libre",
+      "instructions": [
+        "Camina a un ritmo cómodo al aire libre o en una pista. Mantén la postura erguida, aterriza suavemente con la parte media del pie y balancea los brazos de forma natural.",
+        "Para una caminata rápida, acorta ligeramente la zancada y aumenta la cadencia en lugar de dar pasos demasiado largos."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Running",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "Run at a steady pace outdoors or on a track. Land lightly, keep your shoulders relaxed, and breathe rhythmically.",
+        "Ease into longer runs by building duration gradually and stopping if pain appears."
+      ],
+      "category": "cardio",
+      "images": [
+        "Running_Treadmill_0.jpg",
+        "Running_Treadmill_1.jpg"
+      ],
+      "id": "Running_Outdoor"
+    },
+    "es": {
+      "name": "Correr al aire libre",
+      "instructions": [
+        "Corre a un ritmo constante al aire libre o en una pista. Aterriza suavemente, mantén los hombros relajados y respira de forma rítmica.",
+        "Avanza gradualmente hacia carreras más largas aumentando la duración poco a poco y detente si aparece dolor."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Bicycling",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": "other",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, seat yourself on the bike and adjust the seat to your height."
+      ],
+      "category": "cardio",
+      "images": [
+        "Bicycling_0.jpg",
+        "Bicycling_1.jpg"
+      ],
+      "id": "Bicycling"
+    },
+    "es": {
+      "name": "Ciclismo",
+      "instructions": [
+        "Para comenzar, siéntate en la bicicleta y ajusta el asiento a tu altura."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Bicycling, Stationary",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, seat yourself on the bike and adjust the seat to your height.",
+        "Select the desired option from the menu. You may have to start pedaling to turn it on. You can use the manual setting, or you can select a program to use. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. The level of resistance can be changed throughout the workout. The handles can be used to monitor your heart rate to help you stay at an appropriate intensity."
+      ],
+      "category": "cardio",
+      "images": [
+        "Bicycling_Stationary_0.jpg",
+        "Bicycling_Stationary_1.jpg"
+      ],
+      "id": "Bicycling_Stationary"
+    },
+    "es": {
+      "name": "Bicicleta estática",
+      "instructions": [
+        "Para comenzar, siéntate en la bicicleta y ajusta el asiento a tu altura.",
+        "Selecciona la opción deseada en el menú. Es posible que tengas que empezar a pedalear para encenderla. Puedes usar el ajuste manual o seleccionar un programa. Normalmente puedes ingresar tu edad y peso para estimar la cantidad de calorías quemadas durante el ejercicio. El nivel de resistencia puede cambiarse durante todo el entrenamiento. Los manubrios pueden usarse para monitorear tu frecuencia cardíaca y ayudarte a mantener una intensidad adecuada."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Recumbent Bike",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, seat yourself on the bike and adjust the seat to your height.",
+        "Select the desired option from the menu. You may have to start pedaling to turn it on. You can use the manual setting, or you can select a program to use. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. The level of resistance can be changed throughout the workout. The handles can be used to monitor your heart rate to help you stay at an appropriate intensity.",
+        "Recumbent bikes offer convenience, cardiovascular benefits, and have less impact than other activities. A 150 lb person will burn about 230 calories cycling at a moderate rate for 30 minutes, compared to 450 calories or more running."
+      ],
+      "category": "cardio",
+      "images": [
+        "Recumbent_Bike_0.jpg",
+        "Recumbent_Bike_1.jpg"
+      ],
+      "id": "Recumbent_Bike"
+    },
+    "es": {
+      "name": "Bicicleta reclinada",
+      "instructions": [
+        "Para comenzar, siéntate en la bicicleta y ajusta el asiento a tu altura.",
+        "Selecciona la opción deseada en el menú. Es posible que tengas que empezar a pedalear para encenderla. Puedes usar el ajuste manual o seleccionar un programa. Normalmente, puedes ingresar tu edad y peso para estimar la cantidad de calorías quemadas durante el ejercicio. El nivel de resistencia puede cambiarse durante el entrenamiento. Los manubrios pueden usarse para monitorear tu frecuencia cardíaca y ayudarte a mantener una intensidad adecuada.",
+        "Las bicicletas reclinadas ofrecen comodidad, beneficios cardiovasculares y tienen menos impacto que otras actividades. Una persona de 150 lb quemará unas 230 calorías pedaleando a un ritmo moderado durante 30 minutos, en comparación con 450 calorías o más corriendo."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Walking, Treadmill",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, step onto the treadmill and select the desired option from the menu. Most treadmills have a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. Elevation can be adjusted to change the intensity of the workout.",
+        "Treadmills offer convenience, cardiovascular benefits, and usually have less impact than walking outside. When walking, you should move at a moderate to fast pace, not a leisurely one. Being an activity of lower intensity, walking doesn't burn as many calories as some other activities, but still provides great benefit. A 150 lb person will burn about 175 calories walking 4 miles per hour for 30 minutes, compared to 450 calories running twice as fast. Maintain proper posture as you walk, and only hold onto the handles when necessary, such as when dismounting or checking your heart rate."
+      ],
+      "category": "cardio",
+      "images": [
+        "Walking_Treadmill_0.jpg",
+        "Walking_Treadmill_1.jpg"
+      ],
+      "id": "Walking_Treadmill"
+    },
+    "es": {
+      "name": "Caminata en cinta",
+      "instructions": [
+        "Para comenzar, sube a la cinta y selecciona la opción deseada en el menú. La mayoría de las cintas tienen un ajuste manual, o puedes seleccionar un programa. Normalmente puedes ingresar tu edad y tu peso para estimar la cantidad de calorías quemadas durante el ejercicio. La elevación puede ajustarse para cambiar la intensidad del entrenamiento.",
+        "Las cintas ofrecen comodidad, beneficios cardiovasculares y normalmente tienen menos impacto que caminar al aire libre. Al caminar, debes moverte a un ritmo de moderado a rápido, no pausado. Al ser una actividad de menor intensidad, caminar no quema tantas calorías como otras actividades, pero aun así ofrece un gran beneficio. Una persona de 150 lb quemará unas 175 calorías caminando a 4 millas por hora durante 30 minutos, en comparación con 450 calorías corriendo al doble de velocidad. Mantén una postura adecuada mientras caminas y sujétate de las manijas solo cuando sea necesario, por ejemplo al bajar o al revisar tu frecuencia cardíaca."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Running, Treadmill",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, step onto the treadmill and select the desired option from the menu. Most treadmills have a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. Elevation can be adjusted to change the intensity of the workout.",
+        "Treadmills offer convenience, cardiovascular benefits, and usually have less impact than running outside. A 150 lb person will burn over 450 calories running 8 miles per hour for 30 minutes. Maintain proper posture as you run, and only hold onto the handles when necessary, such as when dismounting or checking your heart rate."
+      ],
+      "category": "cardio",
+      "images": [
+        "Running_Treadmill_0.jpg",
+        "Running_Treadmill_1.jpg"
+      ],
+      "id": "Running_Treadmill"
+    },
+    "es": {
+      "name": "Correr en cinta",
+      "instructions": [
+        "Para comenzar, sube a la cinta y selecciona la opción deseada en el menú. La mayoría de las cintas tienen un ajuste manual, o puedes seleccionar un programa para correr. Normalmente, puedes ingresar tu edad y peso para estimar la cantidad de calorías quemadas durante el ejercicio. La elevación se puede ajustar para cambiar la intensidad del entrenamiento.",
+        "Las cintas ofrecen comodidad, beneficios cardiovasculares y normalmente tienen menos impacto que correr al aire libre. Una persona de 150 lb (68 kg) quemará más de 450 calorías corriendo a 8 millas por hora (13 km/h) durante 30 minutos. Mantén una postura adecuada mientras corres y sujétate de las manijas solo cuando sea necesario, como al bajarte o al revisar tu frecuencia cardíaca."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Jogging, Treadmill",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, step onto the treadmill and select the desired option from the menu. Most treadmills have a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. Elevation can be adjusted to change the intensity of the workout.",
+        "Treadmills offer convenience, cardiovascular benefits, and usually have less impact than jogging outside. A 150 lb person will burn almost 250 calories jogging for 30 minutes, compared to more than 450 calories running. Maintain proper posture as you jog, and only hold onto the handles when necessary, such as when dismounting or checking your heart rate."
+      ],
+      "category": "cardio",
+      "images": [
+        "Jogging_Treadmill_0.jpg",
+        "Jogging_Treadmill_1.jpg"
+      ],
+      "id": "Jogging_Treadmill"
+    },
+    "es": {
+      "name": "Trotar en cinta caminadora",
+      "instructions": [
+        "Para empezar, sube a la cinta caminadora y selecciona la opción deseada en el menú. La mayoría de las cintas tienen un modo manual, o puedes seleccionar un programa para correr. Normalmente puedes ingresar tu edad y peso para estimar la cantidad de calorías quemadas durante el ejercicio. La inclinación se puede ajustar para cambiar la intensidad del entrenamiento.",
+        "Las cintas caminadoras ofrecen comodidad, beneficios cardiovasculares y por lo general tienen menos impacto que trotar al aire libre. Una persona de 150 lb quemará casi 250 calorías trotando durante 30 minutos, en comparación con más de 450 calorías corriendo. Mantén una postura adecuada mientras trotas y sujétate de las manijas solo cuando sea necesario, por ejemplo al bajarte o al revisar tu frecuencia cardíaca."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Rope Jumping",
+      "force": null,
+      "level": "intermediate",
+      "mechanic": null,
+      "equipment": "other",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "hamstrings"
+      ],
+      "instructions": [
+        "Hold an end of the rope in each hand. Position the rope behind you on the ground. Raise your arms up and turn the rope over your head bringing it down in front of you. When it reaches the ground, jump over it. Find a good turning pace that can be maintained. Different speeds and techniques can be used to introduce variation.",
+        "Rope jumping is exciting, challenges your coordination, and requires a lot of energy. A 150 lb person will burn about 350 calories jumping rope for 30 minutes, compared to over 450 calories running."
+      ],
+      "category": "cardio",
+      "images": [
+        "Rope_Jumping_0.jpg",
+        "Rope_Jumping_1.jpg"
+      ],
+      "id": "Rope_Jumping"
+    },
+    "es": {
+      "name": "Saltar la cuerda",
+      "instructions": [
+        "Sostén un extremo de la cuerda en cada mano. Coloca la cuerda detrás de ti en el suelo. Levanta los brazos y gira la cuerda sobre tu cabeza, bajándola frente a ti. Cuando llegue al suelo, salta sobre ella. Encuentra un ritmo de giro adecuado que puedas mantener. Se pueden usar diferentes velocidades y técnicas para introducir variación.",
+        "Saltar la cuerda es emocionante, desafía tu coordinación y requiere mucha energía. Una persona de 150 lb (68 kg) quemará aproximadamente 350 calorías saltando la cuerda durante 30 minutos, en comparación con más de 450 calorías corriendo."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Trail Running/Walking",
+      "force": null,
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "Running or hiking on trails will get the blood pumping and heart beating almost immediately. Make sure you have good shoes. While you use the muscles in your calves and buttocks to pull yourself up a hill, the knees, joints and ankles absorb the bulk of the pounding coming back down. Take smaller steps as you walk downhill, keep your knees bent to reduce the impact and slow down to avoid falling.",
+        "A 150 lb person can burn over 200 calories for 30 minutes walking uphill, compared to 175 on a flat surface. If running the trail, a 150 lb person can burn well over 500 calories in 30 minutes."
+      ],
+      "category": "cardio",
+      "images": [
+        "Trail_Running_Walking_0.jpg",
+        "Trail_Running_Walking_1.jpg"
+      ],
+      "id": "Trail_Running_Walking"
+    },
+    "es": {
+      "name": "Correr/caminar por senderos",
+      "instructions": [
+        "Correr o hacer senderismo por senderos hará que la sangre fluya y el corazón lata casi de inmediato. Asegúrate de tener buenos zapatos. Mientras usas los músculos de las pantorrillas y los glúteos para subir una colina, las rodillas, las articulaciones y los tobillos absorben la mayor parte del impacto al bajar. Da pasos más cortos al caminar cuesta abajo, mantén las rodillas flexionadas para reducir el impacto y reduce la velocidad para evitar caídas.",
+        "Una persona de 150 lb puede quemar más de 200 calorías en 30 minutos caminando cuesta arriba, en comparación con 175 en una superficie plana. Si corre por el sendero, una persona de 150 lb puede quemar bastante más de 500 calorías en 30 minutos."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Skating",
+      "force": null,
+      "level": "intermediate",
+      "mechanic": null,
+      "equipment": "other",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "abductors",
+        "adductors",
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "Roller skating is a fun activity which can be effective in improving cardiorespiratory fitness and muscular endurance. It requires relatively good balance and coordination. It is necessary to learn the basics of skating including turning and stopping and to wear protective gear to avoid possible injury.",
+        "You can skate at a comfortable pace for 30 minutes straight. If you want a cardio challenge, do interval skating — speed skate two minutes of every five minutes, using the remaining three minutes to recover. A 150 lb person will typically burn about 175 calories in 30 minutes skating at a comfortable pace, similar to brisk walking."
+      ],
+      "category": "cardio",
+      "images": [
+        "Skating_0.jpg",
+        "Skating_1.jpg"
+      ],
+      "id": "Skating"
+    },
+    "es": {
+      "name": "Patinaje",
+      "instructions": [
+        "Patinar sobre ruedas es una actividad divertida que puede ser efectiva para mejorar la condición cardiorrespiratoria y la resistencia muscular. Requiere un buen equilibrio y coordinación relativamente buenos. Es necesario aprender los fundamentos del patinaje, incluyendo girar y frenar, y usar equipo de protección para evitar posibles lesiones.",
+        "Puedes patinar a un ritmo cómodo durante 30 minutos seguidos. Si quieres un desafío cardiovascular, haz patinaje por intervalos: patina rápido dos minutos de cada cinco minutos, usando los tres minutos restantes para recuperarte. Una persona de 150 lb (68 kg) normalmente quemará unas 175 calorías en 30 minutos patinando a un ritmo cómodo, similar a caminar a paso rápido."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Stairmaster",
+      "force": null,
+      "level": "intermediate",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, step onto the stairmaster and select the desired option from the menu. You can choose a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise.",
+        "Pump your legs up and down in an established rhythm, driving the pedals down but not all the way to the floor. It is recommended that you maintain your grip on the handles so that you don't fall. The handles can be used to monitor your heart rate to help you stay at an appropriate intensity.",
+        "Stairmasters offer convenience, cardiovascular benefits, and usually have less impact than running outside. They are typically much harder than other cardio equipment. A 150 lb person will typically burn over 300 calories in 30 minutes, compared to about 175 calories walking."
+      ],
+      "category": "cardio",
+      "images": [
+        "Stairmaster_0.jpg",
+        "Stairmaster_1.jpg"
+      ],
+      "id": "Stairmaster"
+    },
+    "es": {
+      "name": "Escaladora (Stairmaster)",
+      "instructions": [
+        "Para comenzar, sube a la escaladora y selecciona la opción deseada en el menú. Puedes elegir un ajuste manual o seleccionar un programa. Normalmente puedes ingresar tu edad y tu peso para estimar la cantidad de calorías quemadas durante el ejercicio.",
+        "Mueve las piernas hacia arriba y hacia abajo a un ritmo constante, empujando los pedales hacia abajo sin llegar hasta el suelo. Se recomienda mantener el agarre en las manijas para no caerte. Las manijas pueden usarse para monitorear tu frecuencia cardíaca y ayudarte a mantener una intensidad adecuada.",
+        "Las escaladoras ofrecen comodidad, beneficios cardiovasculares y normalmente tienen menos impacto que correr al aire libre. Suelen ser mucho más difíciles que otros equipos de cardio. Una persona de 150 lb normalmente quemará más de 300 calorías en 30 minutos, en comparación con unas 175 calorías caminando."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Step Mill",
+      "force": null,
+      "level": "intermediate",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, step onto the stepmill and select the desired option from the menu. You can choose a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. Use caution so that you don't trip as you climb the stairs. It is recommended that you maintain your grip on the handles so that you don't fall.",
+        "Stepmills offer convenience, cardiovascular benefits, and usually have less impact than running outside while offering a similar rate of calories burned. They are typically much harder than other cardio equipment. A 150 lb person will typically burn over 300 calories in 30 minutes, compared to about 175 calories walking."
+      ],
+      "category": "cardio",
+      "images": [
+        "Step_Mill_0.jpg",
+        "Step_Mill_1.jpg"
+      ],
+      "id": "Step_Mill"
+    },
+    "es": {
+      "name": "Escaladora (Step Mill)",
+      "instructions": [
+        "Para comenzar, sube a la escaladora (stepmill) y selecciona la opción deseada en el menú. Puedes elegir un ajuste manual o seleccionar un programa. Normalmente puedes ingresar tu edad y tu peso para estimar la cantidad de calorías quemadas durante el ejercicio. Ten cuidado de no tropezar mientras subes las escaleras. Se recomienda mantener el agarre en las manijas para no caerte.",
+        "Las escaladoras ofrecen comodidad, beneficios cardiovasculares y normalmente tienen menos impacto que correr al aire libre, con un gasto de calorías similar. Suelen ser mucho más difíciles que otros equipos de cardio. Una persona de 150 lb normalmente quemará más de 300 calorías en 30 minutos, en comparación con unas 175 calorías caminando."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Elliptical Trainer",
+      "force": null,
+      "level": "intermediate",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, step onto the elliptical and select the desired option from the menu. Most ellipticals have a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. Elevation can be adjusted to change the intensity of the workout.",
+        "The handles can be used to monitor your heart rate to help you stay at an appropriate intensity."
+      ],
+      "category": "cardio",
+      "images": [
+        "Elliptical_Trainer_0.jpg",
+        "Elliptical_Trainer_1.jpg"
+      ],
+      "id": "Elliptical_Trainer"
+    },
+    "es": {
+      "name": "Elíptica",
+      "instructions": [
+        "Para comenzar, sube a la elíptica y selecciona la opción deseada en el menú. La mayoría de las elípticas tienen un ajuste manual, o puedes seleccionar un programa para ejecutar. Normalmente, puedes ingresar tu edad y peso para estimar la cantidad de calorías quemadas durante el ejercicio. La elevación puede ajustarse para cambiar la intensidad del entrenamiento.",
+        "Los agarres pueden usarse para monitorear tu frecuencia cardíaca y ayudarte a mantener una intensidad apropiada."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Rowing, Stationary",
+      "force": null,
+      "level": "intermediate",
+      "mechanic": null,
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "calves",
+        "glutes",
+        "hamstrings",
+        "lower back",
+        "middle back"
+      ],
+      "instructions": [
+        "To begin, seat yourself on the rower. Make sure that your heels are resting comfortably against the base of the foot pedals and that the straps are secured. Select the program that you wish to use, if applicable. Sit up straight and bend forward at the hips.",
+        "There are three phases of movement when using a rower. The first phase is when you come forward on the rower. Your knees are bent and against your chest. Your upper body is leaning slightly forward while still maintaining good posture. Next, push against the foot pedals and extend your legs while bringing your hands to your upper abdominal area, squeezing your shoulders back as you do so. To avoid straining your back, use primarily your leg and hip muscles.",
+        "The recovery phase simply involves straightening your arms, bending the knees, and bringing your body forward again as you transition back into the first phase."
+      ],
+      "category": "cardio",
+      "images": [
+        "Rowing_Stationary_0.jpg",
+        "Rowing_Stationary_1.jpg"
+      ],
+      "id": "Rowing_Stationary"
+    },
+    "es": {
+      "name": "Remo en máquina estacionaria",
+      "instructions": [
+        "Para comenzar, siéntate en la máquina de remo. Asegúrate de que tus talones descansen cómodamente contra la base de los pedales y que las correas estén aseguradas. Selecciona el programa que desees usar, si aplica. Siéntate erguido e inclínate hacia adelante desde las caderas.",
+        "Hay tres fases de movimiento al usar una máquina de remo. La primera fase es cuando te desplazas hacia adelante en la máquina. Tus rodillas están flexionadas y contra tu pecho. Tu torso superior se inclina ligeramente hacia adelante mientras mantiene una buena postura. Luego, empuja contra los pedales y extiende las piernas mientras llevas las manos hacia la zona abdominal superior, apretando los hombros hacia atrás al hacerlo. Para evitar forzar la espalda, usa principalmente los músculos de las piernas y de la cadera.",
+        "La fase de recuperación simplemente implica enderezar los brazos, flexionar las rodillas y llevar tu cuerpo hacia adelante de nuevo mientras haces la transición de regreso a la primera fase."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Standing Hip Circles",
+      "force": "pull",
+      "level": "beginner",
+      "mechanic": "isolation",
+      "equipment": "body only",
+      "primaryMuscles": [
+        "abductors"
+      ],
+      "secondaryMuscles": [
+        "adductors"
+      ],
+      "instructions": [
+        "Begin standing on one leg, holding to a vertical support.",
+        "Raise the unsupported knee to 90 degrees. This will be your starting position.",
+        "Open the hip as far as possible, attempting to make a big circle with your knee.",
+        "Perform this movement slowly for a number of repetitions, and repeat on the other side."
+      ],
+      "category": "stretching",
+      "images": [
+        "Standing_Hip_Circles_0.jpg",
+        "Standing_Hip_Circles_1.jpg"
+      ],
+      "id": "Standing_Hip_Circles"
+    },
+    "es": {
+      "name": "Círculos de cadera de pie",
+      "instructions": [
+        "Comienza de pie sobre una pierna, sujetándote de un soporte vertical.",
+        "Eleva la rodilla sin apoyo a 90 grados. Esta será tu posición inicial.",
+        "Abre la cadera lo más posible, intentando hacer un círculo grande con la rodilla.",
+        "Realiza este movimiento lentamente durante varias repeticiones y repite del otro lado."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Shoulder Circles",
+      "force": "pull",
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": null,
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "traps"
+      ],
+      "instructions": [
+        "With shoulders relaxed and arms resting loosely at your sides (or in your lap if you're seated), gently roll your shoulders forward, up, back, and down.",
+        "Reverse direction. You can do this exercise alternating shoulders or both at the same time."
+      ],
+      "category": "stretching",
+      "images": [
+        "Shoulder_Circles_0.jpg",
+        "Shoulder_Circles_1.jpg"
+      ],
+      "id": "Shoulder_Circles"
+    },
+    "es": {
+      "name": "Círculos de hombros",
+      "instructions": [
+        "Con los hombros relajados y los brazos descansando sueltos a los lados (o en tu regazo si estás sentado), rota suavemente los hombros hacia adelante, arriba, atrás y abajo.",
+        "Invierte la dirección. Puedes hacer este ejercicio alternando hombros o ambos al mismo tiempo."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Arm Circles",
+      "force": "push",
+      "level": "beginner",
+      "mechanic": "isolation",
+      "equipment": null,
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "traps"
+      ],
+      "instructions": [
+        "Stand up and extend your arms straight out by the sides. The arms should be parallel to the floor and perpendicular (90-degree angle) to your torso. This will be your starting position.",
+        "Slowly start to make circles of about 1 foot in diameter with each outstretched arm. Breathe normally as you perform the movement.",
+        "Continue the circular motion of the outstretched arms for about ten seconds. Then reverse the movement, going the opposite direction."
+      ],
+      "category": "stretching",
+      "images": [
+        "Arm_Circles_0.jpg",
+        "Arm_Circles_1.jpg"
+      ],
+      "id": "Arm_Circles"
+    },
+    "es": {
+      "name": "Círculos de brazos",
+      "instructions": [
+        "Ponte de pie y extiende los brazos hacia los lados. Los brazos deben estar paralelos al suelo y perpendiculares (ángulo de 90 grados) a tu torso. Esta será tu posición inicial.",
+        "Comienza lentamente a hacer círculos de aproximadamente 1 pie de diámetro con cada brazo extendido. Respira normalmente mientras realizas el movimiento.",
+        "Continúa el movimiento circular de los brazos extendidos durante unos diez segundos. Luego invierte el movimiento, girando en la dirección opuesta."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Superman",
+      "force": "static",
+      "level": "beginner",
+      "mechanic": "compound",
+      "equipment": "body only",
+      "primaryMuscles": [
+        "lower back"
+      ],
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, lie straight and face down on the floor or exercise mat. Your arms should be fully extended in front of you. This is the starting position.",
+        "Simultaneously raise your arms, legs, and chest off of the floor and hold this contraction for 2 seconds. Tip: Squeeze your lower back to get the best results from this exercise. Remember to exhale during this movement. Note: When holding the contracted position, you should look like superman when he is flying.",
+        "Slowly begin to lower your arms, legs and chest back down to the starting position while inhaling.",
+        "Repeat for the recommended amount of repetitions prescribed in your program."
+      ],
+      "category": "stretching",
+      "images": [
+        "Superman_0.jpg",
+        "Superman_1.jpg"
+      ],
+      "id": "Superman"
+    },
+    "es": {
+      "name": "Superman",
+      "instructions": [
+        "Para comenzar, acuéstate recto boca abajo sobre el suelo o una colchoneta de ejercicio. Los brazos deben estar completamente extendidos frente a ti. Esta es la posición inicial.",
+        "Eleva simultáneamente los brazos, las piernas y el pecho del suelo y mantén esta contracción durante 2 segundos. Consejo: aprieta la zona lumbar para obtener los mejores resultados de este ejercicio. Recuerda exhalar durante este movimiento. Nota: al mantener la posición de contracción, debes parecer Superman cuando vuela.",
+        "Comienza a bajar lentamente los brazos, las piernas y el pecho de nuevo a la posición inicial mientras inhalas.",
+        "Repite el número recomendado de repeticiones prescrito en tu programa."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Bodyweight Squat",
+      "force": "push",
+      "level": "beginner",
+      "mechanic": "compound",
+      "equipment": "body only",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "Stand with your feet shoulder width apart. You can place your hands behind your head. This will be your starting position.",
+        "Begin the movement by flexing your knees and hips, sitting back with your hips.",
+        "Continue down to full depth if you are able,and quickly reverse the motion until you return to the starting position. As you squat, keep your head and chest up and push your knees out."
+      ],
+      "category": "strength",
+      "images": [
+        "Bodyweight_Squat_0.jpg",
+        "Bodyweight_Squat_1.jpg"
+      ],
+      "id": "Bodyweight_Squat"
+    },
+    "es": {
+      "name": "Sentadilla con peso corporal",
+      "instructions": [
+        "Párate con los pies separados al ancho de los hombros. Puedes colocar las manos detrás de la cabeza. Esta será tu posición inicial.",
+        "Comienza el movimiento flexionando las rodillas y las caderas, sentándote hacia atrás con las caderas.",
+        "Continúa bajando hasta la profundidad completa si puedes, e invierte rápidamente el movimiento hasta volver a la posición inicial. Mientras haces la sentadilla, mantén la cabeza y el pecho arriba y empuja las rodillas hacia afuera."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Chair Squat",
+      "force": "push",
+      "level": "beginner",
+      "mechanic": "compound",
+      "equipment": "machine",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings"
+      ],
+      "instructions": [
+        "To begin, first set the bar to a position that best matches your height. Once the bar is loaded, step under it and position it across the back of your shoulders.",
+        "Take the bar with your hands facing forward, unlock it and lift it off the rack by extending your legs.",
+        "Move your feet forward about 18 inches in front of the bar. Position your legs using a shoulder width stance with the toes slightly pointed out. Look forward at all times and maintain a neutral or slightly arched spine. This will be your starting position.",
+        "Slowly lower the bar by bending the knees as you maintain a straight posture with the head up. Continue down until the angle between the upper and lower leg breaks 90 degrees.",
+        "Begin to raise the bar as you exhale by pushing the floor with the heels of your feet, extending the knees and returning to the starting position.",
+        "Repeat for the recommended amount of repetitions."
+      ],
+      "category": "strength",
+      "images": [
+        "Chair_Squat_0.jpg",
+        "Chair_Squat_1.jpg"
+      ],
+      "id": "Chair_Squat"
+    },
+    "es": {
+      "name": "Sentadilla en silla",
+      "instructions": [
+        "Para comenzar, primero coloca la barra en una posición que se ajuste a tu altura. Una vez cargada la barra, métete debajo de ella y colócala sobre la parte posterior de tus hombros.",
+        "Toma la barra con las manos hacia adelante, desbloquéala y levántala del rack extendiendo las piernas.",
+        "Mueve los pies hacia adelante unas 18 pulgadas frente a la barra. Coloca las piernas con una postura al ancho de los hombros y las puntas de los pies ligeramente hacia afuera. Mira al frente en todo momento y mantén la columna neutra o ligeramente arqueada. Esta será tu posición inicial.",
+        "Baja lentamente la barra flexionando las rodillas mientras mantienes una postura recta con la cabeza en alto. Continúa hacia abajo hasta que el ángulo entre la parte superior e inferior de la pierna sea menor de 90 grados.",
+        "Comienza a subir la barra mientras exhalas, empujando el suelo con los talones, extendiendo las rodillas y regresando a la posición inicial.",
+        "Repite el número de repeticiones recomendado."
+      ]
+    }
+  },
+  {
+    "record": {
+      "name": "Chair Upper Body Stretch",
+      "force": "static",
+      "level": "beginner",
+      "mechanic": null,
+      "equipment": "other",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "chest"
+      ],
+      "instructions": [
+        "Sit on the edge of a chair, gripping the back of it.",
+        "Straighten your arms, keeping your back straight, and pull your upper body forward so you feel a stretch. Hold for 20-30 seconds."
+      ],
+      "category": "stretching",
+      "images": [
+        "Chair_Upper_Body_Stretch_0.jpg",
+        "Chair_Upper_Body_Stretch_1.jpg"
+      ],
+      "id": "Chair_Upper_Body_Stretch"
+    },
+    "es": {
+      "name": "Estiramiento de parte superior del cuerpo en silla",
+      "instructions": [
+        "Siéntate en el borde de una silla, sujetando el respaldo.",
+        "Estira los brazos, manteniendo la espalda recta, y jala la parte superior del cuerpo hacia adelante hasta sentir un estiramiento. Mantén la posición de 20 a 30 segundos."
+      ]
+    }
+  }
+]

@@ -10,7 +10,8 @@ Lee también `PLAN_ENTRENADOR_IA.md` y **`PLAN_ENTRENADOR_AMIGABLE.md`** (plan d
 |---|---|---|
 | `EntrenadorIA-beta-2026-10-27n.apk` | `83fdda6f8`, etiqueta `estable-2026-10-27n` | Estable, probada en el teléfono |
 | `EntrenadorIA-beta-2026-10-27o.apk` | `742dfbbf2` | Despensa en Inicio, despensa por voz, sueño corto |
-| `EntrenadorIA-beta-2026-10-28a.apk` | último commit de la rama | + imágenes Gym visual. **Es la que está en el teléfono** |
+| `EntrenadorIA-beta-2026-10-28a.apk` | `9b6bacaba` | + imágenes Gym visual (272), ya reemplazadas |
+| `EntrenadorIA-beta-2026-10-28b.apk` (oficina) | último commit de la rama | Catálogo nuevo de 1.368 ejercicios, buscador tolerante. **Es la que está en el teléfono** (firmada con el `debug.keystore` de casa, ya copiado a la oficina) |
 
 Las APK viven en la carpeta `APK` junto al repo (no en Git); `APK/VERSIONES.md` tiene el detalle.
 
@@ -21,24 +22,26 @@ mayores, calistenia), coach con reglas de entrenador atento (`get_session_extras
 aviso de duplicados), Ciclo menstrual (opt-in, síntomas, importar de Health Connect), avisos (comida por vencer, volver tras
 7 días), búsqueda con tildes, scroll más fluido, esfera de voz encima del +, sueño en Mi cuerpo limitado a 5 noches.
 
-**Imágenes Gym visual (importante en la otra PC):** las animaciones son © Gym visual (gymvisual.com) y **no están en Git**.
-Para que la APK las incluya, en la otra PC hace falta la carpeta `exercises-dataset-main` (o su .zip, de
-github.com/hasaneyldrm/exercises-dataset) y correr, desde la raíz del repo:
+**Catálogo de ejercicios (cambió el 28 en la oficina):** la biblioteca ya no es free-exercise-db (877) sino la carpeta
+local `exercises-dataset-main` (1.324 ejercicios, foto + animación, instrucciones en español del propio dataset; nombres
+traducidos en `scripts/exercise-names-es.json`), más 22 cardio/calentamientos básicos que el dataset no tiene y los
+22 ejercicios propios: 1.368 en total. Ids nuevos `ed_<id del dataset>`; el historial, las rutinas y los favoritos
+con ids viejos se migran al leerse (`exercise-id-migration.json`). El crédito de las imágenes es
+"© tr.AI.ng Coach — All.In.One App". Las fotos y animaciones **sí están en Git** (`android/app/src/exercisemedia/`,
+~53 MB: JPG + WebP animado), así que basta con `git pull`. Solo si cambia el dataset hay que regenerarlas, con la
+carpeta del dataset y `gif2webp.exe` (libwebp de Google, storage.googleapis.com/downloads.webmproject.org/releases/webp/):
 ```
-python android/scripts/match_gymvisual.py <ruta>/exercises-dataset-main
+node scripts/import_exercises_dataset.mjs "<ruta>/exercises-dataset-main" --media <ruta>/gif2webp.exe
 ```
-Eso genera `android/app/src/gymvisual/assets/gymvisual/` (git-ignorada): 272 ejercicios del catálogo emparejados
-(GIF + JPG, renombrados por id). Sin esa carpeta la app compila igual y usa sus ilustraciones propias. La licencia de
-Gym visual exige el crédito (ya se muestra en el detalle) y su permiso para uso comercial: revisar antes de publicar.
+Eso regenera el catálogo y convierte solo los medios que falten.
 
 **Pendiente:** probar en el teléfono factura real, código de barras, importación de Flo, despensa por voz;
-emparejar más ejercicios con Gym visual (hoy 272 de 899) o añadir los que solo existen en el dataset;
 caducidades por alimento (USDA FoodKeeper); aviso de calentamiento antes de la sesión; ilustraciones para
 los 22 ejercicios propios; declarar `READ_MENSTRUATION` en Google Play antes de publicar.
 
 **Para Claude en la otra PC:** el usuario prefiere mensajes muy cortos y que se siga el plan sin pedir confirmación
 en cada paso; ignorar las 3 pruebas que fallan solo en Windows (abajo); nunca copiar código GPL/AGPL (openGym, wger,
-Menstrudel) a esta app MIT; no subir medios de Gym visual ni de RepDB a Git. Commits con
+Menstrudel) a esta app MIT; no subir medios de RepDB a Git (los del dataset sí, con permiso del usuario). Commits con
 `git -c user.name=jotavnz -c user.email=jotavnz@users.noreply.github.com commit …` si la PC no tiene identidad.
 
 ## 0. Arranque rápido en otra PC

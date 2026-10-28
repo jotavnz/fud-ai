@@ -22,25 +22,25 @@ object ExerciseRoles {
             Pick("Fud_Cat_Cow", "8–10 slow reps"),
             Pick("Fud_Open_Book_Rotation", "8 per side"),
             Pick("Standing_Hip_Circles", "10 each direction"),
-            Pick("Ankle_Circles", "10 each direction per foot"),
+            Pick("ed_1368", "10 each direction per foot"),
             Pick("Shoulder_Circles", "10 forward, 10 back"),
-            Pick("Worlds_Greatest_Stretch", "5 per side")
+            Pick("ed_1604", "5 per side")
         ),
         Kind.POSTURE to listOf(
             Pick("Fud_Chin_Tuck", "10 reps, 3–5 s hold; repeat during desk breaks"),
             Pick("Fud_Wall_Angel", "2 × 10"),
-            Pick("Band_Pull_Apart", "2 × 15"),
-            Pick("Face_Pull", "2–3 × 12–15, light"),
-            Pick("Kneeling_Hip_Flexor", "30 s per side"),
+            Pick("ed_0993", "2 × 15"),
+            Pick("ed_0203", "2–3 × 12–15, light"),
+            Pick("ed_1564", "30 s per side"),
             Pick("Fud_Open_Book_Rotation", "8 per side"),
             Pick("Superman", "2 × 10, 2 s hold")
         ),
         Kind.DEEP_CORE to listOf(
             Pick("Fud_Diaphragmatic_Breathing", "5–10 breaths"),
-            Pick("Dead_Bug", "2 × 8 per side, slow"),
+            Pick("ed_0276", "2 × 8 per side, slow"),
             Pick("Fud_Bird_Dog", "2 × 8 per side"),
             Pick("Fud_Side_Plank_Knees", "2 × 20 s per side"),
-            Pick("Pallof_Press", "2 × 10 per side"),
+            Pick("ed_0979", "2 × 10 per side"),
             Pick("Fud_Hollow_Body_Hold", "3 × 15–30 s (knees bent to start)"),
             Pick("Fud_Pelvic_Floor_Activation", "8–10 × 3–5 s holds")
         ),
@@ -60,14 +60,14 @@ object ExerciseRoles {
         ),
         Kind.CALISTHENICS to listOf(
             Pick("Fud_Wall_Push_Up", "Push step 1: 3 × 15 before moving on"),
-            Pick("Incline_Push-Up", "Push step 2: 3 × 12"),
+            Pick("ed_0493", "Push step 2: 3 × 12"),
             Pick("Fud_Knee_Push_Up", "Push step 3: 3 × 12–15"),
-            Pick("Pushups", "Push step 4: 3 × 8+"),
+            Pick("ed_0662", "Push step 4: 3 × 8+"),
             Pick("Fud_Dead_Hang", "Pull step 1: 3 × 20–30 s"),
-            Pick("Scapular_Pull-Up", "Pull step 2: 3 × 8"),
-            Pick("Inverted_Row", "Pull step 3: 3 × 8–12"),
-            Pick("Band_Assisted_Pull-Up", "Pull step 4: 3 × 5–8"),
-            Pick("Pullups", "Pull step 5: sets of 3–5"),
+            Pick("ed_0688", "Pull step 2: 3 × 8"),
+            Pick("ed_0499", "Pull step 3: 3 × 8–12"),
+            Pick("ed_0970", "Pull step 4: 3 × 5–8"),
+            Pick("ed_0652", "Pull step 5: sets of 3–5"),
             Pick("Bodyweight_Squat", "Legs: 3 × 15, then single-leg work"),
             Pick("Fud_Hollow_Body_Hold", "Core base for L-sits and levers")
         )
@@ -95,7 +95,7 @@ object ExerciseRoles {
         }
         if (targets.any { it in PULL }) {
             picks += Pick("Fud_Cat_Cow", "8 slow reps")
-            picks += Pick("Band_Pull_Apart", "15 light reps")
+            picks += Pick("ed_0993", "15 light reps")
         }
         if (targets.isNotEmpty() && targets.none { it in LEGS || it in PUSH || it in PULL }) {
             picks += Pick("Fud_Cat_Cow", "8 slow reps")
@@ -113,19 +113,19 @@ object ExerciseRoles {
         val picks = mutableListOf<Pick>()
         if (heavyLegs) picks += Pick("Walking_Treadmill", "5 min very easy walk, no sudden stop")
         val stretches = linkedMapOf(
-            "quadriceps" to Pick("Quad_Stretch", "30 s per side"),
-            "hamstrings" to Pick("Hamstring_Stretch", "30 s per side"),
-            "glutes" to Pick("Lying_Glute", "30 s per side"),
-            "calves" to Pick("Calf_Stretch_Hands_Against_Wall", "30 s per side"),
-            "chest" to Pick("Chest_And_Front_Of_Shoulder_Stretch", "30 s"),
-            "shoulders" to Pick("Chest_And_Front_Of_Shoulder_Stretch", "30 s"),
-            "triceps" to Pick("Overhead_Triceps", "30 s per side"),
-            "lats" to Pick("Childs_Pose", "45–60 s"),
-            "middle back" to Pick("Childs_Pose", "45–60 s"),
-            "lower back" to Pick("Chair_Lower_Back_Stretch", "30 s")
+            "quadriceps" to Pick("ed_0613", "30 s per side"),
+            "hamstrings" to Pick("ed_1511", "30 s per side"),
+            "glutes" to Pick("ed_1709", "30 s per side"),
+            "calves" to Pick("ed_1377", "30 s per side"),
+            "chest" to Pick("ed_1271", "30 s"),
+            "shoulders" to Pick("ed_1271", "30 s"),
+            "triceps" to Pick("ed_0643", "30 s per side"),
+            "lats" to Pick("ed_1346", "45–60 s"),
+            "middle back" to Pick("ed_1346", "45–60 s"),
+            "lower back" to Pick("ed_0690", "30 s")
         )
         stretches.forEach { (muscle, pick) -> if (muscle in targets) picks += pick }
-        if (picks.size < 2) picks += Pick("Childs_Pose", "45–60 s")
+        if (picks.size < 2) picks += Pick("ed_1346", "45–60 s")
         picks += Pick("Fud_Diaphragmatic_Breathing", "5–10 slow breaths")
         return picks.distinctBy { it.id }.take(6)
     }

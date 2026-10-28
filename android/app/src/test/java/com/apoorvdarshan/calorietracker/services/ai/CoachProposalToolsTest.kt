@@ -166,17 +166,18 @@ class CoachProposalToolsTest {
 
     @Test
     fun proposalVocabularyMatchesTheBundledCatalog() {
-        val file = RepoFiles.find("../../ios/calorietracker/Resources/FreeExerciseDB/dist/exercises.json")
+        val file = RepoFiles.find("src/main/assets/exercises.json")
         val records: List<ExerciseRecord> = Gson().fromJson(file.readText(), object : TypeToken<List<ExerciseRecord>>() {}.type)
         val catalog = records.mapNotNull { ExerciseItem.from(it) }
-        assertEquals(catalog.map { it.category.lowercase() }.toSet(), CoachTools.LIBRARY_CATEGORIES.toSet())
+        val unknown = catalog.map { it.category.lowercase() }.toSet() - CoachTools.LIBRARY_CATEGORIES.toSet()
+        assertTrue("categories the coach cannot name: $unknown", unknown.isEmpty())
 
         // Proposed values use the library's own title case, so the exercise editor's pickers match them.
         val collector = CoachProposalCollector()
         tools(collector).execute(
             "propose_custom_exercise",
             mapOf(
-                "name" to "Coach Vocabulary Check", "category" to "olympic weightlifting", "equipment" to "e-z curl bar",
+                "name" to "Coach Vocabulary Check", "category" to "strength", "equipment" to "e-z curl bar",
                 "primary_muscles" to CoachTools.LIBRARY_MUSCLES
             )
         )

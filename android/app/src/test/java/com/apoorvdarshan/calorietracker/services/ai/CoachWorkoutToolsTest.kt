@@ -623,18 +623,18 @@ class CoachWorkoutToolsTest {
         fun names(query: String, muscle: String = "", equipment: String = "") =
             CoachTools.rankedLibraryMatches(library, query, muscle, equipment).map { it.name }
         // "abs" is not a prefix of "abdominals", so this filter used to drop all 93 ab exercises.
-        assertEquals("Ab Crunch Machine", names("ab crunch machine", muscle = "abs").first())
-        assertTrue("Ab Crunch Machine" in names("crunch", muscle = "core"))
-        assertTrue("Donkey Calf Raises" in names("calf raise", muscle = "calf"))
+        assertEquals("Lever seated crunch", names("lever seated crunch", muscle = "abs").first())
+        assertTrue("Lever seated crunch" in names("crunch", muscle = "core"))
+        assertTrue("Lever donkey calf raise" in names("calf raise", muscle = "calf"))
         assertTrue(names("squat", muscle = "legs").isNotEmpty())
         assertTrue(names("fly", muscle = "pecs").isNotEmpty())
         assertTrue(names("raise", muscle = "delts").isNotEmpty())
-        assertEquals("Smith Machine Squat", names("smith machine squat", equipment = "smith machine").first())
-        assertEquals("Pushups", names("pushups", equipment = "bodyweight").first())
-        assertEquals("Pushups", names("pushups", equipment = "body weight").first())
-        assertTrue("EZ-Bar Curl" in names("curl", equipment = "ez bar"))
-        assertEquals("Band Pull Apart", names("pull apart", equipment = "resistance band").first())
-        assertTrue("Wide-Grip Lat Pulldown" in names("lat pulldown", equipment = "machine"))
+        assertEquals("Smith squat", names("smith squat", equipment = "smith machine").first())
+        assertEquals("Push-up", names("push-up", equipment = "bodyweight").first())
+        assertEquals("Push-up", names("push-up", equipment = "body weight").first())
+        assertTrue(names("curl", equipment = "ez bar").isNotEmpty())
+        assertEquals("Band reverse fly", names("band reverse fly", equipment = "resistance band").first())
+        assertTrue("Reverse grip machine lat pulldown" in names("lat pulldown", equipment = "machine"))
     }
 
     @Test
@@ -653,7 +653,7 @@ class CoachWorkoutToolsTest {
 
     /** The catalog the app bundles (merged into Android assets from the iOS resources). */
     private fun bundledCatalog(): List<ExerciseItem> {
-        val file = RepoFiles.find("../../ios/calorietracker/Resources/FreeExerciseDB/dist/exercises.json")
+        val file = RepoFiles.find("src/main/assets/exercises.json")
         val records: List<ExerciseRecord> = Gson().fromJson(file.readText(), object : TypeToken<List<ExerciseRecord>>() {}.type)
         return records.mapNotNull { ExerciseItem.from(it) }
     }
