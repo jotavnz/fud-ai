@@ -373,8 +373,14 @@ data class PlannedExercise(
     val secondaryMuscles: List<String>,
     val instructions: List<String>,
     val sets: List<PlannedSet> = listOf(PlannedSet()),
-    val timer: ExerciseTimer? = null
+    val timer: ExerciseTimer? = null,
+    /** Marked done in the diary (swipe right on its card). */
+    val finished: Boolean = false
 ) {
+    /** Strength sets without reps; finishing one of these first asks for the numbers. */
+    val setsMissingReps: List<PlannedSet>
+        get() = if (isCardio) emptyList() else sets.filter { (it.reps.toIntOrNull() ?: 0) <= 0 }
+
     val isCardio: Boolean
         get() = category.equals("cardio", ignoreCase = true)
 
@@ -385,7 +391,8 @@ data class PlannedExercise(
     fun copiedForNewDay(includeSetDetails: Boolean = false): PlannedExercise = copy(
         id = UUID.randomUUID(),
         sets = if (includeSetDetails) sets.map { it.copy(id = UUID.randomUUID()) } else listOf(PlannedSet()),
-        timer = if (includeSetDetails) timer else null
+        timer = if (includeSetDetails) timer else null,
+        finished = false
     )
 
     fun asExerciseItem(): ExerciseItem = ExerciseItem(

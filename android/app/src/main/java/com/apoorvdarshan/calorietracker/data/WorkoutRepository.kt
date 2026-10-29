@@ -274,6 +274,12 @@ class WorkoutRepository(
         }
     }
 
+    suspend fun setExerciseFinished(exerciseId: UUID, date: LocalDate, finished: Boolean) {
+        updatePlan(WorkoutDate.key(date)) { plan ->
+            plan.copy(exercises = plan.exercises.map { if (it.id == exerciseId) it.copy(finished = finished) else it })
+        }
+    }
+
     /** Undo of [removeExercise]: the exercise goes back to its old place in the day. */
     suspend fun restoreExercise(exercise: PlannedExercise, index: Int, date: LocalDate) {
         updatePlan(WorkoutDate.key(date)) { plan ->

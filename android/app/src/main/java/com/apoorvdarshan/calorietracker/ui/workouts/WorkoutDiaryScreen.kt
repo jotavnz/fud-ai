@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -231,6 +233,19 @@ internal fun WorkoutDiaryScreen(
     val unsurePrompt = stringResource(R.string.machine_coach_unsure_prompt)
     var dismissedExtras by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(setOf<String>()) }
     var guidedVisible by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var quickFinish by remember { mutableStateOf<PlannedExercise?>(null) }
+    quickFinish?.let { exercise ->
+        QuickFinishDialog(
+            exercise = exercise,
+            weightUnit = state.weightUnit,
+            lastTimeSummary = viewModel.lastExerciseLiftSummary(exercise.itemId, exercise.name),
+            onDismiss = { quickFinish = null },
+            onSave = { sets ->
+                quickFinish = null
+                viewModel.finishExercise(exercise.id, sets)
+            }
+        )
+    }
     if (guidedVisible) {
         GuidedWorkoutScreen(
             exercises = state.exercises,
@@ -513,11 +528,18 @@ internal fun WorkoutDiaryScreen(
                     }
                     SwipeableWorkoutExerciseCard(
                         exerciseId = exercise.id,
-                        isSaved = isSaved,
+                        finished = exercise.finished,
                         modifier = itemModifier.onGloballyPositioned { coordinates ->
                             exerciseCardBounds[exercise.id] = coordinates.boundsInRoot()
                         },
-                        onToggleSaved = toggleSaved,
+                        onFinish = {
+                            dismissKeyboard()
+                            when {
+                                exercise.finished -> viewModel.finishExercise(exercise.id, finished = false)
+                                exercise.setsMissingReps.isNotEmpty() -> quickFinish = exercise
+                                else -> viewModel.finishExercise(exercise.id)
+                            }
+                        },
                         onRemove = removeExercise
                     ) {
                         WorkoutExerciseCard(
@@ -1297,14 +1319,14 @@ private fun WorkoutEmptyState(
 }
 
 /**
- * Adds iOS-style row gestures without hiding the card's visible Save and Delete buttons.
- * A leading swipe toggles Saved; a trailing swipe removes the exercise from this day.
+ * Row gestures next to the card's visible buttons. A leading swipe marks the exercise done
+ * (or not done again); a trailing swipe removes it from this day (with Undo).
  */
 @Composable
 private fun SwipeableWorkoutExerciseCard(
     exerciseId: UUID,
-    isSaved: Boolean,
-    onToggleSaved: () -> Unit,
+    finished: Boolean,
+    onFinish: () -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
@@ -1317,12 +1339,12 @@ private fun SwipeableWorkoutExerciseCard(
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val maxSwipePx = with(density) { maxWidth.toPx() * 0.58f }
         Box(Modifier.fillMaxWidth()) {
-            WorkoutExerciseSwipeBackground(offsetPx = offsetPx, isSaved = isSaved)
+            WorkoutExerciseSwipeBackground(offsetPx = offsetPx, finished = finished)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .offset { IntOffset(offsetPx.roundToInt(), 0) }
-                    .pointerInput(exerciseId, isSaved, maxSwipePx) {
+                    .pointerInput(exerciseId, finished, maxSwipePx) {
                         detectHorizontalDragGestures(
                             onHorizontalDrag = { change, dragAmount ->
                                 change.consume()
@@ -1333,7 +1355,7 @@ private fun SwipeableWorkoutExerciseCard(
                                 offsetPx = 0f
                                 when {
                                     finalOffset <= -deleteTriggerPx -> onRemove()
-                                    finalOffset >= saveTriggerPx -> onToggleSaved()
+                                    finalOffset >= saveTriggerPx -> onFinish()
                                 }
                             },
                             onDragCancel = { offsetPx = 0f }
@@ -1341,13 +1363,28 @@ private fun SwipeableWorkoutExerciseCard(
                     }
             ) {
                 content()
+                if (finished) {
+                    Row(
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF2E7D32))
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(3.dp))
+                        Text(stringResource(R.string.wk_exercise_done), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun BoxScope.WorkoutExerciseSwipeBackground(offsetPx: Float, isSaved: Boolean) {
+private fun BoxScope.WorkoutExerciseSwipeBackground(offsetPx: Float, finished: Boolean) {
     if (offsetPx == 0f) {
         Box(Modifier.matchParentSize())
         return
@@ -1359,13 +1396,13 @@ private fun BoxScope.WorkoutExerciseSwipeBackground(offsetPx: Float, isSaved: Bo
     val background = if (trailing) Color(0xFFD32F2F) else Color(0xFF2E7D32)
     val icon = when {
         trailing -> Icons.Filled.DeleteOutline
-        isSaved -> Icons.Filled.Bookmark
-        else -> Icons.Filled.BookmarkBorder
+        finished -> Icons.Filled.Close
+        else -> Icons.Filled.Check
     }
     val label = when {
         trailing -> stringResource(R.string.action_delete)
-        isSaved -> stringResource(R.string.wk_swipe_unsave)
-        else -> stringResource(R.string.action_save)
+        finished -> stringResource(R.string.wk_swipe_not_done)
+        else -> stringResource(R.string.wk_swipe_finish)
     }
 
     Box(Modifier.matchParentSize().clip(RoundedCornerShape(24.dp))) {
@@ -2306,3 +2343,65 @@ internal fun selectedDateTitle(date: LocalDate, today: LocalDate = LocalDate.now
  */
 internal fun retainedReorderDateKey(reorderDateKey: String?, selectedDateKey: String, exerciseCount: Int): String? =
     reorderDateKey?.takeIf { it == selectedDateKey && exerciseCount > 1 }
+
+/**
+ * Swiping a card to finish it with sets still empty: fill weight and reps in a couple of taps
+ * (empty sets start from the set above, or 10 reps), then it is marked done.
+ */
+@Composable
+private fun QuickFinishDialog(
+    exercise: PlannedExercise,
+    weightUnit: WorkoutWeightUnit,
+    lastTimeSummary: String?,
+    onDismiss: () -> Unit,
+    onSave: (List<WorkoutsViewModel.QuickSet>) -> Unit
+) {
+    val rows = remember(exercise.id) {
+        var previous: PlannedSet? = null
+        exercise.sets.map { set ->
+            val weight = set.displayWeight(weightUnit).ifBlank { previous?.displayWeight(weightUnit).orEmpty() }
+            val reps = set.reps.takeIf { (it.toIntOrNull() ?: 0) > 0 } ?: previous?.reps?.takeIf { (it.toIntOrNull() ?: 0) > 0 } ?: "10"
+            previous = set.copy(weight = weight, weightUnit = weightUnit, reps = reps)
+            androidx.compose.runtime.mutableStateListOf(set.id.toString(), weight, reps)
+        }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.wk_quick_finish_title, exercise.name)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                lastTimeSummary?.let {
+                    Text(it, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+                rows.forEachIndexed { index, row ->
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("${index + 1}", fontWeight = FontWeight.Bold, modifier = Modifier.width(18.dp))
+                        androidx.compose.material3.OutlinedTextField(
+                            value = row[1],
+                            onValueChange = { row[1] = it.filter { c -> c.isDigit() || c == '.' || c == ',' }.take(6) },
+                            label = { Text(weightUnit.name.lowercase()) },
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { row[2] = ((row[2].toIntOrNull() ?: 0) - 1).coerceAtLeast(1).toString() }) {
+                            Icon(Icons.Filled.Remove, contentDescription = null)
+                        }
+                        Text(stringResource(R.string.wk_quick_reps, row[2]), fontWeight = FontWeight.SemiBold)
+                        IconButton(onClick = { row[2] = ((row[2].toIntOrNull() ?: 0) + 1).coerceAtMost(999).toString() }) {
+                            Icon(Icons.Filled.Add, contentDescription = null)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onSave(rows.map { WorkoutsViewModel.QuickSet(UUID.fromString(it[0]), it[1].replace(',', '.'), it[2]) })
+            }) { Text(stringResource(R.string.wk_quick_finish_save), fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
+    )
+}

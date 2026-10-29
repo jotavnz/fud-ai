@@ -15,4 +15,10 @@
     <string name="recovery_see_all">Ver todo (%1$d)</string>
     <string name="machine_coach_unsure">No sé</string>
     <string name="machine_coach_unsure_prompt">No sé qué entrenar hoy. Mira mi recuperación y mis últimos entrenos y propónme la sesión de hoy.</string>
+    <string name="wk_exercise_done">Hecho</string>
+    <string name="wk_swipe_finish">Terminé</string>
+    <string name="wk_swipe_not_done">No terminado</string>
+    <string name="wk_quick_finish_title">Terminar %1$s</string>
+    <string name="wk_quick_reps">%1$s reps</string>
+    <string name="wk_quick_finish_save">Guardar y terminar</string>
 </resources>

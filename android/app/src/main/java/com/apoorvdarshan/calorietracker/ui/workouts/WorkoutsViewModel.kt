@@ -577,6 +577,38 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { workoutRepository?.setTimerIntensity(exerciseId, date, intensity) }
     }
 
+    /** One set's numbers from the quick "finish exercise" card. */
+    data class QuickSet(val setId: UUID, val weight: String, val reps: String)
+
+    /**
+     * Swipe right on a card: saves the quick-filled sets, marks the exercise done (or not done
+     * again), and when every exercise of today is done, finishes the workout like "I'm done".
+     */
+    fun finishExercise(exerciseId: UUID, sets: List<QuickSet> = emptyList(), finished: Boolean = true) {
+        val repository = workoutRepository ?: return
+        val date = diaryUiState.selectedDate
+        viewModelScope.launch {
+            sets.forEach { set ->
+                repository.updateSet(
+                    exerciseId = exerciseId,
+                    setId = set.setId,
+                    date = date,
+                    weight = set.weight,
+                    weightUnit = workoutWeightUnit,
+                    reps = set.reps,
+                    rpe = null
+                )
+            }
+            repository.setExerciseFinished(exerciseId, date, finished)
+            val plan = repository.planNow(date).exercises
+            if (finished && plan.isNotEmpty() && plan.all { it.finished }) {
+                // Let the diary state catch up before the burn reads it.
+                delay(300)
+                calculateBurn()
+            }
+        }
+    }
+
     fun updateWeight(exerciseId: UUID, setId: UUID, value: String) {
         updateSet(exerciseId, setId, weight = value)
     }

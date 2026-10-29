@@ -78,11 +78,13 @@ fun AnimatedExerciseImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
     fallbackLabel: String? = null,
-    animatesFrames: Boolean = true
+    animatesFrames: Boolean = true,
+    /** The image credit is shown where the exercise is studied (its detail), not on previews. */
+    showCredit: Boolean = false
 ) {
     val colors = workoutsColors()
     if (visual.isAnimated) {
-        CatalogMediaImage(visual, modifier, animatesFrames, fallbackLabel)
+        CatalogMediaImage(visual, modifier, animatesFrames, fallbackLabel, showCredit)
         return
     }
     val imagePaths = visual.framePaths
@@ -170,7 +172,8 @@ private fun CatalogMediaImage(
     visual: ExerciseVisual,
     modifier: Modifier,
     animates: Boolean,
-    fallbackLabel: String?
+    fallbackLabel: String?,
+    showCredit: Boolean
 ) {
     val context = LocalContext.current
     val animationsEnabled = remember {
@@ -199,7 +202,7 @@ private fun CatalogMediaImage(
             onError = { unavailable = true },
             modifier = Modifier.fillMaxSize()
         )
-        if (animates) {
+        if (showCredit) {
             Text(
                 "© tr.AI.ng Coach — All.In.One App",
                 color = Color(0xFF8A8A8A),

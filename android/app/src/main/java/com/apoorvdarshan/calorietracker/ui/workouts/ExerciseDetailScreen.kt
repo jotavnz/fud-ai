@@ -162,7 +162,7 @@ private fun Hero(item: ExerciseItem, visual: ExerciseVisual, showMetrics: Boolea
             .background(colors.background)
             .border(0.5.dp, colors.hairline.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
     ) {
-        AnimatedExerciseImage(visual, Modifier.fillMaxSize(), fallbackLabel = item.name)
+        AnimatedExerciseImage(visual, Modifier.fillMaxSize(), fallbackLabel = item.name, showCredit = true)
 
         AnimatedVisibility(
             visible = showMetrics,
