@@ -59,4 +59,7 @@
     <string name="scan_tip_barcode_close">Bring the barcode close and hold the phone still.</string>
     <string name="scan_tip_barcode_light">Avoid glare: tilt the package a little if the light reflects.</string>
     <string name="scan_tip_barcode_missing">If the product is not found, take a photo of the nutrition label instead.</string>
+    <string name="wk_progress_increase">Today: try %1$s %2$s (you hit every rep)</string>
+    <string name="wk_progress_repeat">Today: %1$s %2$s again, aim for one more rep</string>
+    <string name="wk_progress_deload">Stuck for 3 sessions: go lighter today, %1$s %2$s</string>
 </resources>

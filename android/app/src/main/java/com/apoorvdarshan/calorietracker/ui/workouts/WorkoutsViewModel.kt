@@ -855,6 +855,21 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         diaryUiState = diaryUiState.copy(notice = null)
     }
 
+    /** "Today try 42.5 kg" and friends, from the last three sessions of this exercise. */
+    private fun progressionHint(itemId: String, name: String, beforeKey: String): String? {
+        val history = ExerciseLiftHistory.history(latestPersistedState, itemId, name, beforeKey, limit = 3)
+        val app = getApplication<Application>()
+        return when (val advice = com.apoorvdarshan.calorietracker.models.WeightProgression.advise(history, workoutWeightUnit)) {
+            is com.apoorvdarshan.calorietracker.models.WeightProgression.Advice.Increase ->
+                app.getString(R.string.wk_progress_increase, advice.weight, advice.unit.storageValue)
+            is com.apoorvdarshan.calorietracker.models.WeightProgression.Advice.Repeat ->
+                app.getString(R.string.wk_progress_repeat, advice.weight, advice.unit.storageValue)
+            is com.apoorvdarshan.calorietracker.models.WeightProgression.Advice.Deload ->
+                app.getString(R.string.wk_progress_deload, advice.weight, advice.unit.storageValue)
+            null -> null
+        }
+    }
+
     fun lastExerciseLiftSummary(itemId: String, name: String): String? =
         exerciseLiftSummaries[liftSummaryKey(itemId, name)]
 
@@ -996,13 +1011,16 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
             .asSequence()
             .filterNot { it.isCardio }
             .associate { exercise ->
-                liftSummaryKey(exercise.itemId, exercise.name) to ExerciseLiftHistory.lastSummary(
+                val last = ExerciseLiftHistory.lastSummary(
                     latestPersistedState,
                     exercise.itemId,
                     exercise.name,
                     beforeKey,
                     workoutWeightUnit
                 )
+                liftSummaryKey(exercise.itemId, exercise.name) to last?.let { summary ->
+                    progressionHint(exercise.itemId, exercise.name, beforeKey)?.let { "$summary\n$it" } ?: summary
+                }
             }
     }
 
