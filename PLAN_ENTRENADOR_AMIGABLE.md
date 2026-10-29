@@ -136,3 +136,28 @@ Idea: saber qué hay en casa (nevera, congelador, despensa), que el coach sugier
 4. Resto de Fase 3 (estilo, incoherencias, fatiga, constancia).
 5. Fase 2.2 (ejercicios propios, hipopresivos, mayores) con revisión de fisioterapeuta.
 6. Fase 4 (ciclo) tras probar Flo + Health Connect y preparar la declaración de Play.
+
+## Tanda del 29 (pedidos del usuario, 2026-10-28 noche)
+
+Estado: [ ] pendiente · [x] hecho
+
+1. [ ] Reloj/Samsung Health: revisar que todo lo del reloj llegue (los pasos del reloj siguen más altos que la app).
+2. [ ] Coach: arreglar el hover/foco del logo de la IA (se ve un cuadrado alrededor del círculo al tocar).
+3. [ ] "Cuéntale al coach qué quieres lograr": solo mostrarlo si no se ha pulsado nunca.
+4. [ ] Recordatorio "Esta noche duerme…": botón X; vuelve la tarde-noche del día siguiente.
+5. [ ] Training → biblioteca: al volver de un ejercicio, conservar el scroll (no volver al inicio).
+6. [ ] Detalle del ejercicio: botón "Añadir a hoy" (ir de compras por ejercicios).
+7. [ ] Aviso de sobreexigencia (demasiados ejercicios/series/volumen para 1–2 h), descartable.
+8. [ ] "Deshacer" (snackbar unos segundos) en todo lo que se borra: comidas, entrenamientos, despensa (el ✓ borraba sin avisar).
+9. [ ] Lista de compras: acceso directo propio (junto a Despensa).
+10. [ ] Despensa como "otra app": stock que baja al registrar comidas (porciones restantes), el coach sugiere según cantidades y avisa si falta algo ("no importa" / reformular).
+11. [ ] Comida de la calle / ya preparada: preguntar si se cocinó en casa; si no, no descontar de la despensa.
+12. [ ] FUTURO: grupo familiar (pareja/roomies): despensa compartida, dietas y restricciones de cada uno, recetas para ambos, descuento en la despensa del grupo. Necesita backend (ver 20). Revisar si grocy / whats-in-the-fridge traen algo reutilizable.
+13. [ ] Mensajes sugeridos del coach: X para quitarlos; vuelven a las 24 h; la 2.ª vez se apagan y se reactivan en Ajustes.
+14. [ ] Training → Recuperación muscular: solo 2 (las más recientes) + "Ver más" a otra pantalla.
+15. [ ] "¿Qué quieres entrenar hoy?": opción "No sé" que lleva al coach.
+16. [ ] Diario de entreno: swipe = "Terminar" (no guardar); si faltan kg/reps, popup rápido para llenarlos. Borrar con deshacer.
+17. [ ] Tarjetas de ejercicio en el diario: preview limpia sin el texto de crédito (crédito solo en el detalle).
+18. [ ] Training: "Pedir rutina al coach" lo primero. Orden de pestañas por defecto Inicio, Progreso, Training, Coach, Ajustes, y configurable en Ajustes.
+19. [ ] Gastos de despensa en Bs o $ con la tasa del día (y decir qué tasa se usó).
+20. [ ] Datos en la nube (Supabase) para Play Store y grupo familiar: decidir.
