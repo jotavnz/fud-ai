@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Add
@@ -153,10 +154,16 @@ fun ExerciseDetailScreen(
             Hero(item = item, visual = visual, showMetrics = showMetrics, onToggle = { showMetrics = !showMetrics })
             inToday?.let { added ->
                 val shape = RoundedCornerShape(24.dp)
+                // Lifts above the Undo bar while it shows, so the bar never covers the button.
+                val undoContext = androidx.compose.ui.platform.LocalContext.current
+                val undoEvent by remember(undoContext) {
+                    (undoContext.applicationContext as com.apoorvdarshan.calorietracker.FudAIApp).container.undo.event
+                }.collectAsState()
+                val lift by androidx.compose.animation.core.animateDpAsState(if (undoEvent != null) 76.dp else 0.dp, label = "addLift")
                 Row(
                     Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(start = 20.dp, end = 20.dp, bottom = BottomNavScrollPadding - 24.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = BottomNavScrollPadding - 24.dp + lift)
                         .fillMaxWidth()
                         .clip(shape)
                         .background(if (added) Color(0xFF2E7D32) else colors.accent)
