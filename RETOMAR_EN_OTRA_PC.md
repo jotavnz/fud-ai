@@ -84,7 +84,11 @@ teléfono; el retraso viene de que Samsung Health sincroniza con Health Connect 
 Diario: el botón rojo "Calcular" ahora dice "Terminé"; al guardar se vuelve verde "¡Hecho!" con la hora, "Actualizar"
 si cambian las series, y ✓ verde en la tira de días.
 
+**28k (casa, noche del 28, commit `ed271fc91`, NO instalada: el teléfono no estaba conectado):** tanda del 29 de
+`PLAN_ENTRENADOR_AMIGABLE.md` (17 de 20 pedidos). Falta: grupo familiar y nube (Supabase), y probar todo en el teléfono.
+
 **Pendiente:**
+- Instalar la 28k y probar: Deshacer, swipe Terminé, Añadir a hoy, "¿Lo cocinaste en casa?", Bs/$, botón ⟳ de pasos.
 - Probar en el teléfono: factura real, código de barras, importación de Flo, despensa por voz.
 - Declarar `READ_SLEEP` y `READ_MENSTRUATION` en Google Play antes de publicar (textos listos en `PLAYSTORE.md`).
 - Contenido propio nuevo (60–80 ejercicios, Otago, hipopresivos avanzados), idealmente revisado por un fisioterapeuta.
