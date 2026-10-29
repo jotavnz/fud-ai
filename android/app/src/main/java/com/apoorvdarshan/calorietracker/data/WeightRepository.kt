@@ -46,6 +46,7 @@ class WeightRepository(
             latestBeforeAdd = current.maxByOrNull { it.date }
             current + entry
         }
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.trackContent("weight_logged", mapOf("kg" to entry.weightKg))
         val previousLatest = latestBeforeAdd
 
         syncProfileWeightToLatest()

@@ -27,11 +27,13 @@ import java.util.concurrent.TimeUnit
 /**
  * The closed beta's opt-in usage and error log, sent to Supabase (supabase/telemetry.sql).
  *
- * It records what people use (screens, features), how AI calls and syncs go, and crashes,
- * with an anonymous install id, the app version and the phone model. It never records what
- * someone ate, weighs, slept or wrote: [TelemetryEvent.sanitized] keeps only short plain
- * values, and callers pass counts and outcomes, never content. Nothing is queued until the
- * person says yes, and saying no deletes what was waiting.
+ * Two levels, each asked separately. Usage ([track]): what people use (screens, features),
+ * how AI calls and syncs go, and crashes, with an anonymous install id, the app version and
+ * the phone model — counts and outcomes, never content. Records ([trackContent]), only when
+ * the person also ticks "include my records": what they log (food with its macros, weight,
+ * water), a daily summary (sleep, steps, training) and the start of their messages to Coach,
+ * so the beta can be tuned to real use. Nothing is queued before a yes, and turning a level
+ * off deletes what was waiting.
  */
 object Telemetry {
     enum class Consent { UNASKED, YES, NO }
@@ -40,6 +42,7 @@ object Telemetry {
     private const val PREFS = "fudai_telemetry"
     private const val KEY_CONSENT = "consent"
     private const val KEY_INSTALL_ID = "install_id"
+    private const val KEY_CONTENT = "content"
     private const val MAX_STACK = 3_000
 
     private var prefs: SharedPreferences? = null
@@ -49,6 +52,10 @@ object Telemetry {
 
     private val _consent = MutableStateFlow(Consent.UNASKED)
     val consent: StateFlow<Consent> = _consent.asStateFlow()
+
+    private val _content = MutableStateFlow(false)
+    /** Whether records (food, weight, sleep, Coach messages) are shared too. */
+    val content: StateFlow<Boolean> = _content.asStateFlow()
 
     /** False when the build has no Supabase project: the prompt and the setting stay hidden. */
     val configured: Boolean
@@ -67,8 +74,23 @@ object Telemetry {
         )
         _consent.value = runCatching { Consent.valueOf(store.getString(KEY_CONSENT, null) ?: "") }
             .getOrDefault(Consent.UNASKED)
+        _content.value = store.getBoolean(KEY_CONTENT, false)
         installCrashHandler()
         if (isOn()) TelemetryWorker.schedule(app)
+    }
+
+    /** Home's card: usage yes/no, and whether records go too. */
+    fun answer(yes: Boolean, includeRecords: Boolean) {
+        setConsent(yes)
+        if (yes) setContentConsent(includeRecords)
+    }
+
+    fun setContentConsent(on: Boolean) {
+        prefs?.edit()?.putBoolean(KEY_CONTENT, on)?.apply()
+        _content.value = on
+        // Records already queued may include food or weight: turning sharing off drops them.
+        if (!on) queue?.clear()
+        track("records_sharing", mapOf("on" to on))
     }
 
     fun setConsent(yes: Boolean) {
@@ -80,6 +102,8 @@ object Telemetry {
             TelemetryWorker.schedule(app)
             TelemetryWorker.sendSoon(app)
         } else {
+            prefs?.edit()?.putBoolean(KEY_CONTENT, false)?.apply()
+            _content.value = false
             queue?.clear()
             TelemetryWorker.cancel(app)
         }
@@ -94,6 +118,13 @@ object Telemetry {
             val event = TelemetryEvent.sanitized(name, props, Instant.now())
             queue?.append(event.toJson(installId(), context ?: return))
         }.onFailure { Log.w(TAG, "track failed", it) }
+    }
+
+    fun isContentOn(): Boolean = isOn() && _content.value
+
+    /** Queues a record event (what was logged); a no-op unless records sharing is on. */
+    fun trackContent(name: String, props: Map<String, Any?>) {
+        if (isContentOn()) track(name, props)
     }
 
     /** A handled failure: where it happened and its type, with a short message. */

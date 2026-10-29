@@ -19,6 +19,7 @@ class WaterRepository(private val prefs: PreferencesStore) {
         mutationMutex.withLock {
             prefs.updateWaterEntries { current -> current + entry }
         }
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.trackContent("water_logged", mapOf("ml" to entry.milliliters))
     }
 
     suspend fun importDiary(preview: DiaryImportPreview, mode: DiaryImportMode) {

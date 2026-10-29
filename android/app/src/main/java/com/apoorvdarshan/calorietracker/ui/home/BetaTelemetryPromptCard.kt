@@ -10,9 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -24,9 +29,13 @@ import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassTextButton
 import com.apoorvdarshan.calorietracker.ui.components.FudIconBubble
 
-/** Home's one-time question about the beta's anonymous usage and error log. */
+/**
+ * Home's one-time question about the beta log: usage yes/no, and a separate, unticked box to
+ * also share records (food, weight, sleep, Coach messages).
+ */
 @Composable
-internal fun BetaTelemetryPromptCard(onAnswer: (Boolean) -> Unit) {
+internal fun BetaTelemetryPromptCard(onAnswer: (yes: Boolean, includeRecords: Boolean) -> Unit) {
+    var includeRecords by rememberSaveable { mutableStateOf(false) }
     FudGlassSurface(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         cornerRadius = 20.dp,
@@ -50,7 +59,16 @@ internal fun BetaTelemetryPromptCard(onAnswer: (Boolean) -> Unit) {
                     )
                 }
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = includeRecords, onCheckedChange = { includeRecords = it })
+                Text(
+                    stringResource(R.string.tm_home_records),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+            }
+            Spacer(Modifier.height(6.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -58,12 +76,12 @@ internal fun BetaTelemetryPromptCard(onAnswer: (Boolean) -> Unit) {
             ) {
                 FudGlassTextButton(
                     text = stringResource(R.string.tm_home_no),
-                    onClick = { onAnswer(false) },
+                    onClick = { onAnswer(false, false) },
                     modifier = Modifier.weight(1f)
                 )
                 FudGlassPrimaryButton(
                     text = stringResource(R.string.tm_home_yes),
-                    onClick = { onAnswer(true) },
+                    onClick = { onAnswer(true, includeRecords) },
                     modifier = Modifier.weight(1f),
                     height = 42.dp
                 )

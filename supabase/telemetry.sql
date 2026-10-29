@@ -1,4 +1,6 @@
 -- Entrenador IA: registro de uso y errores de la beta (opcional, con consentimiento en la app).
+-- Dos niveles: uso/errores, y "Incluir mis registros" (comida, peso, agua, resumen diario,
+-- inicio de los mensajes al coach). Son datos de salud: no compartas este panel.
 -- Ejecutar una vez en Supabase: Dashboard -> SQL Editor -> pegar todo -> Run.
 -- La app solo puede INSERTAR con la anon key; nadie puede leer con esa clave.
 -- Tú lees desde el panel de Supabase (Table Editor / SQL Editor), que usa permisos de dueño.
@@ -74,4 +76,31 @@ from public.events
 where name in ('ai_call', 'coach_reply') and received_at > now() - interval '14 days'
 group by 1, 2 order by 1 desc, 2;
 
-revoke all on public.v_errors_recent, public.v_daily_active, public.v_feature_usage, public.v_ai_health from anon, authenticated;
+-- Registros (solo de quienes activaron "Incluir mis registros").
+-- Comida registrada, más reciente primero.
+create or replace view public.v_food_log with (security_invoker = true) as
+select occurred_at, install_id, props->>'food' as comida, (props->>'kcal')::int as kcal,
+       (props->>'protein_g')::numeric as proteina_g, (props->>'carbs_g')::numeric as carbos_g,
+       (props->>'fat_g')::numeric as grasa_g, props->>'source' as origen, props->>'meal' as comida_del_dia
+from public.events where name = 'food_logged'
+order by occurred_at desc;
+
+-- Un día por persona: lo comido, agua, peso, sueño, pasos y entrenamiento.
+create or replace view public.v_daily_summary with (security_invoker = true) as
+select (props->>'day')::date as dia, install_id,
+       (props->>'kcal')::int as kcal, (props->>'protein_g')::int as proteina_g,
+       (props->>'foods')::int as comidas, (props->>'water_ml')::int as agua_ml,
+       (props->>'weight_kg')::numeric as peso_kg, (props->>'sleep_min')::int as sueno_min,
+       (props->>'steps')::int as pasos, (props->>'workouts')::int as entrenos,
+       (props->>'workout_min')::int as entreno_min
+from public.events where name = 'daily_summary'
+order by dia desc, install_id;
+
+-- Qué le preguntan al coach (primeros 300 caracteres).
+create or replace view public.v_coach_messages with (security_invoker = true) as
+select occurred_at, install_id, props->>'text' as mensaje, (props->>'image')::boolean as con_foto
+from public.events where name = 'coach_message'
+order by occurred_at desc;
+
+revoke all on public.v_errors_recent, public.v_daily_active, public.v_feature_usage, public.v_ai_health,
+              public.v_food_log, public.v_daily_summary, public.v_coach_messages from anon, authenticated;

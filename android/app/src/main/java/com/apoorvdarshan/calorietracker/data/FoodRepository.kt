@@ -75,6 +75,15 @@ class FoodRepository(
         // Decode + append + encode in one transaction: a diary that fails to
         // decode is preserved, never replaced by `[entry]`.
         prefs.updateFoodEntries { current -> current + entry }
+        // Beta log, records sharing only: what was logged and how (photo, text, barcode, Coach…).
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.trackContent(
+            "food_logged",
+            mapOf(
+                "food" to entry.name, "kcal" to entry.calories, "protein_g" to entry.protein,
+                "carbs_g" to entry.carbs, "fat_g" to entry.fat, "source" to entry.source,
+                "meal" to entry.mealType, "photo" to (entry.imageFilename != null)
+            )
+        )
         // Don't hold Log on Health Connect: a stalled binder call froze the Review Food sheet.
         healthRetry.syncInBackground(entry, isUpdate = false)
         // One-time organic review moment: the first successful food log (iOS parity).

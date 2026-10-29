@@ -1367,6 +1367,17 @@ fun SettingsScreen(
                         icon = Icons.Outlined.BugReport,
                         onChange = com.apoorvdarshan.calorietracker.services.telemetry.Telemetry::setConsent
                     )
+                    if (telemetryConsent == com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.Consent.YES) {
+                        val recordsOn by com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.content.collectAsState()
+                        HorizontalDivider()
+                        ToggleRow(
+                            stringResource(R.string.tm_settings_records),
+                            recordsOn,
+                            icon = Icons.Outlined.BugReport,
+                            subtitle = stringResource(R.string.tm_settings_records_footer),
+                            onChange = com.apoorvdarshan.calorietracker.services.telemetry.Telemetry::setContentConsent
+                        )
+                    }
                     Text(
                         stringResource(R.string.tm_settings_footer),
                         fontSize = 12.sp,

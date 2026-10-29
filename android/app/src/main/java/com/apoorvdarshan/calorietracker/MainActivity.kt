@@ -94,6 +94,12 @@ open class MainActivity : AppCompatActivity() {
         com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track("app_open")
         com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.sendSoon()
         lifecycleScope.launch {
+            runCatching {
+                com.apoorvdarshan.calorietracker.services.telemetry.DailySummary
+                    .sendForYesterdayIfDue(applicationContext, (application as FudAIApp).container)
+            }
+        }
+        lifecycleScope.launch {
             // Adaptive Goals auto-runs the full goal calculation about once a week (Energy Burn,
             // when on, supplies the measured-burn anchor it consumes — separate toggle).
             val container = (application as FudAIApp).container

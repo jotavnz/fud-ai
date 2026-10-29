@@ -738,7 +738,7 @@ DisposableEffect(lifecycleOwner, vm) {
 
             if (isToday && telemetryConsent == Telemetry.Consent.UNASKED && Telemetry.configured) {
                 item(key = "beta-telemetry-prompt") {
-                    BetaTelemetryPromptCard(onAnswer = Telemetry::setConsent)
+                    BetaTelemetryPromptCard(onAnswer = Telemetry::answer)
                 }
             }
 

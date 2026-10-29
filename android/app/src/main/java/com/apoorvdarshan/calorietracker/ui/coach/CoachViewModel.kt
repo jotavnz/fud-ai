@@ -174,6 +174,11 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 attachmentImageBase64 = thumbnailBytes?.let { Base64.getEncoder().encodeToString(it) }
             )
             val started = System.nanoTime()
+            // Records sharing only: the start of what the person asked, for context.
+            com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.trackContent(
+                "coach_message",
+                mapOf("text" to text.take(300), "length" to text.length, "image" to (imageBytes != null))
+            )
             try {
                 container.chatRepository.append(userMsg)
                 val history = container.chatRepository.contextMessages(limit = 20).dropLast(1) // exclude the just-appended user msg — it's passed separately
