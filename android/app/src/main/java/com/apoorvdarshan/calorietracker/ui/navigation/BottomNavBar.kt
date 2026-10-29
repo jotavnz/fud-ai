@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.navigation
 
+import com.apoorvdarshan.calorietracker.models.TabBarSettings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -116,11 +117,12 @@ fun FudAIBottomNavBar(
     showAboutBadge: Boolean = false,
     workoutMode: WorkoutTabMode = WorkoutTabMode.Default,
     hiddenRoutes: Set<String> = emptySet(),
+    tabOrder: List<String> = TabBarSettings.DefaultOrder,
     onTap: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tabs = remember(workoutMode, hiddenRoutes) {
-        BottomTabs.filterNot { FudAIRoutes.isHiddenTab(it.route, hiddenRoutes) }.map { tab ->
+    val tabs = remember(workoutMode, hiddenRoutes, tabOrder) {
+        BottomTabs.sortedBy { tab -> tabOrder.indexOf(tab.route).let { if (it < 0) Int.MAX_VALUE else it } }.filterNot { FudAIRoutes.isHiddenTab(it.route, hiddenRoutes) }.map { tab ->
             if (tab.route != FudAIRoutes.WORKOUTS) tab else tab.copy(icon = workoutsTabIcon(workoutMode))
         }
     }

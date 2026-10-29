@@ -274,6 +274,28 @@ class WorkoutRepository(
         }
     }
 
+    /** Undo of [removeExercise]: the exercise goes back to its old place in the day. */
+    suspend fun restoreExercise(exercise: PlannedExercise, index: Int, date: LocalDate) {
+        updatePlan(WorkoutDate.key(date)) { plan ->
+            if (plan.exercises.any { it.id == exercise.id }) plan
+            else plan.copy(exercises = plan.exercises.toMutableList().also { it.add(index.coerceIn(0, it.size), exercise) })
+        }
+    }
+
+    /** Deletes the custom-exercise photos in [paths] that nothing references any more. */
+    suspend fun pruneUserExerciseImages(paths: List<String>, imageStore: com.apoorvdarshan.calorietracker.services.FoodImageStore) {
+        val after = snapshot()
+        paths.distinct().filterNot { after.referencesUserExerciseImage(it) }.forEach { imageStore.delete(it) }
+    }
+
+    /** Undo of [deleteRoutine]. */
+    suspend fun restoreRoutine(routine: com.apoorvdarshan.calorietracker.models.WorkoutRoutine, index: Int) {
+        updateState { current ->
+            if (current.routines.any { it.id == routine.id }) current
+            else current.copy(routines = current.routines.toMutableList().also { it.add(index.coerceIn(0, it.size), routine) })
+        }
+    }
+
     suspend fun moveExercise(exerciseId: UUID, date: LocalDate, offset: Int) =
         moveExercise(exerciseId, WorkoutDate.key(date), offset)
 

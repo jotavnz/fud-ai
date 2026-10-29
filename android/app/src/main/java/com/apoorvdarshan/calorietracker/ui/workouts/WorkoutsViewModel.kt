@@ -520,7 +520,23 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
     fun removeExercise(exerciseId: UUID) {
         val date = diaryUiState.selectedDate
         val imageStore = exerciseImageStore
-        viewModelScope.launch { workoutRepository?.removeExercise(exerciseId, date, imageStore) }
+        viewModelScope.launch {
+            val repository = workoutRepository ?: return@launch
+            val before = repository.planNow(date).exercises
+            val index = before.indexOfFirst { it.id == exerciseId }
+            val removed = before.getOrNull(index)
+            // Photos of a custom exercise are only cleaned once the undo window has passed.
+            repository.removeExercise(exerciseId, date, imageStore = null)
+            if (removed == null) return@launch
+            val app = getApplication<com.apoorvdarshan.calorietracker.FudAIApp>()
+            app.container.undo.offer(app.getString(R.string.undo_removed, removed.name)) {
+                repository.restoreExercise(removed, index, date)
+            }
+            if (imageStore != null && removed.imagePaths.isNotEmpty()) {
+                kotlinx.coroutines.delay(com.apoorvdarshan.calorietracker.ui.components.UndoVisibleMillis + 2_000)
+                repository.pruneUserExerciseImages(removed.imagePaths, imageStore)
+            }
+        }
     }
 
     /** Negative offsets move the exercise up the day's list; positive offsets move it down. */
@@ -692,7 +708,22 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteRoutine(routineId: UUID) {
         val imageStore = exerciseImageStore
-        viewModelScope.launch { workoutRepository?.deleteRoutine(routineId, imageStore) }
+        viewModelScope.launch {
+            val repository = workoutRepository ?: return@launch
+            val routines = repository.snapshot().routines
+            val index = routines.indexOfFirst { it.id == routineId }
+            val removed = routines.getOrNull(index)
+            repository.deleteRoutine(routineId, imageStore = null)
+            if (removed == null) return@launch
+            val app = getApplication<com.apoorvdarshan.calorietracker.FudAIApp>()
+            app.container.undo.offer(app.getString(R.string.undo_removed, removed.name)) {
+                repository.restoreRoutine(removed, index)
+            }
+            if (imageStore != null) {
+                kotlinx.coroutines.delay(com.apoorvdarshan.calorietracker.ui.components.UndoVisibleMillis + 2_000)
+                repository.pruneUserExerciseImages(removed.exercises.flatMap { it.imagePaths }, imageStore)
+            }
+        }
     }
 
     /** Starts the selected day from a routine; logged sets already there are kept. */

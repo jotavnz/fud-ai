@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_tab_order_section">Tab order</string>
+    <string name="settings_tab_move_up">Move up</string>
+    <string name="settings_tab_move_down">Move down</string>
+    <string name="sleep_card_hide_a11y">Hide until tomorrow evening</string>
+    <string name="undo">Undo</string>
+    <string name="undo_food_deleted">Deleted %1$s</string>
+    <string name="undo_pantry_used_up">%1$s used up · added to the shopping list</string>
+    <string name="undo_removed">Removed %1$s</string>
+    <string name="undo_purchase">purchase</string>
+</resources>

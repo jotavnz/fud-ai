@@ -533,6 +533,10 @@ class PreferencesStore(
     val coachGoalPromptDismissed: Flow<Boolean> = ds.data.map { it[Keys.COACH_GOAL_PROMPT_DISMISSED] ?: false }
     suspend fun setCoachGoalPromptDismissed(v: Boolean) { ds.edit { it[Keys.COACH_GOAL_PROMPT_DISMISSED] = v } }
 
+    /** Home's sleep card stays hidden until this epoch millis (closed with its X). */
+    val sleepCardHiddenUntil: Flow<Long> = ds.data.map { it[Keys.SLEEP_CARD_HIDDEN_UNTIL] ?: 0L }
+    suspend fun setSleepCardHiddenUntil(v: Long) { ds.edit { it[Keys.SLEEP_CARD_HIDDEN_UNTIL] = v } }
+
     /** Onboarding chose "explain it to Coach": Home opens the goal interview once on first launch. */
     val coachGoalInterviewPending: Flow<Boolean> = ds.data.map { it[Keys.COACH_GOAL_INTERVIEW_PENDING] ?: false }
     suspend fun setCoachGoalInterviewPending(v: Boolean) { ds.edit { it[Keys.COACH_GOAL_INTERVIEW_PENDING] = v } }
@@ -891,6 +895,9 @@ class PreferencesStore(
     }
 
     val hiddenTabs: Flow<Set<String>> = ds.data.map { TabBarSettings.decode(it[Keys.HIDDEN_TABS]) }
+
+    val tabOrder: Flow<List<String>> = ds.data.map { TabBarSettings.decodeOrder(it[Keys.TAB_ORDER]) }
+    suspend fun setTabOrder(order: List<String>) { ds.edit { it[Keys.TAB_ORDER] = TabBarSettings.encodeOrder(order) } }
 
     /** Shows or hides one tab, reading the other tabs' state inside the same edit. */
     suspend fun setTabHidden(route: String, hidden: Boolean) {
@@ -1833,6 +1840,7 @@ class PreferencesStore(
         val SAMSUNG_WORKOUTS = stringPreferencesKey("samsungWorkouts")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
+        val SLEEP_CARD_HIDDEN_UNTIL = androidx.datastore.preferences.core.longPreferencesKey("sleepCardHiddenUntil")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")
         val FASTING_DEFAULT_GOAL_MINUTES = intPreferencesKey("fastingDefaultGoalMinutes")
         val FASTING_GOAL_NOTIFICATION_ENABLED = booleanPreferencesKey("fastingGoalNotificationEnabled")
@@ -1887,6 +1895,7 @@ class PreferencesStore(
         val QUICK_ACTION_3 = stringPreferencesKey("quickAction.slot3")
         val ADD_MENU_CONFIG = stringPreferencesKey(AddMenuConfig.STORAGE_KEY)
         val HIDDEN_TABS = stringPreferencesKey(TabBarSettings.STORAGE_KEY)
+        val TAB_ORDER = stringPreferencesKey(TabBarSettings.ORDER_STORAGE_KEY)
         val WORKOUT_STATE = stringPreferencesKey("workoutDiaryStateV1")
         val MEAL_BREAKFAST_START = intPreferencesKey("mealBreakfastStartMinutes")
         val MEAL_LUNCH_START = intPreferencesKey("mealLunchStartMinutes")

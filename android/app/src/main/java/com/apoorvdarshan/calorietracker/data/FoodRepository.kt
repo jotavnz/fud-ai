@@ -117,13 +117,19 @@ class FoodRepository(
         }
     }
 
-    suspend fun deleteEntry(entryId: UUID) {
+    /** Puts back an entry the user just deleted ("Undo"), photos included if not yet pruned. */
+    suspend fun restoreEntry(entry: FoodEntry) {
+        prefs.updateFoodEntries { current -> if (current.any { it.id == entry.id }) current else current + entry }
+        healthRetry.syncInBackground(entry, isUpdate = false)
+    }
+
+    suspend fun deleteEntry(entryId: UUID, pruneImages: Boolean = true) {
         ensureFavoritesMigrated()
         // Drop the queue entry under the same mutex retry/sync uses, before the local
         // row disappears, so an in-flight retry cannot recreate Health Connect data.
         healthRetry.forget(entryId)
         prefs.updateFoodEntries { current -> current.filter { it.id != entryId } }
-        pruneOrphanedImages()
+        if (pruneImages) pruneOrphanedImages()
         // Delete even when sync is off (iOS parity, best-effort) — a surviving
         // fudai-tagged record would resurrect through restoreFromHealthConnect.
         health?.deleteNutrition(entryId)

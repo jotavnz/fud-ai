@@ -15,6 +15,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.IconButton
+import com.apoorvdarshan.calorietracker.models.TabBarSettings
+import kotlinx.coroutines.launch
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -103,6 +108,40 @@ fun TabBarSettingsScreen(
                             onChange = { shown -> vm.setTabHidden(route, hidden = !shown) }
                         )
                         if (index < tabs.lastIndex) HorizontalDivider()
+                    }
+                }
+            }
+            item {
+                val scope = androidx.compose.runtime.rememberCoroutineScope()
+                val order by vm.container.prefs.tabOrder.collectAsState(initial = TabBarSettings.DefaultOrder)
+                val labels = mapOf(
+                    FudAIRoutes.HOME to R.string.nav_home,
+                    FudAIRoutes.PROGRESS to R.string.nav_progress,
+                    FudAIRoutes.WORKOUTS to R.string.nav_workouts,
+                    FudAIRoutes.COACH to R.string.nav_coach,
+                    FudAIRoutes.SETTINGS to R.string.nav_settings
+                )
+                SectionCard(title = stringResource(R.string.settings_tab_order_section)) {
+                    order.forEachIndexed { index, route ->
+                        Row(
+                            Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "${index + 1}. " + stringResource(labels[route] ?: R.string.nav_home),
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            IconButton(
+                                onClick = { scope.launch { vm.container.prefs.setTabOrder(TabBarSettings.moved(order, route, -1)) } },
+                                enabled = index > 0
+                            ) { Icon(Icons.Filled.KeyboardArrowUp, contentDescription = stringResource(R.string.settings_tab_move_up)) }
+                            IconButton(
+                                onClick = { scope.launch { vm.container.prefs.setTabOrder(TabBarSettings.moved(order, route, 1)) } },
+                                enabled = index < order.lastIndex
+                            ) { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(R.string.settings_tab_move_down)) }
+                        }
+                        if (index < order.lastIndex) HorizontalDivider()
                     }
                 }
             }

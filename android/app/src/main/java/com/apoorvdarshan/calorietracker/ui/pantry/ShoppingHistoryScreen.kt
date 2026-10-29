@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.pantry
 
+import com.apoorvdarshan.calorietracker.ui.components.UndoBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +55,7 @@ import java.util.Locale
 fun ShoppingHistoryScreen(container: AppContainer, onDismiss: () -> Unit) {
     val purchases by container.pantryRepository.purchases.collectAsState(initial = emptyList())
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
     var showPrices by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf<java.util.UUID?>(null) }
     val months = remember(purchases) { ShoppingHistory.months(purchases) }
@@ -103,7 +105,14 @@ fun ShoppingHistoryScreen(container: AppContainer, onDismiss: () -> Unit) {
                                 purchase = purchase,
                                 expanded = expanded == purchase.id,
                                 onToggle = { expanded = if (expanded == purchase.id) null else purchase.id },
-                                onDelete = { scope.launch { container.pantryRepository.removePurchase(purchase.id) } }
+                                onDelete = {
+                                    scope.launch {
+                                        container.pantryRepository.removePurchase(purchase.id)
+                                        container.undo.offer(context.getString(R.string.undo_removed, purchase.store.ifBlank { context.getString(R.string.undo_purchase) })) {
+                                            container.pantryRepository.restorePurchase(purchase)
+                                        }
+                                    }
+                                }
                             )
                         }
                     }
@@ -133,6 +142,7 @@ fun ShoppingHistoryScreen(container: AppContainer, onDismiss: () -> Unit) {
                     }
                 }
             }
+            UndoBar(container.undo, bottomPadding = 16.dp)
         }
     }
 }

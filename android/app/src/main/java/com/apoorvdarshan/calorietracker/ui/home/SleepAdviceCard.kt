@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +30,7 @@ import java.time.format.FormatStyle
 
 /** Home's sleep card: last night, and how long and when to sleep tonight, with the reasons. */
 @Composable
-internal fun SleepAdviceCard(advice: SleepAdvice, onOpenHistory: () -> Unit = {}) {
+internal fun SleepAdviceCard(advice: SleepAdvice, onOpenHistory: () -> Unit = {}, onHide: () -> Unit = {}) {
     val clock = DateTimeFormatter.ofPattern(
         com.apoorvdarshan.calorietracker.ui.util.clockTimePattern(androidx.compose.ui.platform.LocalContext.current)
     )
@@ -64,7 +66,17 @@ internal fun SleepAdviceCard(advice: SleepAdvice, onOpenHistory: () -> Unit = {}
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            InfoIconButton(title = stringResource(R.string.sleep_info_title), body = stringResource(R.string.sleep_info_body))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                androidx.compose.material3.IconButton(onClick = onHide, modifier = Modifier.size(28.dp)) {
+                    androidx.compose.material3.Icon(
+                        androidx.compose.material.icons.Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.sleep_card_hide_a11y),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                InfoIconButton(title = stringResource(R.string.sleep_info_title), body = stringResource(R.string.sleep_info_body))
+            }
         }
     }
 }
@@ -86,3 +98,11 @@ private fun reasonLines(advice: SleepAdvice, clock: DateTimeFormatter): List<Str
 }
 
 private fun hm(minutes: Long): String = if (minutes % 60 == 0L) "${minutes / 60} h" else "${minutes / 60} h ${minutes % 60} min"
+
+/** Closing the sleep card hides it until 17:00 of the next day (or today, if closed after midnight). */
+internal object SleepCardVisibility {
+    fun hiddenUntil(now: java.time.ZonedDateTime = java.time.ZonedDateTime.now()): Long {
+        val day = if (now.hour < 5) now.toLocalDate() else now.toLocalDate().plusDays(1)
+        return day.atTime(17, 0).atZone(now.zone).toInstant().toEpochMilli()
+    }
+}

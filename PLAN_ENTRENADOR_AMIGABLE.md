@@ -161,3 +161,11 @@ Estado: [ ] pendiente · [x] hecho
 18. [ ] Training: "Pedir rutina al coach" lo primero. Orden de pestañas por defecto Inicio, Progreso, Training, Coach, Ajustes, y configurable en Ajustes.
 19. [ ] Gastos de despensa en Bs o $ con la tasa del día (y decir qué tasa se usó).
 20. [ ] Datos en la nube (Supabase) para Play Store y grupo familiar: decidir.
+
+### Investigación grupo familiar / despensa (2026-10-28)
+- grocy (MIT): consumir receta (rechaza si falta stock), "fulfillment" por receta (alcanza o no, faltantes, kcal), due score (+1 por ingrediente que vence pronto). Portable con atribución. Sin hogares ni dietas por miembro.
+- Pantrie (MIT, untraceablez/pantrie): hogares con roles Admin/Editor/Viewer y alérgenos por ingrediente. Referencia de modelo.
+- EverShelf (MIT): recetas con IA, lista de compras que descuenta lo que hay, cantidades "X / Y".
+- KitchenOwl, Mealie, Tandoor: AGPL, solo ideas (grupo → hogar, "on hand", listas compartidas).
+- Modelo propuesto: Household(id, name, inviteCode); Member(householdId, role, dietTags, allergens, kcalTarget, miembros locales sin cuenta); StockTransaction(delta, mealLogId, memberId) como registro solo de altas (facilita deshacer y sincronizar). Porciones = mín. de floor(stock / cantidad por porción). IA recibe unión de restricciones (alergias duras, preferencias suaves).
+- Todos necesitan servidor: offline-first local + sincronizar con Supabase después.

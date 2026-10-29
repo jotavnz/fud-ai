@@ -475,6 +475,7 @@ DisposableEffect(lifecycleOwner, vm) {
     }
     val coachGoalPlan by container.prefs.coachGoalPlan.collectAsState(initial = null)
     val coachGoalPromptDismissed by container.prefs.coachGoalPromptDismissed.collectAsState(initial = true)
+    val sleepCardHiddenUntil by container.prefs.sleepCardHiddenUntil.collectAsState(initial = Long.MAX_VALUE)
     val pantryItems by container.pantryRepository.items.collectAsState(initial = emptyList())
     val homeScope = rememberCoroutineScope()
     var healthSyncing by remember { mutableStateOf(false) }
@@ -713,14 +714,24 @@ DisposableEffect(lifecycleOwner, vm) {
             if (isToday && coachGoalPlan == null && !coachGoalPromptDismissed) {
                 item(key = "coach-goal-prompt") {
                     CoachGoalPromptCard(
-                        onTalk = { container.navigator.showCoachGoalInterview() },
+                        onTalk = {
+                            // Once the user has talked to Coach about it, the invitation is done.
+                            homeScope.launch { container.prefs.setCoachGoalPromptDismissed(true) }
+                            container.navigator.showCoachGoalInterview()
+                        },
                         onClose = { homeScope.launch { container.prefs.setCoachGoalPromptDismissed(true) } }
                     )
                 }
             }
 
             ui.sleepAdvice?.let { advice ->
-                if (isToday) item(key = "sleep-advice") { SleepAdviceCard(advice, onOpenHistory = { showSleepHistory = true }) }
+                if (isToday && System.currentTimeMillis() >= sleepCardHiddenUntil) item(key = "sleep-advice") {
+                    SleepAdviceCard(
+                        advice,
+                        onOpenHistory = { showSleepHistory = true },
+                        onHide = { homeScope.launch { container.prefs.setSleepCardHiddenUntil(SleepCardVisibility.hiddenUntil()) } }
+                    )
+                }
             }
 
             // Unified diary. Water and fasting remain excluded from nutrition totals and sharing.

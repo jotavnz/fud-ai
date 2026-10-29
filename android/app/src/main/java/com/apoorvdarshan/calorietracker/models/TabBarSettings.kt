@@ -14,6 +14,28 @@ object TabBarSettings {
 
     fun encode(hidden: Set<String>): String = Hideable.filter { it in hidden }.joinToString(",")
 
+    const val ORDER_STORAGE_KEY = "tabOrder"
+    val DefaultOrder = listOf("home", "progress", "workouts", "coach", "settings")
+
+    /** The stored tab order; unknown routes are dropped and missing ones keep their default place at the end. */
+    fun decodeOrder(raw: String?): List<String> {
+        val stored = raw.orEmpty().split(',').map { it.trim() }.filter { it in DefaultOrder }.distinct()
+        return stored + DefaultOrder.filterNot { it in stored }
+    }
+
+    fun encodeOrder(order: List<String>): String = decodeOrder(order.joinToString(",")).joinToString(",")
+
+    /** [order] with [route] moved one place earlier (delta -1) or later (delta 1). */
+    fun moved(order: List<String>, route: String, delta: Int): List<String> {
+        val list = decodeOrder(order.joinToString(",")).toMutableList()
+        val from = list.indexOf(route)
+        val to = from + delta
+        if (from < 0 || to !in list.indices) return list
+        list.removeAt(from)
+        list.add(to, route)
+        return list
+    }
+
     /**
      * The stored value after showing or hiding one tab. Applied to what is stored right now,
      * so the other tabs keep their current state even if a screen still shows an older set.

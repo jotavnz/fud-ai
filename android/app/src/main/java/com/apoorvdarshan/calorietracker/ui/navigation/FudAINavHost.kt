@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.navigation
 
+import com.apoorvdarshan.calorietracker.ui.components.UndoBar
+import androidx.compose.ui.unit.dp
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -125,6 +127,7 @@ fun FudAINavHost(
     }
     // Null until the stored choice is read, so a hidden tab never flashes in the bar.
     val hiddenTabs by container.prefs.hiddenTabs.collectAsState(initial = null)
+    val tabOrder by container.prefs.tabOrder.collectAsState(initial = com.apoorvdarshan.calorietracker.models.TabBarSettings.DefaultOrder)
     val showTabs = selectedTabRoute != null && hiddenTabs != null && !analyzing &&
         !(voiceUi.visible && voiceUi.expanded)
     // Bumped when the Settings tab is re-tapped so SettingsScreen can pop back to the hub
@@ -311,6 +314,7 @@ fun FudAINavHost(
                     showAboutBadge = updateAvailable,
                     workoutMode = workoutMode,
                     hiddenRoutes = hiddenTabs.orEmpty(),
+                    tabOrder = tabOrder,
                     onTap = ::selectTab
                 )
             }
@@ -405,6 +409,7 @@ fun FudAINavHost(
     AppTourOverlay(tour) {
         scope.launch { container.prefs.setAppTourCompleted(true) }
     }
+    UndoBar(container.undo, bottomPadding = if (showTabs) 96.dp else 24.dp)
     }
     }
 }

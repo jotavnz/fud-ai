@@ -410,6 +410,9 @@ class AppContainer(app: FudAIApp) {
     /** Shared navigation state: what each screen shows, and requests from the voice assistant. */
     val navigator = AppNavigator()
 
+    /** "Deleted · Undo" bar shown for a few seconds after anything is removed. */
+    val undo = com.apoorvdarshan.calorietracker.ui.components.UndoController()
+
     /** The live voice assistant (the orb). Created on first use. */
     val voiceAssistant: VoiceAssistantController by lazy { VoiceAssistantController(this) }
     /** Settings sample playback; never starts a conversation or microphone. */

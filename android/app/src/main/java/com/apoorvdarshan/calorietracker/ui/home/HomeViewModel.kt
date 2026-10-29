@@ -1034,7 +1034,15 @@ viewModelScope.launch {
 
     fun deleteEntry(id: UUID) {
         viewModelScope.launch {
-            container.foodRepository.deleteEntry(id)
+            val removed = container.foodRepository.entries.first().firstOrNull { it.id == id }
+            container.foodRepository.deleteEntry(id, pruneImages = removed == null)
+            if (removed == null) return@launch
+            container.undo.offer(container.appContext.getString(R.string.undo_food_deleted, removed.name)) {
+                container.foodRepository.restoreEntry(removed)
+            }
+            // Photos stay until the undo window closes; pruning skips anything restored.
+            kotlinx.coroutines.delay(com.apoorvdarshan.calorietracker.ui.components.UndoVisibleMillis + 2_000)
+            container.foodRepository.pruneOrphanedImages()
         }
     }
 

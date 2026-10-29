@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_tab_order_section">Orden de las pestañas</string>
+    <string name="settings_tab_move_up">Subir</string>
+    <string name="settings_tab_move_down">Bajar</string>
+    <string name="sleep_card_hide_a11y">Ocultar hasta mañana en la tarde</string>
+    <string name="undo">Deshacer</string>
+    <string name="undo_food_deleted">Borraste %1$s</string>
+    <string name="undo_pantry_used_up">Se acabó %1$s · va a la lista de compras</string>
+    <string name="undo_removed">Quitaste %1$s</string>
+    <string name="undo_purchase">compra</string>
+</resources>

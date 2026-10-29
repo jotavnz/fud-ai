@@ -51,8 +51,32 @@ class PantryRepository(private val prefs: PreferencesStore) {
 
     /** Used up: leaves the pantry and goes on the shopping list (unless it is already there). */
     suspend fun usedUp(item: PantryItem) {
+        val alreadyListed = prefs.shoppingList.first().any { !it.checked && it.name.equals(item.name.trim(), ignoreCase = true) }
         remove(item.id)
         addToShoppingList(item.name, location = item.location)
+        lastUsedUpAddedToList = !alreadyListed
+    }
+
+    private var lastUsedUpAddedToList = false
+
+    /** Undo of [usedUp] or [remove]: the item comes back, and leaves the list if usedUp put it there. */
+    suspend fun restore(item: PantryItem, fromUsedUp: Boolean = false) {
+        prefs.updatePantryItems { list -> if (list.any { it.id == item.id }) list else list + item }
+        if (fromUsedUp && lastUsedUpAddedToList) {
+            val name = item.name.trim()
+            prefs.updateShoppingList { list ->
+                val index = list.indexOfLast { !it.checked && it.name.equals(name, ignoreCase = true) }
+                if (index < 0) list else list.filterIndexed { i, _ -> i != index }
+            }
+        }
+    }
+
+    suspend fun restoreShopping(item: ShoppingItem) {
+        prefs.updateShoppingList { list -> if (list.any { it.id == item.id }) list else list + item }
+    }
+
+    suspend fun restorePurchase(purchase: GroceryPurchase) {
+        prefs.updateGroceryPurchases { list -> if (list.any { it.id == purchase.id }) list else list + purchase }
     }
 
     val shoppingList: Flow<List<ShoppingItem>> = prefs.shoppingList

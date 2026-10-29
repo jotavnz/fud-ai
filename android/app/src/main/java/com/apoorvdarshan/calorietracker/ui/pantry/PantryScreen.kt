@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.pantry
 
+import com.apoorvdarshan.calorietracker.ui.components.UndoBar
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -272,7 +273,14 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                         PantryRow(
                             item = item,
                             onEdit = { editing = item },
-                            onUsed = { scope.launch { container.pantryRepository.usedUp(item) } }
+                            onUsed = {
+                                scope.launch {
+                                    container.pantryRepository.usedUp(item)
+                                    container.undo.offer(context.getString(R.string.undo_pantry_used_up, item.name)) {
+                                        container.pantryRepository.restore(item, fromUsedUp = true)
+                                    }
+                                }
+                            }
                         )
                     }
                 }
@@ -287,7 +295,15 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                             scope.launch { container.pantryRepository.addToShoppingList(name) }
                         },
                         onToggle = { id -> scope.launch { container.pantryRepository.toggleShopping(id) } },
-                        onRemove = { id -> scope.launch { container.pantryRepository.removeShopping(id) } },
+                        onRemove = { id ->
+                            scope.launch {
+                                val removed = shopping.firstOrNull { it.id == id }
+                                container.pantryRepository.removeShopping(id)
+                                if (removed != null) container.undo.offer(context.getString(R.string.undo_removed, removed.name)) {
+                                    container.pantryRepository.restoreShopping(removed)
+                                }
+                            }
+                        },
                         onStock = { stockingShop = true }
                     )
                 }
@@ -301,6 +317,7 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                     }
                 }
             }
+            UndoBar(container.undo, bottomPadding = 16.dp)
         }
 
         if (showHistory) ShoppingHistoryScreen(container) { showHistory = false }
@@ -328,7 +345,13 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                 },
                 onDelete = {
                     editing = null
-                    scope.launch { container.pantryRepository.remove(draft.id) }
+                    scope.launch {
+                        val removed = items.firstOrNull { it.id == draft.id }
+                        container.pantryRepository.remove(draft.id)
+                        if (removed != null) container.undo.offer(context.getString(R.string.undo_removed, removed.name)) {
+                            container.pantryRepository.restore(removed)
+                        }
+                    }
                 }
             )
         }
