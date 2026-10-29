@@ -325,8 +325,11 @@ object ReceiptParser {
     fun prompt(): String = """
         Read this grocery store receipt. Expand abbreviations into plain food names in the receipt's language
         (e.g. "PECH POLLO" -> "Pechuga de pollo"). Skip non-food lines, discounts, taxes, bags and totals.
-        For each food line give the quantity as printed (count or weight with unit), the line price as a number,
-        and where it is usually stored: "fridge", "freezer" or "pantry".
+        For each food line give the quantity the user now has at home, in kitchen units: a count of units or a weight
+        or volume with its unit ("2", "30 huevos" for 2 half cartons of eggs, "1 kg", "2 l"). Never put prices or
+        "2 X 2386.84" style multiplications in quantity: the number before X is the count, the rest is the unit price.
+        Give the line price (what was paid for the whole line) as a number, and where it is usually stored:
+        "fridge", "freezer" or "pantry".
         Respond ONLY with JSON:
         {"store":"","date":"yyyy-MM-dd or null","currency":"ISO code or symbol","total":0.0,
          "items":[{"name":"","quantity":"","price":0.0,"location":"pantry"}]}
@@ -356,7 +359,7 @@ object ReceiptParser {
             if (name.isEmpty()) return@mapNotNull null
             GroceryLine(
                 name = name,
-                quantity = line.text("quantity").take(30),
+                quantity = PantryStock.cleanQuantity(line.text("quantity")).take(30),
                 price = line.number("price"),
                 location = PantryLocation.parse(line.text("location")) ?: PantryLocation.PANTRY
             )

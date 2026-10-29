@@ -15,8 +15,54 @@ object PantryStock {
 
     private val pattern = Regex("""^\s*(\d+(?:[.,]\d+)?)\s*([a-zA-Záéíóú]*)""")
 
+    /** Receipts print "2 X 2386.84" (units × unit price); only the units are a quantity. */
+    private val pricedQuantity = Regex("""^\s*(\d+(?:[.,]\d+)?)\s*[xX×*]\s*\d[\d.,]*\s*$""")
+
+    fun cleanQuantity(quantity: String): String = pricedQuantity.find(quantity)?.groupValues?.get(1) ?: quantity
+
+    /** Units inside one package named in the food ("Huevos 1/2 cartón" = 15, "docena" = 12). */
+    fun unitsPerPack(name: String): Int? {
+        val key = PantryMatching.key(name.replace("½", " 1/2 ").replace("1/2", " medio "))
+        return when {
+            Regex("""\bmedi[oa] (carton|maple|bandeja)\b""").containsMatchIn(key) -> 15
+            Regex("""\b(carton|cartones|maple|bandeja de 30)\b""").containsMatchIn(key) -> 30
+            Regex("""\bmedia docena\b""").containsMatchIn(key) -> 6
+            Regex("""\bdocenas?\b""").containsMatchIn(key) -> 12
+            else -> null
+        }
+    }
+
+    /** Rough weight of one unit, to turn a meal's grams into units (two eggs in a perico). */
+    private val unitGrams = listOf(
+        "huevo" to 50.0, "egg" to 50.0, "platano" to 180.0, "cambur" to 120.0, "banana" to 120.0,
+        "tomate" to 120.0, "cebolla" to 150.0, "papa" to 170.0, "aguacate" to 170.0, "manzana" to 180.0,
+        "limon" to 60.0, "zanahoria" to 80.0, "pimenton" to 150.0, "arepa" to 90.0, "pan " to 60.0
+    )
+
+    private fun gramsPerUnit(name: String): Double? {
+        val key = PantryMatching.key(name) + " "
+        return unitGrams.firstOrNull { (word, _) -> key.contains(word) }?.second
+    }
+
+    /**
+     * The item with its quantity in units used in the kitchen: no receipt price, and packages
+     * opened up ("2" of "Huevos 1/2 cartón" → "30 huevos").
+     */
+    fun normalized(item: PantryItem): PantryItem {
+        val clean = cleanQuantity(item.quantity)
+        val amount = parse(clean)
+        val perPack = unitsPerPack(item.name)
+        // Only a bare count is packages ("2"); "30 huevos" is already in units.
+        val bareCount = pattern.find(clean)?.groupValues?.get(2).isNullOrEmpty() && clean.trim().matches(Regex("""\d+(?:[.,]\d+)?"""))
+        if (amount != null && amount.unit == Unit.COUNT && perPack != null && bareCount) {
+            val word = if (PantryMatching.key(item.name).contains("huevo")) "huevos" else "unidades"
+            return item.copy(quantity = "${format(Amount(amount.value * perPack, Unit.COUNT))} $word")
+        }
+        return if (clean == item.quantity) item else item.copy(quantity = clean)
+    }
+
     fun parse(quantity: String): Amount? {
-        val match = pattern.find(quantity) ?: return null
+        val match = pattern.find(cleanQuantity(quantity)) ?: return null
         val number = match.groupValues[1].replace(',', '.').toDoubleOrNull() ?: return null
         return when (match.groupValues[2].lowercase(Locale.ROOT)) {
             "g", "gr", "grs", "gramos", "gramo", "grams", "gram" -> Amount(number, Unit.GRAMS)
@@ -37,7 +83,7 @@ object PantryStock {
             Unit.COUNT -> {
                 // Keep the user's word after the number ("2 latas").
                 val word = pattern.find(originalQuantity)?.groupValues?.get(2).orEmpty()
-                val rest = originalQuantity.substringAfter(word, "").trim().takeIf { word.isNotEmpty() }.orEmpty()
+                val rest = cleanQuantity(originalQuantity).substringAfter(word, "").trim().takeIf { word.isNotEmpty() }.orEmpty()
                 listOf(n(v), word, rest).filter { it.isNotBlank() }.joinToString(" ")
             }
         }
@@ -59,13 +105,16 @@ object PantryStock {
      * Pantry items a logged meal seems to use: matched against each ingredient, else the dish name.
      * Grams come from the ingredient, else the serving; counted items use one unit.
      */
-    fun suggestUses(entry: FoodEntry, pantry: List<PantryItem>): List<Use> = pantry.mapNotNull { item ->
+    fun suggestUses(entry: FoodEntry, pantry: List<PantryItem>): List<Use> = pantry.map(::normalized).mapNotNull { item ->
         val stock = parse(item.quantity)
         val ingredient = entry.ingredients.firstOrNull { mentions(it.name, item) }
         if (ingredient == null && !mentions(entry.name, item)) return@mapNotNull null
         val grams = ingredient?.grams?.takeIf { it > 0 }
             ?: entry.servingSizeGrams?.takeIf { it > 0 }?.times(entry.selectedServingQuantity ?: 1.0)
+        val perUnit = gramsPerUnit(item.name)
         val amount = when {
+            (stock == null || stock.unit == Unit.COUNT) && grams != null && perUnit != null ->
+                Amount(Math.round(grams / perUnit).toDouble().coerceAtLeast(1.0).coerceAtMost(stock?.value ?: Double.MAX_VALUE), Unit.COUNT)
             stock == null || stock.unit == Unit.COUNT -> Amount(1.0, Unit.COUNT)
             grams != null -> Amount(grams.coerceAtMost(stock.value), stock.unit)
             else -> Amount((stock.value / 4).coerceAtLeast(1.0), stock.unit)
@@ -74,7 +123,8 @@ object PantryStock {
     }
 
     /** The item after using [amount]; null when nothing is left (it goes to the shopping list). */
-    fun deduct(item: PantryItem, amount: Amount): PantryItem? {
+    fun deduct(original: PantryItem, amount: Amount): PantryItem? {
+        val item = normalized(original)
         val stock = parse(item.quantity) ?: return null
         // suggestUses always speaks the stock's own unit, so the numbers subtract directly.
         val left = stock.value - amount.value

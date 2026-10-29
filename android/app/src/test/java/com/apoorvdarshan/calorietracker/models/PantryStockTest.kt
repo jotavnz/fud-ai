@@ -40,4 +40,17 @@ class PantryStockTest {
         assertEquals(3, PantryStock.portionsLeft(PantryItem(name = "Carne", quantity = "500 g"), PantryStock.Amount(150.0, PantryStock.Unit.GRAMS)))
         assertTrue(PantryStock.suggestUses(entry("Ensalada"), listOf(PantryItem(name = "Pollo", quantity = "1 kg"))).isEmpty())
     }
+
+    @Test
+    fun receiptPriceIsNotAQuantityAndHalfCartonsOpenIntoEggs() {
+        val eggs = PantryItem(name = "Huevos tipo AA 1/2 cartón", quantity = "2X2386.84")
+        assertEquals("30 huevos", PantryStock.normalized(eggs).quantity)
+        // Already in eggs: not multiplied again.
+        assertEquals("30 huevos", PantryStock.normalized(eggs.copy(quantity = "30 huevos")).quantity)
+        val perico = entry("Arepa con huevo perico", listOf(MealIngredient(name = "huevo perico", grams = 100.0, calories = 150, protein = 12.0, carbs = 2.0, fat = 10.0)))
+        val use = PantryStock.suggestUses(perico, listOf(eggs)).single()
+        assertEquals(2.0, use.amount.value, 0.01)
+        assertEquals("28 huevos", PantryStock.deduct(eggs, use.amount)?.quantity)
+        assertEquals("2", PantryStock.cleanQuantity("2 X 2386.84"))
+    }
 }

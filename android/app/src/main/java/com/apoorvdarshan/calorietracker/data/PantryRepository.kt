@@ -15,9 +15,12 @@ import java.util.UUID
  * shopping list; nothing here touches the food diary.
  */
 class PantryRepository(private val prefs: PreferencesStore) {
-    /** Soonest-to-expire first; undated items last, alphabetically. */
+    /**
+     * Soonest-to-expire first; undated items last, alphabetically. Quantities read in kitchen
+     * units (no receipt prices, packages opened up: "2" half cartons → "30 huevos").
+     */
     val items: Flow<List<PantryItem>> = prefs.pantryItems.map { list ->
-        list.sortedWith(compareBy<PantryItem>({ it.expiresOn ?: "9999" }, { it.name.lowercase() }))
+        list.map(com.apoorvdarshan.calorietracker.models.PantryStock::normalized).sortedWith(compareBy<PantryItem>({ it.expiresOn ?: "9999" }, { it.name.lowercase() }))
     }
 
     val purchases: Flow<List<GroceryPurchase>> = prefs.groceryPurchases.map { list -> list.sortedByDescending { it.date } }
