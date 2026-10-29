@@ -1170,7 +1170,11 @@ DisposableEffect(lifecycleOwner, vm) {
                 showBarcodeScanner = false
                 vm.lookupBarcode(barcode)
             },
-            onDismiss = { showBarcodeScanner = false }
+            onDismiss = { showBarcodeScanner = false },
+            onSwitchTab = {
+                showBarcodeScanner = false
+                showCameraCapture = true
+            }
         )
     }
 
@@ -1188,6 +1192,10 @@ DisposableEffect(lifecycleOwner, vm) {
                 } else {
                     vm.clearLabelScanBarcode()
                 }
+            },
+            onSwitchTab = {
+                showCameraCapture = false
+                openBarcodeScanner()
             }
         )
     }

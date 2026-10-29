@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.components
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Column
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
@@ -54,7 +56,9 @@ private const val PHOTO_JPEG_QUALITY = 95
 @Composable
 fun InAppCameraCaptureDialog(
     onCapture: (ByteArray) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /** Shows the "Scan" header with the food/barcode tabs; called when the barcode tab is picked. */
+    onSwitchTab: ((ScanTab) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val cameraOpenError = stringResource(R.string.camera_error_open)
@@ -126,9 +130,12 @@ fun InAppCameraCaptureDialog(
         },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        Column(Modifier.fillMaxSize().background(Color.Black)) {
+        onSwitchTab?.let { switch -> ScanHeader(ScanTab.FOOD, onBack = { if (!isCapturing) onDismiss() }, onSelect = switch) }
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f)
                 .background(Color.Black)
         ) {
             AndroidView(
@@ -138,7 +145,9 @@ fun InAppCameraCaptureDialog(
 
             CameraFocusOverlay(focus = focus, enabled = !isCapturing)
 
-            IconButton(
+            if (onSwitchTab != null) {
+                ScanHelpChip(ScanTab.FOOD, Modifier.align(Alignment.TopCenter).padding(top = 18.dp))
+            } else IconButton(
                 onClick = onDismiss,
                 enabled = !isCapturing,
                 modifier = Modifier
@@ -258,6 +267,7 @@ fun InAppCameraCaptureDialog(
                     )
                 }
             }
+        }
         }
     }
 }

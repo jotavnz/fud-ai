@@ -47,4 +47,16 @@
     <string name="analyzing_step_macros">Working out calories and macros…</string>
     <string name="analyzing_step_search">Looking up the foods…</string>
     <string name="pantry_shopping_subtitle">What you need to buy. Tick what you bought and move it to the pantry.</string>
+    <string name="scan_title">Scan</string>
+    <string name="scan_tab_food">Scan food</string>
+    <string name="scan_tab_barcode">Barcode</string>
+    <string name="scan_help">Need help?</string>
+    <string name="scan_help_title">Tips for a good scan</string>
+    <string name="scan_tip_food_light">Good light, photo from above or at a slight angle.</string>
+    <string name="scan_tip_food_whole">Get the whole plate in; things should not hide each other.</string>
+    <string name="scan_tip_food_note">After the photo you can add a note (oil, sauces, amounts) to make it more precise.</string>
+    <string name="scan_tip_food_packaged">For packaged products, the Barcode tab is more exact.</string>
+    <string name="scan_tip_barcode_close">Bring the barcode close and hold the phone still.</string>
+    <string name="scan_tip_barcode_light">Avoid glare: tilt the package a little if the light reflects.</string>
+    <string name="scan_tip_barcode_missing">If the product is not found, take a photo of the nutrition label instead.</string>
 </resources>

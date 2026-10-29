@@ -47,4 +47,16 @@
     <string name="analyzing_step_macros">Sacando calorías y macros…</string>
     <string name="analyzing_step_search">Buscando los alimentos…</string>
     <string name="pantry_shopping_subtitle">Lo que te falta comprar. Marca lo que compraste y pásalo a la despensa.</string>
+    <string name="scan_title">Escanear</string>
+    <string name="scan_tab_food">Escanear comida</string>
+    <string name="scan_tab_barcode">Código de barras</string>
+    <string name="scan_help">¿Necesitas ayuda?</string>
+    <string name="scan_help_title">Consejos para escanear bien</string>
+    <string name="scan_tip_food_light">Buena luz y la foto desde arriba o un poco inclinada.</string>
+    <string name="scan_tip_food_whole">Que salga todo el plato y que las cosas no se tapen entre sí.</string>
+    <string name="scan_tip_food_note">Después de la foto puedes añadir una nota (aceite, salsas, cantidades) para afinar.</string>
+    <string name="scan_tip_food_packaged">Para productos empaquetados, la pestaña Código de barras es más exacta.</string>
+    <string name="scan_tip_barcode_close">Acerca el código y mantén el teléfono quieto.</string>
+    <string name="scan_tip_barcode_light">Evita reflejos: inclina un poco el empaque si la luz brilla.</string>
+    <string name="scan_tip_barcode_missing">Si no aparece el producto, mejor toma una foto de la tabla nutricional.</string>
 </resources>

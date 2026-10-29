@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -55,7 +56,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Composable
 fun BarcodeScannerSheet(
     onBarcode: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /** Shows the "Scan" header with the food/barcode tabs; called when the food tab is picked. */
+    onSwitchTab: ((com.apoorvdarshan.calorietracker.ui.components.ScanTab) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -141,9 +144,16 @@ fun BarcodeScannerSheet(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        Column(Modifier.fillMaxSize().background(Color.Black)) {
+        onSwitchTab?.let { switch ->
+            com.apoorvdarshan.calorietracker.ui.components.ScanHeader(
+                com.apoorvdarshan.calorietracker.ui.components.ScanTab.BARCODE, onBack = onDismiss, onSelect = switch
+            )
+        }
         Box(
             Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f)
                 .background(Color.Black)
         ) {
             AndroidView(
@@ -153,7 +163,12 @@ fun BarcodeScannerSheet(
 
             CameraFocusOverlay(focus = focus, enabled = true)
 
-            IconButton(
+            if (onSwitchTab != null) {
+                com.apoorvdarshan.calorietracker.ui.components.ScanHelpChip(
+                    com.apoorvdarshan.calorietracker.ui.components.ScanTab.BARCODE,
+                    Modifier.align(Alignment.TopCenter).padding(top = 18.dp)
+                )
+            } else IconButton(
                 onClick = onDismiss,
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -195,6 +210,7 @@ fun BarcodeScannerSheet(
                     lineHeight = 18.sp
                 )
             }
+        }
         }
     }
 }
