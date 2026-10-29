@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -78,7 +81,10 @@ fun ExerciseDetailScreen(
     onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     progression: ProgressionLinks? = null,
-    onOpenExercise: (ExerciseItem) -> Unit = {}
+    onOpenExercise: (ExerciseItem) -> Unit = {},
+    /** Whether the exercise is already in today's workout; null hides the button. */
+    inToday: Boolean? = null,
+    onToggleToday: () -> Unit = {}
 ) {
     val colors = workoutsColors()
     var showMetrics by remember { mutableStateOf(false) }
@@ -145,6 +151,35 @@ fun ExerciseDetailScreen(
             }
 
             Hero(item = item, visual = visual, showMetrics = showMetrics, onToggle = { showMetrics = !showMetrics })
+            inToday?.let { added ->
+                val shape = RoundedCornerShape(24.dp)
+                Row(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(start = 20.dp, end = 20.dp, bottom = BottomNavScrollPadding - 24.dp)
+                        .fillMaxWidth()
+                        .clip(shape)
+                        .background(if (added) Color(0xFF2E7D32) else colors.accent)
+                        .clickable(onClick = onToggleToday)
+                        .padding(vertical = 14.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        if (added) Icons.Filled.Check else Icons.Filled.Add,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        stringResource(if (added) R.string.wk_detail_in_today else R.string.wk_detail_add_today),
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }

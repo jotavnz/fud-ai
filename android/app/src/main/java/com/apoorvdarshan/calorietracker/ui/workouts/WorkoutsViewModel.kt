@@ -577,6 +577,33 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { workoutRepository?.setTimerIntensity(exerciseId, date, intensity) }
     }
 
+    /**
+     * The detail's "Add to today": adds the exercise to today's workout (or takes it out again)
+     * and says how long today now looks, so piling up exercises is noticed.
+     */
+    fun toggleToday(item: ExerciseItem) {
+        val repository = workoutRepository ?: return
+        val today = LocalDate.now()
+        viewModelScope.launch {
+            val wasIn = repository.planNow(today).exercises.any { it.itemId == item.id }
+            repository.toggleExercise(item, today)
+            val app = getApplication<com.apoorvdarshan.calorietracker.FudAIApp>()
+            val load = com.apoorvdarshan.calorietracker.models.WorkoutLoadCheck.check(
+                repository.planNow(today).exercises,
+                diaryUiState.preferences.restTimerSeconds
+            )
+            val message = if (wasIn) app.getString(R.string.undo_removed, item.name)
+            else app.getString(
+                if (load.tooMuch) R.string.wk_added_today_heavy else R.string.wk_added_today,
+                item.name, load.minutes
+            )
+            app.container.undo.offer(message) {
+                val nowIn = repository.planNow(today).exercises.any { it.itemId == item.id }
+                if (nowIn != wasIn) repository.toggleExercise(item, today)
+            }
+        }
+    }
+
     /** One set's numbers from the quick "finish exercise" card. */
     data class QuickSet(val setId: UUID, val weight: String, val reps: String)
 

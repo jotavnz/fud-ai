@@ -21,4 +21,12 @@
     <string name="wk_quick_finish_title">Finish %1$s</string>
     <string name="wk_quick_reps">%1$s reps</string>
     <string name="wk_quick_finish_save">Save and finish</string>
+    <string name="wk_detail_add_today">Add to today\'s workout</string>
+    <string name="wk_detail_in_today">In today\'s workout · tap to remove</string>
+    <string name="wk_added_today">Added %1$s to today · about %2$d min in total</string>
+    <string name="wk_added_today_heavy">Added %1$s · today is about %2$d min, a lot for one visit</string>
+    <string name="wk_load_title">This is a lot for one session</string>
+    <string name="wk_load_body">About %1$d min and %2$d sets. Most people train 1–2 h; you could split it over two days.</string>
+    <string name="wk_load_weight">A weight looks unrealistic (over 500 kg). Check the number.</string>
+    <string name="wk_load_dismiss">Hide this warning</string>
 </resources>

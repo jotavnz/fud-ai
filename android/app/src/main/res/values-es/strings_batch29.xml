@@ -21,4 +21,12 @@
     <string name="wk_quick_finish_title">Terminar %1$s</string>
     <string name="wk_quick_reps">%1$s reps</string>
     <string name="wk_quick_finish_save">Guardar y terminar</string>
+    <string name="wk_detail_add_today">Añadir al entreno de hoy</string>
+    <string name="wk_detail_in_today">En el entreno de hoy · toca para quitar</string>
+    <string name="wk_added_today">Añadiste %1$s a hoy · unos %2$d min en total</string>
+    <string name="wk_added_today_heavy">Añadiste %1$s · hoy son unos %2$d min, mucho para una visita</string>
+    <string name="wk_load_title">Es mucho para una sesión</string>
+    <string name="wk_load_body">Unos %1$d min y %2$d series. Lo normal es 1–2 h; puedes repartirlo en dos días.</string>
+    <string name="wk_load_weight">Hay un peso que no parece real (más de 500 kg). Revisa el número.</string>
+    <string name="wk_load_dismiss">Ocultar este aviso</string>
 </resources>

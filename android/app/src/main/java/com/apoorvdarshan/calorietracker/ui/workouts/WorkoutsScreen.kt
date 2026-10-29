@@ -186,6 +186,8 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
                 ProgressionLinks(steps.easier?.let(repo.byId::get), steps.harder?.let(repo.byId::get))
             },
             onOpenExercise = { vm.openExerciseId = it.id },
+            inToday = openItem.id in vm.diaryUiState.todayItemIds,
+            onToggleToday = { vm.toggleToday(openItem) },
             onEdit = if (com.apoorvdarshan.calorietracker.models.UserExercise.isUserExercise(openItem.id)) {
                 {
                     val itemId = openItem.id

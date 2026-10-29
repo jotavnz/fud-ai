@@ -494,6 +494,13 @@ internal fun WorkoutDiaryScreen(
                     WorkoutLoggingGuide(onDismiss = { viewModel.dismissLoggingGuide() })
                 }
             }
+            val load = com.apoorvdarshan.calorietracker.models.WorkoutLoadCheck.check(state.exercises, state.preferences.restTimerSeconds)
+            val loadKey = "load-${state.selectedDate}"
+            if (load.tooMuch && loadKey !in dismissedExtras && !isReordering) {
+                item(key = "workout-load-warning") {
+                    WorkoutLoadWarning(load, onDismiss = { dismissedExtras = dismissedExtras + loadKey })
+                }
+            }
             if (state.exercises.isNotEmpty()) {
                 itemsIndexed(state.exercises, key = { _, exercise -> exercise.id }) { index, exercise ->
                     val canMoveUp = index > 0
@@ -2404,4 +2411,30 @@ private fun QuickFinishDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
+}
+
+@Composable
+private fun WorkoutLoadWarning(load: com.apoorvdarshan.calorietracker.models.WorkoutLoadCheck.Result, onDismiss: () -> Unit) {
+    val amber = Color(0xFFB26A00)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(amber.copy(alpha = 0.12f))
+            .padding(start = 14.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(R.string.wk_load_title), color = amber, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                if (load.unrealisticWeight) stringResource(R.string.wk_load_weight)
+                else stringResource(R.string.wk_load_body, load.minutes, load.sets),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                fontSize = 13.sp
+            )
+        }
+        IconButton(onClick = onDismiss) {
+            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.wk_load_dismiss), tint = amber, modifier = Modifier.size(18.dp))
+        }
+    }
 }
