@@ -37,4 +37,8 @@
     <string name="pantry_use_done">Despensa actualizada (%1$d alimentos)</string>
     <string name="pantry_shopping_shortcut">Lista de compras</string>
     <string name="pantry_shopping_shortcut_short">Lista</string>
+    <string name="pantry_spend_as_bought">Como se pagó</string>
+    <string name="pantry_rate_official">BCV</string>
+    <string name="pantry_rate_parallel">Paralelo</string>
+    <string name="pantry_rate_used">Tasa %1$s: %2$s Bs por $ (%3$s, DolarApi)</string>
 </resources>

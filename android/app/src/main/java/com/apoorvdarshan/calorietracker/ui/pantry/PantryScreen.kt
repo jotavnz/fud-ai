@@ -1,5 +1,8 @@
 package com.apoorvdarshan.calorietracker.ui.pantry
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.apoorvdarshan.calorietracker.services.ExchangeRates
 import com.apoorvdarshan.calorietracker.ui.components.UndoBar
 import android.Manifest
 import android.content.pm.PackageManager
@@ -653,10 +656,47 @@ private fun StockShopDialog(lastCurrency: String, onDismiss: () -> Unit, onSave:
 private fun SpendingCard(purchases: List<GroceryPurchase>, onOpenHistory: () -> Unit) {
     val since = LocalDate.now().minusDays(30).toString()
     val recent = purchases.filter { it.date >= since }
-    val totals = recent.filter { it.total != null }.groupBy { it.currency }.mapValues { (_, list) -> list.sumOf { it.total ?: 0.0 } }
+    val rawTotals = recent.filter { it.total != null }.groupBy { it.currency }.mapValues { (_, list) -> list.sumOf { it.total ?: 0.0 } }
+    val context = LocalContext.current
+    val exchange = remember { ExchangeRates(context.applicationContext) }
+    var rates by remember { mutableStateOf(exchange.cached()) }
+    // Shown as bought, all in bolívares, or all in dollars (Venezuela: BCV or parallel rate).
+    var shownIn by rememberSaveable { mutableStateOf("") }
+    var source by rememberSaveable { mutableStateOf(ExchangeRates.OFFICIAL) }
+    val convertible = rawTotals.keys.any { ExchangeRates.isBolivares(it) || ExchangeRates.isDollars(it) }
+    LaunchedEffect(convertible) { if (convertible) rates = exchange.rates() }
+    val rate = rates.firstOrNull { it.source == source } ?: rates.firstOrNull()
+    val totals = if (shownIn.isNotEmpty() && rate != null) ExchangeRates.convert(rawTotals, shownIn, rate.bsPerUsd) else rawTotals
     FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 14.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.pantry_spending_title), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            if (convertible && rate != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    PantryFilterChip(stringResource(R.string.pantry_spend_as_bought), shownIn.isEmpty()) { shownIn = "" }
+                    PantryFilterChip("Bs", shownIn == "Bs") { shownIn = "Bs" }
+                    PantryFilterChip("$", shownIn == "$") { shownIn = "$" }
+                }
+                if (shownIn.isNotEmpty()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        rates.forEach { r ->
+                            PantryFilterChip(
+                                if (r.source == ExchangeRates.OFFICIAL) stringResource(R.string.pantry_rate_official) else stringResource(R.string.pantry_rate_parallel),
+                                r.source == rate.source
+                            ) { source = r.source }
+                        }
+                    }
+                    Text(
+                        stringResource(
+                            R.string.pantry_rate_used,
+                            if (rate.source == ExchangeRates.OFFICIAL) stringResource(R.string.pantry_rate_official) else stringResource(R.string.pantry_rate_parallel),
+                            String.format(Locale.getDefault(), "%.2f", rate.bsPerUsd),
+                            rate.updated
+                        ),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
             Text(
                 if (totals.isEmpty()) stringResource(R.string.pantry_spending_none)
                 else totals.entries.joinToString("  ·  ") { (currency, sum) -> String.format(Locale.getDefault(), "%s %.2f", currency, sum).trim() },

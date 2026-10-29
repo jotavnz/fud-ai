@@ -37,4 +37,8 @@
     <string name="pantry_use_done">Pantry updated (%1$d foods)</string>
     <string name="pantry_shopping_shortcut">Shopping list</string>
     <string name="pantry_shopping_shortcut_short">List</string>
+    <string name="pantry_spend_as_bought">As bought</string>
+    <string name="pantry_rate_official">BCV</string>
+    <string name="pantry_rate_parallel">Parallel</string>
+    <string name="pantry_rate_used">Rate %1$s: %2$s Bs per $ (%3$s, DolarApi)</string>
 </resources>
