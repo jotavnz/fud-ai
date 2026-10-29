@@ -46,4 +46,5 @@
     <string name="analyzing_step_portions">Calculando las porciones…</string>
     <string name="analyzing_step_macros">Sacando calorías y macros…</string>
     <string name="analyzing_step_search">Buscando los alimentos…</string>
+    <string name="pantry_shopping_subtitle">Lo que te falta comprar. Marca lo que compraste y pásalo a la despensa.</string>
 </resources>

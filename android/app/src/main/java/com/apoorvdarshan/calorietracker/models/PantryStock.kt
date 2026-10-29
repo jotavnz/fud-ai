@@ -83,7 +83,7 @@ object PantryStock {
      * opened up ("2" of "Huevos 1/2 cartón" → "30 huevos").
      */
     fun normalized(item: PantryItem): PantryItem {
-        val clean = cleanQuantity(item.quantity)
+        val clean = cleanQuantity(item.quantity).ifBlank { if (packContent(item.name) != null) "1" else "" }
         val amount = parse(clean)
         val content = packContent(item.name)
         // Only a count of packages opens up ("2", "3 latas"); "30 huevos" or "800 g" are already in units.

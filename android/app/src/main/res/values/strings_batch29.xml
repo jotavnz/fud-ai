@@ -46,4 +46,5 @@
     <string name="analyzing_step_portions">Estimating portions…</string>
     <string name="analyzing_step_macros">Working out calories and macros…</string>
     <string name="analyzing_step_search">Looking up the foods…</string>
+    <string name="pantry_shopping_subtitle">What you need to buy. Tick what you bought and move it to the pantry.</string>
 </resources>

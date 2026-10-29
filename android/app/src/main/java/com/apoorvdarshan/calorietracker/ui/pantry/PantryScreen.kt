@@ -208,7 +208,7 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit, startOnShopping
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(stringResource(if (startOnShopping) R.string.pantry_shopping_shortcut else R.string.pantry_title), fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                            Text(stringResource(R.string.pantry_subtitle), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text(stringResource(if (startOnShopping) R.string.pantry_shopping_subtitle else R.string.pantry_subtitle), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                         }
                         IconButton(onClick = onDismiss) {
                             Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.pantry_close))

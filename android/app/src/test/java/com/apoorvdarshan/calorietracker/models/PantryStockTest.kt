@@ -83,4 +83,10 @@ class PantryStockTest {
         assertEquals("445 g", n("Mayonesa mavesa 445 gr 1", "1 X"))
         assertEquals("1 kg", n("Pasta pluma premium Capri 1 kg", "1 X"))
     }
+
+    @Test
+    fun noQuantityButASizedNameIsOnePackage() {
+        assertEquals("900 g", PantryStock.normalized(PantryItem(name = "Arroz blanco clásico superior primor 900 g", quantity = "")).quantity)
+        assertEquals("", PantryStock.normalized(PantryItem(name = "Cilantro", quantity = "")).quantity)
+    }
 }
