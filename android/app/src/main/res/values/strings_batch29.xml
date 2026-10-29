@@ -62,4 +62,13 @@
     <string name="wk_progress_increase">Today: try %1$s %2$s (you hit every rep)</string>
     <string name="wk_progress_repeat">Today: %1$s %2$s again, aim for one more rep</string>
     <string name="wk_progress_deload">Stuck for 3 sessions: go lighter today, %1$s %2$s</string>
+    <string name="wk_warmup_button">Warm-up</string>
+    <string name="wk_warmup_title">Warm-up and plates</string>
+    <string name="wk_warmup_target">Working weight (%1$s)</string>
+    <string name="wk_warmup_sets">Warm-up sets</string>
+    <string name="wk_warmup_none">Light enough: no warm-up sets needed.</string>
+    <string name="wk_warmup_work">Working sets: %1$s %2$s</string>
+    <string name="wk_plates_per_side">per side %1$s</string>
+    <string name="wk_plates_empty_bar">empty bar</string>
+    <string name="wk_plates_note">Plates per side on a %1$s %2$s bar.</string>
 </resources>

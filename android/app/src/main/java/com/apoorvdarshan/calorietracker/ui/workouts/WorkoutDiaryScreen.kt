@@ -234,6 +234,10 @@ internal fun WorkoutDiaryScreen(
     var dismissedExtras by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(setOf<String>()) }
     var guidedVisible by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var quickFinish by remember { mutableStateOf<PlannedExercise?>(null) }
+    var warmupFor by remember { mutableStateOf<PlannedExercise?>(null) }
+    warmupFor?.let { exercise ->
+        WarmupPlatesDialog(exercise, state.weightUnit, onDismiss = { warmupFor = null })
+    }
     quickFinish?.let { exercise ->
         QuickFinishDialog(
             exercise = exercise,
@@ -560,6 +564,7 @@ internal fun WorkoutDiaryScreen(
                             lastTimeSummary = viewModel.lastExerciseLiftSummary(exercise.itemId, exercise.name),
                             moveActions = moveActions,
                             onOpen = { viewModel.openDiaryExercise(exercise) },
+                            onShowWarmup = { warmupFor = exercise },
                             onShowHistory = {
                                 historyRequest = WorkoutExerciseHistoryRequest(exercise.itemId, exercise.name)
                             },
@@ -1449,6 +1454,7 @@ private fun WorkoutExerciseCard(
     moveActions: List<CustomAccessibilityAction>,
     onOpen: () -> Unit,
     onShowHistory: () -> Unit,
+    onShowWarmup: () -> Unit = {},
     onToggleSaved: () -> Unit,
     onRemove: () -> Unit,
     onSetCount: (Int) -> Unit,
@@ -1538,7 +1544,7 @@ private fun WorkoutExerciseCard(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
+                            maxLines = 3,
                             overflow = TextOverflow.Ellipsis
                         )
                     } else if (simpleLogging) {
@@ -1551,6 +1557,15 @@ private fun WorkoutExerciseCard(
                         )
                     } else {
                         Spacer(modifier = Modifier.weight(1f))
+                    }
+                    if (!exercise.isCardio) {
+                        Text(
+                            stringResource(R.string.wk_warmup_button),
+                            modifier = Modifier.clickable(onClick = onShowWarmup),
+                            color = AppColors.Calorie,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Text(
                         stringResource(R.string.wk_history),
@@ -2438,3 +2453,64 @@ private fun WorkoutLoadWarning(load: com.apoorvdarshan.calorietracker.models.Wor
         }
     }
 }
+
+/** Warm-up sets up to the working weight and, for a barbell, the plates on each side. */
+@Composable
+private fun WarmupPlatesDialog(exercise: PlannedExercise, unit: WorkoutWeightUnit, onDismiss: () -> Unit) {
+    val heaviest = exercise.sets.mapNotNull { it.displayWeight(unit).replace(',', '.').toDoubleOrNull() }.maxOrNull()
+    var target by remember(exercise.id) { mutableStateOf(heaviest?.let { formatKg(it) }.orEmpty()) }
+    val barbell = com.apoorvdarshan.calorietracker.models.PantryMatching.key(exercise.equipment + " " + exercise.name)
+        .let { it.contains("barra") || it.contains("barbell") }
+    val weight = target.replace(',', '.').toDoubleOrNull()
+    val unitLabel = unit.storageValue
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.wk_warmup_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                androidx.compose.material3.OutlinedTextField(
+                    value = target,
+                    onValueChange = { target = it.filter { c -> c.isDigit() || c == '.' || c == ',' }.take(6) },
+                    label = { Text(stringResource(R.string.wk_warmup_target, unitLabel)) },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
+                )
+                if (weight != null && weight > 0) {
+                    val ramp = com.apoorvdarshan.calorietracker.models.WarmupPlates.warmup(weight, unit, barbell)
+                    Text(stringResource(R.string.wk_warmup_sets), fontWeight = FontWeight.Bold)
+                    if (ramp.isEmpty()) Text(stringResource(R.string.wk_warmup_none))
+                    ramp.forEach { set ->
+                        Text("${set.percent} %  ·  ${formatKg(set.weight)} $unitLabel × ${set.reps}" + platesSuffix(set.weight, unit, barbell))
+                    }
+                    Text(
+                        stringResource(R.string.wk_warmup_work, formatKg(weight), unitLabel) + platesSuffix(weight, unit, barbell),
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppColors.Calorie
+                    )
+                    if (barbell) {
+                        Text(
+                            stringResource(R.string.wk_plates_note, formatKg(com.apoorvdarshan.calorietracker.models.WarmupPlates.barWeight(unit)), unitLabel),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.info_button_ok)) } }
+    )
+}
+
+@Composable
+private fun platesSuffix(weight: Double, unit: WorkoutWeightUnit, barbell: Boolean): String {
+    if (!barbell) return ""
+    val loading = com.apoorvdarshan.calorietracker.models.WarmupPlates.plates(weight, unit)
+    if (loading.perSide.isEmpty()) return "  ·  " + stringResource(R.string.wk_plates_empty_bar)
+    val text = loading.perSide.joinToString(" + ") { formatKg(it) }
+    return "  ·  " + stringResource(R.string.wk_plates_per_side, text)
+}
+
+private fun formatKg(value: Double): String =
+    String.format(java.util.Locale.US, "%.2f", value).trimEnd('0').trimEnd('.')

@@ -62,4 +62,13 @@
     <string name="wk_progress_increase">Hoy: prueba %1$s %2$s (cumpliste todas las reps)</string>
     <string name="wk_progress_repeat">Hoy: repite %1$s %2$s y busca una rep más</string>
     <string name="wk_progress_deload">3 sesiones estancado: hoy más ligero, %1$s %2$s</string>
+    <string name="wk_warmup_button">Calentar</string>
+    <string name="wk_warmup_title">Calentamiento y discos</string>
+    <string name="wk_warmup_target">Peso de trabajo (%1$s)</string>
+    <string name="wk_warmup_sets">Series de calentamiento</string>
+    <string name="wk_warmup_none">Es ligero: no hacen falta series de calentamiento.</string>
+    <string name="wk_warmup_work">Series de trabajo: %1$s %2$s</string>
+    <string name="wk_plates_per_side">por lado %1$s</string>
+    <string name="wk_plates_empty_bar">barra sola</string>
+    <string name="wk_plates_note">Discos por lado en una barra de %1$s %2$s.</string>
 </resources>
