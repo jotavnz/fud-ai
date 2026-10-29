@@ -146,6 +146,10 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
         )
     }
 
+    // Hoisted above the detail/machine screens so going back keeps the place in each list.
+    val libraryListState = rememberLazyListState()
+    val diaryListState = rememberLazyListState()
+
     // Prefer the catalog copy (current app language); the diary snapshot is the fallback for
     // exercises no longer in the dataset.
     val openItem = vm.openExerciseId?.let { id -> repo.exercises.firstOrNull { it.id == id } }
@@ -239,6 +243,7 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
             onShowLibrary = toggleMode,
             onCreateExercise = { showCreateUserExercise = true },
             onEditUserExercise = { editingUserExerciseId = it },
+            listState = diaryListState,
             modifier = modifier
         )
     } else {
@@ -247,6 +252,7 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
             vm = vm,
             onShowLog = toggleMode,
             onCreateExercise = { showCreateUserExercise = true },
+            listState = libraryListState,
             modifier = modifier
         )
     }
@@ -309,6 +315,7 @@ private fun WorkoutLibraryScreen(
     vm: WorkoutsViewModel,
     onShowLog: () -> Unit,
     onCreateExercise: () -> Unit,
+    listState: LazyListState,
     modifier: Modifier = Modifier
 ) {
 
@@ -332,7 +339,6 @@ private fun WorkoutLibraryScreen(
 
     // Dismiss the search keyboard as soon as the list starts scrolling — matches
     // iOS, where the scroll view resigns the search field automatically.
-    val listState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 

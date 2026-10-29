@@ -177,7 +177,8 @@ internal fun WorkoutDiaryScreen(
     weekStartsOnMonday: Boolean = true,
     onShowLibrary: () -> Unit,
     onCreateExercise: () -> Unit = {},
-    onEditUserExercise: (String) -> Unit = {}
+    onEditUserExercise: (String) -> Unit = {},
+    listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState()
 ) {
     var pickerRequest by remember { mutableStateOf<WorkoutPickerRequest?>(null) }
     // Muscle recovery from the diary and the watch's workouts; refreshed as the diary changes.
@@ -211,7 +212,6 @@ internal fun WorkoutDiaryScreen(
     }
     val heightUnit by container.prefs.heightUnit.collectAsState(initial = "cm")
     val voiceUi by container.voiceAssistant.ui.collectAsState()
-    val listState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val exerciseCardBounds = remember { mutableStateMapOf<UUID, androidx.compose.ui.geometry.Rect>() }
@@ -228,6 +228,7 @@ internal fun WorkoutDiaryScreen(
     val moveDownLabel = stringResource(R.string.workout_move_down)
     val addWorkoutLabel = stringResource(R.string.wk_cd_add_workout)
     val beginnerRoutinePrompt = stringResource(R.string.wk_coach_beginner_prompt)
+    val unsurePrompt = stringResource(R.string.machine_coach_unsure_prompt)
     var dismissedExtras by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(setOf<String>()) }
     var guidedVisible by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     if (guidedVisible) {
@@ -319,13 +320,36 @@ internal fun WorkoutDiaryScreen(
                 )
             }
 
+            if (state.exercises.isEmpty()) {
+                item(key = "workout-empty") {
+                    WorkoutEmptyState(
+                        splitTitle = workoutSplitLabel(state.preferences.split),
+                        simpleLogging = state.preferences.simpleLogging,
+                        onAdd = { addMenuExpanded = true },
+                        onAskCoach = { container.navigator.showCoachMessage(beginnerRoutinePrompt) },
+                        onStarter = { routine ->
+                            val items = routine.exerciseIds.mapNotNull { exerciseRepository.byId[it] }
+                            viewModel.addStarterRoutine(items, StarterRoutine.SETS)
+                        },
+                        modifier = Modifier.workoutDaySwipe(
+                            selectedDate = state.selectedDate,
+                            onMove = { viewModel.moveDate(it) }
+                        )
+                    )
+                }
+            }
+
             item(key = "workout-machine-coach") {
                 MachineCoachEntry(
                     onPick = {
                         dismissKeyboard()
                         viewModel.openMachineCoach(it)
                     },
-                    recovering = if (smartSuggestions) state.fatigue.keys else emptySet()
+                    recovering = if (smartSuggestions) state.fatigue.keys else emptySet(),
+                    onUnsure = {
+                        dismissKeyboard()
+                        container.navigator.showCoachMessage(unsurePrompt)
+                    }
                 )
             }
 
@@ -455,24 +479,7 @@ internal fun WorkoutDiaryScreen(
                     WorkoutLoggingGuide(onDismiss = { viewModel.dismissLoggingGuide() })
                 }
             }
-            if (state.exercises.isEmpty()) {
-                item(key = "workout-empty") {
-                    WorkoutEmptyState(
-                        splitTitle = workoutSplitLabel(state.preferences.split),
-                        simpleLogging = state.preferences.simpleLogging,
-                        onAdd = { addMenuExpanded = true },
-                        onAskCoach = { container.navigator.showCoachMessage(beginnerRoutinePrompt) },
-                        onStarter = { routine ->
-                            val items = routine.exerciseIds.mapNotNull { exerciseRepository.byId[it] }
-                            viewModel.addStarterRoutine(items, StarterRoutine.SETS)
-                        },
-                        modifier = Modifier.workoutDaySwipe(
-                            selectedDate = state.selectedDate,
-                            onMove = { viewModel.moveDate(it) }
-                        )
-                    )
-                }
-            } else {
+            if (state.exercises.isNotEmpty()) {
                 itemsIndexed(state.exercises, key = { _, exercise -> exercise.id }) { index, exercise ->
                     val canMoveUp = index > 0
                     val canMoveDown = index < state.exercises.lastIndex
@@ -1249,11 +1256,15 @@ private fun WorkoutEmptyState(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
                 )
-                if (simpleLogging) {
-                    FudGlassTextButton(text = stringResource(R.string.wk_ask_coach_routine), onClick = onAskCoach)
-                }
             }
         }
+        // The first thing on an empty day: let Coach build today's routine.
+        com.apoorvdarshan.calorietracker.ui.components.FudGlassPrimaryButton(
+            text = stringResource(R.string.wk_ask_coach_routine),
+            onClick = onAskCoach,
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            height = 46.dp
+        )
         if (simpleLogging) {
             Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(

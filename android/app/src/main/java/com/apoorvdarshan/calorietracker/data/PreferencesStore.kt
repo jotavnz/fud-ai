@@ -533,6 +533,27 @@ class PreferencesStore(
     val coachGoalPromptDismissed: Flow<Boolean> = ds.data.map { it[Keys.COACH_GOAL_PROMPT_DISMISSED] ?: false }
     suspend fun setCoachGoalPromptDismissed(v: Boolean) { ds.edit { it[Keys.COACH_GOAL_PROMPT_DISMISSED] = v } }
 
+    /**
+     * Coach's suggested-message row. The first X hides it for 24 h; the next one turns it off
+     * (Settings can turn it back on).
+     */
+    val coachChipsEnabled: Flow<Boolean> = ds.data.map { it[Keys.COACH_CHIPS_ENABLED] ?: true }
+    val coachChipsHiddenUntil: Flow<Long> = ds.data.map { it[Keys.COACH_CHIPS_HIDDEN_UNTIL] ?: 0L }
+    suspend fun setCoachChipsEnabled(v: Boolean) {
+        ds.edit {
+            it[Keys.COACH_CHIPS_ENABLED] = v
+            if (v) it[Keys.COACH_CHIPS_HIDDEN_UNTIL] = 0L
+        }
+    }
+    suspend fun hideCoachChips(now: Long = System.currentTimeMillis()) {
+        ds.edit {
+            val dismissals = it[Keys.COACH_CHIPS_DISMISSALS] ?: 0
+            it[Keys.COACH_CHIPS_DISMISSALS] = dismissals + 1
+            if (dismissals == 0) it[Keys.COACH_CHIPS_HIDDEN_UNTIL] = now + 24L * 60 * 60 * 1000
+            else it[Keys.COACH_CHIPS_ENABLED] = false
+        }
+    }
+
     /** Home's sleep card stays hidden until this epoch millis (closed with its X). */
     val sleepCardHiddenUntil: Flow<Long> = ds.data.map { it[Keys.SLEEP_CARD_HIDDEN_UNTIL] ?: 0L }
     suspend fun setSleepCardHiddenUntil(v: Long) { ds.edit { it[Keys.SLEEP_CARD_HIDDEN_UNTIL] = v } }
@@ -1840,6 +1861,9 @@ class PreferencesStore(
         val SAMSUNG_WORKOUTS = stringPreferencesKey("samsungWorkouts")
         val COACH_GOAL_PLAN = stringPreferencesKey("coachGoalPlan")
         val COACH_GOAL_PROMPT_DISMISSED = booleanPreferencesKey("coachGoalPromptDismissed")
+        val COACH_CHIPS_ENABLED = booleanPreferencesKey("coachChipsEnabled")
+        val COACH_CHIPS_HIDDEN_UNTIL = androidx.datastore.preferences.core.longPreferencesKey("coachChipsHiddenUntil")
+        val COACH_CHIPS_DISMISSALS = intPreferencesKey("coachChipsDismissals")
         val SLEEP_CARD_HIDDEN_UNTIL = androidx.datastore.preferences.core.longPreferencesKey("sleepCardHiddenUntil")
         val COACH_GOAL_INTERVIEW_PENDING = booleanPreferencesKey("coachGoalInterviewPending")
         val FASTING_DEFAULT_GOAL_MINUTES = intPreferencesKey("fastingDefaultGoalMinutes")

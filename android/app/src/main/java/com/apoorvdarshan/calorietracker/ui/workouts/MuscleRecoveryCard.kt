@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +56,10 @@ private fun colorFor(r: MuscleReadiness): Color = when {
 internal fun MuscleRecoveryCard(readiness: List<MuscleReadiness>, onOpenGroup: (MachineMuscleGroup) -> Unit) {
     val colors = workoutsColors()
     var selected by remember { mutableStateOf<MuscleReadiness?>(null) }
+    var showAll by remember { mutableStateOf(false) }
+    // The two most recently worked (least recovered) groups; the rest behind "See all".
+    val sorted = readiness.sortedBy { it.percent }
+    val shown = sorted.take(CompactCount)
     Column(
         Modifier
             .fillMaxWidth()
@@ -78,26 +83,49 @@ internal fun MuscleRecoveryCard(readiness: List<MuscleReadiness>, onOpenGroup: (
             )
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            readiness.sortedBy { it.percent }.forEach { r ->
+            shown.forEach { r -> RecoveryChip(r) { selected = r } }
+            if (sorted.size > shown.size) {
                 Row(
                     Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(colorFor(r).copy(alpha = 0.12f))
-                        .clickable { selected = r }
+                        .background(colors.panel.copy(alpha = 0.8f))
+                        .clickable { showAll = true }
                         .padding(horizontal = 10.dp, vertical = 7.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(Modifier.size(8.dp).clip(CircleShape).background(colorFor(r)))
-                    Text(stringResource(r.group.titleRes), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = colors.charcoal)
                     Text(
-                        if (r.ready) stringResource(R.string.recovery_ready) else stringResource(R.string.recovery_hours, r.readyInHours),
-                        fontSize = 12.sp,
-                        color = colors.mutedText
+                        stringResource(R.string.recovery_see_all, sorted.size),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = com.apoorvdarshan.calorietracker.ui.theme.AppColors.Calorie
                     )
                 }
             }
         }
+    }
+
+    if (showAll) {
+        AlertDialog(
+            onDismissRequest = { showAll = false },
+            title = { Text(stringResource(R.string.recovery_title)) },
+            text = {
+                Column(
+                    Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(stringResource(R.string.recovery_info), fontSize = 13.sp, color = colors.mutedText)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        sorted.forEach { r ->
+                            RecoveryChip(r) {
+                                showAll = false
+                                selected = r
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showAll = false }) { Text(stringResource(R.string.info_button_ok)) } }
+        )
     }
 
     selected?.let { r ->
@@ -128,6 +156,30 @@ internal fun MuscleRecoveryCard(readiness: List<MuscleReadiness>, onOpenGroup: (
                 }) { Text(stringResource(R.string.insight_action_machines)) }
             },
             dismissButton = { TextButton(onClick = { selected = null }) { Text(stringResource(R.string.info_button_ok)) } }
+        )
+    }
+}
+
+private const val CompactCount = 2
+
+@Composable
+private fun RecoveryChip(r: MuscleReadiness, onClick: () -> Unit) {
+    val colors = workoutsColors()
+    Row(
+        Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(colorFor(r).copy(alpha = 0.12f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(colorFor(r)))
+        Text(stringResource(r.group.titleRes), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = colors.charcoal)
+        Text(
+            if (r.ready) stringResource(R.string.recovery_ready) else stringResource(R.string.recovery_hours, r.readyInHours),
+            fontSize = 12.sp,
+            color = colors.mutedText
         )
     }
 }

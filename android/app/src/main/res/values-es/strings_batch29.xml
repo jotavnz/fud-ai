@@ -9,4 +9,10 @@
     <string name="undo_pantry_used_up">Se acabó %1$s · va a la lista de compras</string>
     <string name="undo_removed">Quitaste %1$s</string>
     <string name="undo_purchase">compra</string>
+    <string name="coach_chips_hide_a11y">Ocultar mensajes sugeridos</string>
+    <string name="settings_coach_chips">Mensajes sugeridos en el coach</string>
+    <string name="settings_coach_chips_footer">La primera vez que los cierras vuelven en 24 h; la segunda se apagan aquí.</string>
+    <string name="recovery_see_all">Ver todo (%1$d)</string>
+    <string name="machine_coach_unsure">No sé</string>
+    <string name="machine_coach_unsure_prompt">No sé qué entrenar hoy. Mira mi recuperación y mis últimos entrenos y propónme la sesión de hoy.</string>
 </resources>

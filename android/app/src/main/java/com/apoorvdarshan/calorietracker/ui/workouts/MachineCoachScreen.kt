@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
+import androidx.compose.material.icons.filled.Psychology
+import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -77,7 +79,9 @@ internal fun MachineCoachEntry(
     onPick: (MachineMuscleGroup) -> Unit,
     modifier: Modifier = Modifier,
     /** Groups the smart suggestions mark as still recovering. */
-    recovering: Set<MachineMuscleGroup> = emptySet()
+    recovering: Set<MachineMuscleGroup> = emptySet(),
+    /** "I don't know": hands the choice to Coach. */
+    onUnsure: (() -> Unit)? = null
 ) {
     val colors = workoutsColors()
     Column(
@@ -109,6 +113,34 @@ internal fun MachineCoachEntry(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            onUnsure?.let { unsure ->
+                Column(
+                    Modifier
+                        .width(78.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(AppColors.Calorie.copy(alpha = 0.12f))
+                        .border(0.5.dp, AppColors.Calorie.copy(alpha = 0.35f), RoundedCornerShape(18.dp))
+                        .clickable(onClick = unsure)
+                        .padding(vertical = 10.dp, horizontal = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    androidx.compose.material3.Icon(
+                        androidx.compose.material.icons.Icons.Filled.Psychology,
+                        contentDescription = null,
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(40.dp).padding(6.dp)
+                    )
+                    Text(
+                        stringResource(R.string.machine_coach_unsure),
+                        color = colors.charcoal,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        maxLines = 2
+                    )
+                }
+            }
             MachineMuscleGroup.entries.forEach { group ->
                 MuscleGroupChip(group = group, recovering = group in recovering, onClick = { onPick(group) })
             }

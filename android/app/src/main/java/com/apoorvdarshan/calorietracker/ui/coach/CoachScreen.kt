@@ -392,11 +392,13 @@ fun CoachScreen(container: AppContainer) {
                 }
             }
 
-            if (ui.messages.isNotEmpty()) {
+            val chipsVisible by vm.suggestionChipsVisible.collectAsState(initial = false)
+            if (ui.messages.isNotEmpty() && chipsVisible) {
                 PromptChipRow(
                     chips = resolvedChips,
                     enabled = !ui.sending,
-                    onTap = onPromptTap
+                    onTap = onPromptTap,
+                    onHide = vm::hideSuggestionChips
                 )
             }
 
@@ -1121,7 +1123,7 @@ private fun Bubble(
  *     padding 14h × 9v, footnote rounded medium, calorie text
  */
 @Composable
-private fun PromptChipRow(chips: List<ResolvedPrompt>, enabled: Boolean, onTap: (Int) -> Unit) {
+private fun PromptChipRow(chips: List<ResolvedPrompt>, enabled: Boolean, onTap: (Int) -> Unit, onHide: () -> Unit) {
     if (chips.isEmpty()) return
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
@@ -1149,6 +1151,18 @@ private fun PromptChipRow(chips: List<ResolvedPrompt>, enabled: Boolean, onTap: 
             }
         }
         items(chips) { chip -> PromptChip(chip, enabled, onTap) }
+        item(key = "prompt-hide") {
+            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) {
+                IconButton(onClick = onHide, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.coach_chips_hide_a11y),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
     }
 }
 

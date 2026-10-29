@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.voice
 
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,10 +25,15 @@ import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 @Composable
 fun VoiceAssistantButton(onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp = 60.dp, paused: Boolean = false) {
     val label = stringResource(R.string.voice_talk_to_fud_ai)
+    // No square ripple/focus box around the sphere: the orb itself shrinks a little while pressed.
+    val interaction = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val pressScale by androidx.compose.animation.core.animateFloatAsState(if (pressed) 0.9f else 1f, label = "orbPress")
     Box(
         modifier
             .size(size)
-            .clickable(onClick = onClick)
+            .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
             .semantics {
                 contentDescription = label
                 role = Role.Button

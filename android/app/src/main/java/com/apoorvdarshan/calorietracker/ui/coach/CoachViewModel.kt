@@ -151,6 +151,16 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
         return if (hasWorkoutSessions) listOf(R.string.coach_chip_training) + goalChips else goalChips
     }
 
+    /** The suggested-message row above the input: off in Settings, or hidden for 24 h after the first X. */
+    val suggestionChipsVisible: kotlinx.coroutines.flow.Flow<Boolean> =
+        kotlinx.coroutines.flow.combine(container.prefs.coachChipsEnabled, container.prefs.coachChipsHiddenUntil) { enabled, until ->
+            enabled && System.currentTimeMillis() >= until
+        }
+
+    fun hideSuggestionChips() {
+        viewModelScope.launch { container.prefs.hideCoachChips() }
+    }
+
     fun send(userText: String, imageBytes: ByteArray? = null, thumbnailBytes: ByteArray? = null) {
         val trimmed = userText.trim()
         if ((trimmed.isBlank() && imageBytes == null) || session.sending.value) return

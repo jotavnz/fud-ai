@@ -1297,6 +1297,16 @@ fun SettingsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
                 HorizontalDivider()
+                val chipsScope = rememberCoroutineScope()
+                val coachChipsOn by vm.container.prefs.coachChipsEnabled.collectAsState(initial = true)
+                ToggleRow(
+                    stringResource(R.string.settings_coach_chips),
+                    coachChipsOn,
+                    icon = Icons.Outlined.Lightbulb,
+                    subtitle = stringResource(R.string.settings_coach_chips_footer),
+                    onChange = { on -> chipsScope.launch { vm.container.prefs.setCoachChipsEnabled(on) } }
+                )
+                HorizontalDivider()
                 ToggleRow(
                     stringResource(R.string.settings_year_review),
                     ui.yearReviewEnabled,
