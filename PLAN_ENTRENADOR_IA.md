@@ -32,9 +32,9 @@ Solo inglés y español; el idioma elegido aplica a todo.
 ## Siguiente
 1. Base propia: nombre (idea del dueño: **trAIng** o **trAIngCoach**, guiño a "entrenador AI"), ícono/logo, paquete; quitar RevenueCat/"Hosted"/enlaces de Fud AI; alojar las ilustraciones de ejercicios en servidor propio (hoy se descargan de assets.fud-ai.app).
 2. Plan automático para principiantes (Full Body / Upper-Lower) — base: gymcoach (MIT).
-3. Progresión en el diario: pesos de la última vez precargados, +2,5 kg al cumplir reps, descarga tras 3 fallos.
+3. ~~Progresión en el diario~~ (hecho 28 noche: "Hoy: prueba X kg" / repite / más ligero tras 3 sesiones estancado, bajo "La última vez").
 4. Dibujo del cuerpo (frente/espalda) para el mapa de recuperación — binarybeastt/musclemap (Kotlin/Compose, MIT) o body-highlighter (MIT); hoy el mapa es por grupos con colores.
-5. Calculadora de calentamiento y de discos en kg.
+5. ~~Calculadora de calentamiento y de discos~~ (hecho 28 noche: botón "Calentar" en cada ejercicio de fuerza).
 6. Nutrición: foto → ajuste de porción en medidas caseras; macros desde base de datos (USDA, dominio público) + platos venezolanos/latinos revisados por nutricionista; recordar porciones habituales.
 7. Retención: rachas, récords en vivo, tarjetas para WhatsApp/Instagram, superseries y tipos de serie.
 8. Relojes: probar Samsung (Galaxy Watch del dueño), Xiaomi, Amazfit y Cubitt reales; ayuda para Huawei (Health Sync).
