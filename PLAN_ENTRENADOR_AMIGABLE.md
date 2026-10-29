@@ -141,7 +141,7 @@ Idea: saber qué hay en casa (nevera, congelador, despensa), que el coach sugier
 
 Estado: [ ] pendiente · [x] hecho
 
-1. [~] Reloj/Samsung Health: revisar que todo lo del reloj llegue (los pasos del reloj siguen más altos que la app).
+1. [x] Reloj/Samsung Health: revisar que todo lo del reloj llegue (los pasos del reloj siguen más altos que la app).
 2. [x] Coach: arreglar el hover/foco del logo de la IA (se ve un cuadrado alrededor del círculo al tocar).
 3. [x] "Cuéntale al coach qué quieres lograr": solo mostrarlo si no se ha pulsado nunca.
 4. [x] Recordatorio "Esta noche duerme…": botón X; vuelve la tarde-noche del día siguiente.
@@ -178,3 +178,5 @@ Estado: [ ] pendiente · [x] hecho
 - 16 Swipe derecha = Terminé el ejercicio (si faltan reps, ventana rápida); cuando todos están hechos se cierra el entreno como "Terminé".
 - 18 Orden de pestañas por defecto Inicio, Progreso, Training, Coach, Ajustes; editable en Ajustes → Barra de pestañas.
 - 19 Gastos en Bs o $ con tasa BCV o paralelo de ve.dolarapi.com (gratis, sin clave); se muestra la tasa y su fecha.
+
+- 1 (actualizado 28 noche): la causa era el ahorro de energía de Honor ("job is prevent by HN_USER_EXPERIENCE"). Con Samsung Health en Ajustes → Batería → Inicio de la aplicación → manual (los 3 permitidos) y fuera de la optimización de batería, Samsung Health empezó a escribir en Health Connect ("Contributed Data: true").
