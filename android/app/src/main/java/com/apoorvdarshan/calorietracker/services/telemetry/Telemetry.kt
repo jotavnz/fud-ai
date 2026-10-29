@@ -18,6 +18,8 @@ import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.time.Instant
 import java.util.Locale
@@ -145,11 +147,14 @@ object Telemetry {
         if (isOn()) TelemetryWorker.sendSoon(app)
     }
 
-    internal suspend fun flush(): Boolean {
-        if (!isOn()) return true
-        val queued = queue ?: return true
+    /** The periodic and the immediate upload can start together; one at a time, or a batch goes twice. */
+    private val flushLock = Mutex()
+
+    internal suspend fun flush(): Boolean = flushLock.withLock {
+        if (!isOn()) return@withLock true
+        val queued = queue ?: return@withLock true
         val uploader = TelemetryUploader(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_ANON_KEY, FoodAnalysisService.defaultClient)
-        return uploader.flush(queued)
+        uploader.flush(queued)
     }
 
     private fun installId(): String {
