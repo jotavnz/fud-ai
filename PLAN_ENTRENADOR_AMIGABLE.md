@@ -141,25 +141,25 @@ Idea: saber qué hay en casa (nevera, congelador, despensa), que el coach sugier
 
 Estado: [ ] pendiente · [x] hecho
 
-1. [ ] Reloj/Samsung Health: revisar que todo lo del reloj llegue (los pasos del reloj siguen más altos que la app).
-2. [ ] Coach: arreglar el hover/foco del logo de la IA (se ve un cuadrado alrededor del círculo al tocar).
-3. [ ] "Cuéntale al coach qué quieres lograr": solo mostrarlo si no se ha pulsado nunca.
-4. [ ] Recordatorio "Esta noche duerme…": botón X; vuelve la tarde-noche del día siguiente.
-5. [ ] Training → biblioteca: al volver de un ejercicio, conservar el scroll (no volver al inicio).
-6. [ ] Detalle del ejercicio: botón "Añadir a hoy" (ir de compras por ejercicios).
-7. [ ] Aviso de sobreexigencia (demasiados ejercicios/series/volumen para 1–2 h), descartable.
-8. [ ] "Deshacer" (snackbar unos segundos) en todo lo que se borra: comidas, entrenamientos, despensa (el ✓ borraba sin avisar).
-9. [ ] Lista de compras: acceso directo propio (junto a Despensa).
-10. [ ] Despensa como "otra app": stock que baja al registrar comidas (porciones restantes), el coach sugiere según cantidades y avisa si falta algo ("no importa" / reformular).
-11. [ ] Comida de la calle / ya preparada: preguntar si se cocinó en casa; si no, no descontar de la despensa.
+1. [~] Reloj/Samsung Health: revisar que todo lo del reloj llegue (los pasos del reloj siguen más altos que la app).
+2. [x] Coach: arreglar el hover/foco del logo de la IA (se ve un cuadrado alrededor del círculo al tocar).
+3. [x] "Cuéntale al coach qué quieres lograr": solo mostrarlo si no se ha pulsado nunca.
+4. [x] Recordatorio "Esta noche duerme…": botón X; vuelve la tarde-noche del día siguiente.
+5. [x] Training → biblioteca: al volver de un ejercicio, conservar el scroll (no volver al inicio).
+6. [x] Detalle del ejercicio: botón "Añadir a hoy" (ir de compras por ejercicios).
+7. [x] Aviso de sobreexigencia (demasiados ejercicios/series/volumen para 1–2 h), descartable.
+8. [x] "Deshacer" (snackbar unos segundos) en todo lo que se borra: comidas, entrenamientos, despensa (el ✓ borraba sin avisar).
+9. [x] Lista de compras: acceso directo propio (junto a Despensa).
+10. [x] Despensa como "otra app": stock que baja al registrar comidas (porciones restantes), el coach sugiere según cantidades y avisa si falta algo ("no importa" / reformular).
+11. [x] Comida de la calle / ya preparada: preguntar si se cocinó en casa; si no, no descontar de la despensa.
 12. [ ] FUTURO: grupo familiar (pareja/roomies): despensa compartida, dietas y restricciones de cada uno, recetas para ambos, descuento en la despensa del grupo. Necesita backend (ver 20). Revisar si grocy / whats-in-the-fridge traen algo reutilizable.
-13. [ ] Mensajes sugeridos del coach: X para quitarlos; vuelven a las 24 h; la 2.ª vez se apagan y se reactivan en Ajustes.
-14. [ ] Training → Recuperación muscular: solo 2 (las más recientes) + "Ver más" a otra pantalla.
-15. [ ] "¿Qué quieres entrenar hoy?": opción "No sé" que lleva al coach.
-16. [ ] Diario de entreno: swipe = "Terminar" (no guardar); si faltan kg/reps, popup rápido para llenarlos. Borrar con deshacer.
-17. [ ] Tarjetas de ejercicio en el diario: preview limpia sin el texto de crédito (crédito solo en el detalle).
-18. [ ] Training: "Pedir rutina al coach" lo primero. Orden de pestañas por defecto Inicio, Progreso, Training, Coach, Ajustes, y configurable en Ajustes.
-19. [ ] Gastos de despensa en Bs o $ con la tasa del día (y decir qué tasa se usó).
+13. [x] Mensajes sugeridos del coach: X para quitarlos; vuelven a las 24 h; la 2.ª vez se apagan y se reactivan en Ajustes.
+14. [x] Training → Recuperación muscular: solo 2 (las más recientes) + "Ver más" a otra pantalla.
+15. [x] "¿Qué quieres entrenar hoy?": opción "No sé" que lleva al coach.
+16. [x] Diario de entreno: swipe = "Terminar" (no guardar); si faltan kg/reps, popup rápido para llenarlos. Borrar con deshacer.
+17. [x] Tarjetas de ejercicio en el diario: preview limpia sin el texto de crédito (crédito solo en el detalle).
+18. [x] Training: "Pedir rutina al coach" lo primero. Orden de pestañas por defecto Inicio, Progreso, Training, Coach, Ajustes, y configurable en Ajustes.
+19. [x] Gastos de despensa en Bs o $ con la tasa del día (y decir qué tasa se usó).
 20. [ ] Datos en la nube (Supabase) para Play Store y grupo familiar: decidir.
 
 ### Investigación grupo familiar / despensa (2026-10-28)
@@ -169,3 +169,12 @@ Estado: [ ] pendiente · [x] hecho
 - KitchenOwl, Mealie, Tandoor: AGPL, solo ideas (grupo → hogar, "on hand", listas compartidas).
 - Modelo propuesto: Household(id, name, inviteCode); Member(householdId, role, dietTags, allergens, kcalTarget, miembros locales sin cuenta); StockTransaction(delta, mealLogId, memberId) como registro solo de altas (facilita deshacer y sincronizar). Porciones = mín. de floor(stock / cantidad por porción). IA recibe unión de restricciones (alergias duras, preferencias suaves).
 - Todos necesitan servidor: offline-first local + sincronizar con Supabase después.
+
+### Cómo quedó la tanda del 29 (2026-10-28 noche)
+- 1 Reloj: la app ya usa el conteo más alto entre fuentes (merged vs. cada app). El retraso es de Samsung Health, que solo escribe en Health Connect cuando él sincroniza. Nuevo botón ⟳ junto a los pasos en Inicio que abre Samsung Health (sincroniza el reloj) y al volver se releen los pasos.
+- 8 Deshacer: `UndoController` en AppContainer + `UndoBar` (5 s) en la raíz y dentro de Despensa/Histórico. Comidas, agua no, ejercicios del día, rutinas, despensa (Se acabó, borrar), lista de compras, compras.
+- 10/11 Despensa: `PantryStock` (cantidades a número, descuento, porciones). Al registrar una comida que usa algo de la despensa sale "¿Lo cocinaste en casa?" → descontar (con deshacer) o "lo compré hecho / comí fuera". El coach calcula porciones y avisa faltantes con dos opciones.
+- 12 Grupo familiar y 20 nube: pendiente; necesita backend (ver investigación arriba).
+- 16 Swipe derecha = Terminé el ejercicio (si faltan reps, ventana rápida); cuando todos están hechos se cierra el entreno como "Terminé".
+- 18 Orden de pestañas por defecto Inicio, Progreso, Training, Coach, Ajustes; editable en Ajustes → Barra de pestañas.
+- 19 Gastos en Bs o $ con tasa BCV o paralelo de ve.dolarapi.com (gratis, sin clave); se muestra la tasa y su fecha.

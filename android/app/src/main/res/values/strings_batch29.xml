@@ -41,4 +41,5 @@
     <string name="pantry_rate_official">BCV</string>
     <string name="pantry_rate_parallel">Parallel</string>
     <string name="pantry_rate_used">Rate %1$s: %2$s Bs per $ (%3$s, DolarApi)</string>
+    <string name="home_steps_sync_watch">Open Samsung Health to bring the watch steps</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
+import androidx.compose.material.icons.filled.Sync
 import kotlinx.coroutines.flow.map
 import androidx.compose.material.icons.filled.ShoppingCart
 import android.Manifest
@@ -238,6 +239,12 @@ fun HomeScreen(
     val vm: HomeViewModel = viewModel(factory = HomeViewModel.Factory(container))
     val ui by vm.ui.collectAsState()
     val homeListState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val stepsContext = LocalContext.current
+    val samsungHealthLaunch = remember(stepsContext) {
+        stepsContext.packageManager.getLaunchIntentForPackage(
+            com.apoorvdarshan.calorietracker.services.health.HealthConnectManager.SAMSUNG_HEALTH_PACKAGE
+        )
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
 DisposableEffect(lifecycleOwner, vm) {
         val observer = LifecycleEventObserver { _, event ->
@@ -666,7 +673,13 @@ DisposableEffect(lifecycleOwner, vm) {
                     }
                     ui.dailySteps?.let { steps ->
                         Spacer(Modifier.height(8.dp))
-                        DailyStepsRow(steps = steps)
+                        DailyStepsRow(steps = steps, onSyncWatch = samsungHealthLaunch?.let { intent ->
+                            {
+                                // Samsung Health syncs the watch when it opens, then shares with Health
+                                // Connect; Home re-reads steps when the user comes back.
+                                runCatching { stepsContext.startActivity(intent) }
+                            }
+                        })
                     }
                     Spacer(Modifier.height(12.dp))
                     Row(
@@ -1787,7 +1800,7 @@ private fun shortDay(dow: DayOfWeek): String =
  *   .padding(.vertical, 20)
  */
 @Composable
-private fun DailyStepsRow(steps: Int) {
+private fun DailyStepsRow(steps: Int, onSyncWatch: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1808,6 +1821,17 @@ private fun DailyStepsRow(steps: Int) {
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        onSyncWatch?.let { sync ->
+            Spacer(Modifier.width(4.dp))
+            androidx.compose.material3.IconButton(onClick = sync, modifier = Modifier.size(30.dp)) {
+                Icon(
+                    Icons.Filled.Sync,
+                    contentDescription = stringResource(R.string.home_steps_sync_watch),
+                    modifier = Modifier.size(16.dp),
+                    tint = AppColors.Calorie
+                )
+            }
+        }
     }
 }
 
