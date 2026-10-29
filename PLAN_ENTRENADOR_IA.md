@@ -41,6 +41,19 @@ Solo inglés y español; el idioma elegido aplica a todo.
 9. Nube y premium (más adelante): Supabase + sincronización offline; cuentas, varios dispositivos, panel de entrenador; privacidad y políticas de Play/Apple.
 10. iPhone: portar las funciones nuevas a la app Swift (requiere Mac).
 
+## Lanzamiento público (cuando se defina la versión final)
+Mientras sea beta en casa no se registra nada en Google ni en Play. Al lanzar, con el nombre y paquete definitivos (punto 1 de Siguiente):
+1. **Firma de release:** crear la clave de subida (`keytool`, ver `android/app/build.gradle.kts`) y `keystore.properties`; activar Play App Signing. Guardar la clave fuera de Git (Drive privado "EntrenadorIA-privado").
+2. **Google Play:** cuenta de desarrollador (25 USD), subir **AAB** (no APK); prueba cerrada con ≥12 testers durante 14 días si la cuenta es personal nueva (confirmar requisito vigente); `versionCode` sube en cada subida.
+3. **Respaldo en Google Drive** (ya programado, heredado de Fud AI; `backup/DriveCloudBackupClient.kt`, carpeta privada appData de cada usuario). Solo falta configurar, con la cuenta del dueño en Google Cloud Console:
+   - proyecto nuevo → habilitar **Google Drive API**;
+   - pantalla de consentimiento OAuth: externa, alcances `drive.appdata` y `userinfo.email`; para el público hay que **enviarla a verificación** de Google (en modo prueba solo entran hasta 100 correos de prueba);
+   - cliente OAuth **Android** con el paquete final y el **SHA-1 de la clave de firma de Play** (Play Console → Integridad de la app); el web client id es opcional (`cloud.backup.web.client.id`).
+   - Para probar antes con la beta: cliente Android con paquete `com.apoorvdarshan.calorietracker.debug` y SHA-1 del `debug.keystore` `5F:29:00:A0:FE:1D:DC:DF:FA:91:C9:D3:3B:BF:31:6E:1A:F7:AC:92`.
+4. **Registro de uso (Supabase):** ya activo en la beta (`supabase/telemetry.sql`, opt-in en dos niveles). Para el público: política de privacidad que lo mencione, formulario "Seguridad de los datos" de Play (datos de salud, compartidos con el desarrollador, opcionales), y decidir si "Incluir mis registros" se mantiene.
+5. **Cuentas y nube (fase posterior):** login con correo/Google en Supabase Auth, sincronización entre teléfonos, RLS por usuario; asociar el registro de uso a la cuenta. Requiere política de privacidad y borrado de cuenta en la app (exigido por Play).
+6. **Permisos de salud:** Play revisa las apps con Health Connect: justificar cada tipo de dato leído en la declaración de Health Connect.
+
 ## Por hacer en algún momento (fuera de foco)
 - **Escanear máquina con la cámara** (opcional; las ilustraciones ya orientan). Enfoque recomendado: Gemini con lista cerrada de 40–60 máquinas mapeadas a ids de free-exercise-db (~$0,001 por foto), opción "¿cuál de estas es?" si duda; luego modelo propio en el teléfono (MediaPipe Model Maker, Apache-2.0) entrenado con fotos confirmadas por usuarios.
 - **Investigar las máquinas más usadas en gimnasios** (general y en LatAm): lista con nombre en ES/EN, foto de referencia con licencia libre (Wikimedia Commons, Unsplash, Pexels — guardar autor y licencia), músculos y ejercicio equivalente. Sirve para el escáner y para mejorar las listas curadas de MachineCoach.
