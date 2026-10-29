@@ -482,6 +482,8 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
     private fun handle(event: LiveEvent) {
         when (event) {
             LiveEvent.Ready -> {
+                // Audible cue that the mic is really open ("Go ahead, I'm listening").
+                if (_ui.value.phase != VoicePhase.LIVE) ReadyChime.play(container.appContext)
                 _ui.update { it.copy(phase = VoicePhase.LIVE) }
                 noteActivity()
                 updateOrb()
