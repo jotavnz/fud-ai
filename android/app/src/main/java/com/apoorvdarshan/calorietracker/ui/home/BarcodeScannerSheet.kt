@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
+import androidx.compose.foundation.layout.navigationBarsPadding
+import com.apoorvdarshan.calorietracker.ui.components.scanCameraFrame
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -144,7 +146,12 @@ fun BarcodeScannerSheet(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Column(Modifier.fillMaxSize().background(Color.Black)) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(if (onSwitchTab != null) MaterialTheme.colorScheme.background else Color.Black)
+                .then(if (onSwitchTab != null) Modifier.navigationBarsPadding() else Modifier)
+        ) {
         onSwitchTab?.let { switch ->
             com.apoorvdarshan.calorietracker.ui.components.ScanHeader(
                 com.apoorvdarshan.calorietracker.ui.components.ScanTab.BARCODE, onBack = onDismiss, onSelect = switch
@@ -154,6 +161,7 @@ fun BarcodeScannerSheet(
             Modifier
                 .fillMaxWidth()
                 .weight(1f)
+                .then(Modifier.scanCameraFrame(onSwitchTab != null))
                 .background(Color.Black)
         ) {
             AndroidView(

@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,6 +66,9 @@ fun ScanHeader(selected: ScanTab, onBack: () -> Unit, onSelect: (ScanTab) -> Uni
         }
         Spacer(Modifier.height(10.dp))
         val shape = RoundedCornerShape(14.dp)
+        // Solid pill so its shadow doesn't show through: white card in light mode, raised gray in dark.
+        val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+        val activePill = if (dark) Color(0xFF2C2C2E) else MaterialTheme.colorScheme.surface
         Row(
             Modifier
                 .padding(start = 8.dp)
@@ -80,7 +84,7 @@ fun ScanHeader(selected: ScanTab, onBack: () -> Unit, onSelect: (ScanTab) -> Uni
                         .weight(1f)
                         .then(if (active) Modifier.shadow(2.dp, RoundedCornerShape(11.dp)) else Modifier)
                         .clip(RoundedCornerShape(11.dp))
-                        .background(if (active) MaterialTheme.colorScheme.onBackground.copy(alpha = 0.16f) else Color.Transparent)
+                        .background(if (active) activePill else Color.Transparent)
                         .clickable(enabled = !active) { onSelect(tab) }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
@@ -97,6 +101,13 @@ fun ScanHeader(selected: ScanTab, onBack: () -> Unit, onSelect: (ScanTab) -> Uni
     }
 }
 
+/**
+ * With the Scan tabs, the camera sits as a rounded card on the app background, so the screen
+ * follows light or dark mode like the rest of the app.
+ */
+fun Modifier.scanCameraFrame(tabbed: Boolean): Modifier =
+    if (tabbed) padding(start = 12.dp, end = 12.dp, bottom = 12.dp).clip(RoundedCornerShape(24.dp)) else this
+
 /** "Need help?" pill over the camera, with short tips for a good scan. */
 @Composable
 fun ScanHelpChip(tab: ScanTab, modifier: Modifier = Modifier) {
@@ -104,14 +115,14 @@ fun ScanHelpChip(tab: ScanTab, modifier: Modifier = Modifier) {
     Row(
         modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.88f))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
             .clickable { open = true }
             .padding(horizontal = 12.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(Icons.Filled.Info, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(6.dp))
-        Text(stringResource(R.string.scan_help), color = Color(0xFF1F1F24), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.scan_help), color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
     if (open) {
         val tips = if (tab == ScanTab.FOOD) {

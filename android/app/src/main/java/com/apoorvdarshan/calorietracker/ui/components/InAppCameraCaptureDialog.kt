@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.components
 
+import androidx.compose.foundation.layout.navigationBarsPadding
+import com.apoorvdarshan.calorietracker.ui.components.scanCameraFrame
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Column
 import androidx.camera.core.ImageCapture
@@ -130,12 +132,18 @@ fun InAppCameraCaptureDialog(
         },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Column(Modifier.fillMaxSize().background(Color.Black)) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(if (onSwitchTab != null) MaterialTheme.colorScheme.background else Color.Black)
+                .then(if (onSwitchTab != null) Modifier.navigationBarsPadding() else Modifier)
+        ) {
         onSwitchTab?.let { switch -> ScanHeader(ScanTab.FOOD, onBack = { if (!isCapturing) onDismiss() }, onSelect = switch) }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
+                .then(Modifier.scanCameraFrame(onSwitchTab != null))
                 .background(Color.Black)
         ) {
             AndroidView(
