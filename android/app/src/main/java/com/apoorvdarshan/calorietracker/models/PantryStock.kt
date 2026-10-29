@@ -28,7 +28,39 @@ object PantryStock {
             Regex("""\b(carton|cartones|maple|bandeja de 30)\b""").containsMatchIn(key) -> 30
             Regex("""\bmedia docena\b""").containsMatchIn(key) -> 6
             Regex("""\bdocenas?\b""").containsMatchIn(key) -> 12
-            else -> null
+            else -> Regex("""(?:\bx|\bpack de|\bpaquete de|\bbolsa de|\bcaja de)\s*(\d+)\b|\b(\d+)\s*(?:unidades|unid|und|uds|piezas|pzas|rebanadas|panes|huevos)\b""")
+                .find(key)?.let { m -> (m.groupValues[1].ifEmpty { m.groupValues[2] }).toIntOrNull()?.takeIf { it > 1 } }
+        }
+    }
+
+    private val contentInName = Regex(
+        """(\d+(?:[.,]\d+)?)\s*(kg|kilos?|kilogramos?|grs?|gramos?|g|ml|cc|mililitros?|lts?|litros?|l|lbs?|libras?)\b""",
+        RegexOption.IGNORE_CASE
+    )
+
+    /**
+     * What one package holds when the name says it: "Arroz 1 kg", "Leche 1 L", "Atún 140 g",
+     * "Pan x6", "Huevos 1/2 cartón". Null when the name gives no size.
+     */
+    fun packContent(name: String): Amount? {
+        val text = name.replace("½", "0.5 ").replace(Regex("""\b1/2\s*(?=kg|kilo|l\b|lt|litro)""", RegexOption.IGNORE_CASE), "0.5 ")
+        contentInName.find(text)?.let { m -> parse("${m.groupValues[1]} ${m.groupValues[2]}")?.takeIf { it.unit != Unit.COUNT && it.value > 0 }?.let { return it } }
+        return unitsPerPack(name)?.let { Amount(it.toDouble(), Unit.COUNT) }
+    }
+
+    /** Words that only say how many packages there are ("2 paquetes", "3 latas"). */
+    private val packageWords = setOf(
+        "", "paquete", "paquetes", "bolsa", "bolsas", "lata", "latas", "caja", "cajas", "botella", "botellas",
+        "frasco", "frascos", "pote", "potes", "sobre", "sobres", "envase", "envases", "carton", "cartón",
+        "cartones", "unidad", "unidades", "und", "u", "pack", "packs", "pza", "pzas", "x"
+    )
+
+    private fun countWord(name: String): String {
+        val key = PantryMatching.key(name)
+        return when {
+            key.contains("huevo") -> "huevos"
+            key.contains("rebanad") -> "rebanadas"
+            else -> "unidades"
         }
     }
 
@@ -51,12 +83,15 @@ object PantryStock {
     fun normalized(item: PantryItem): PantryItem {
         val clean = cleanQuantity(item.quantity)
         val amount = parse(clean)
-        val perPack = unitsPerPack(item.name)
-        // Only a bare count is packages ("2"); "30 huevos" is already in units.
-        val bareCount = pattern.find(clean)?.groupValues?.get(2).isNullOrEmpty() && clean.trim().matches(Regex("""\d+(?:[.,]\d+)?"""))
-        if (amount != null && amount.unit == Unit.COUNT && perPack != null && bareCount) {
-            val word = if (PantryMatching.key(item.name).contains("huevo")) "huevos" else "unidades"
-            return item.copy(quantity = "${format(Amount(amount.value * perPack, Unit.COUNT))} $word")
+        val content = packContent(item.name)
+        // Only a count of packages opens up ("2", "3 latas"); "30 huevos" or "800 g" are already in units.
+        val word = pattern.find(clean)?.groupValues?.get(2).orEmpty().lowercase(Locale.ROOT)
+        val rest = clean.substringAfter(word, "").trim().takeIf { word.isNotEmpty() } ?: clean.replace(Regex("""^\s*\d+(?:[.,]\d+)?"""), "").trim()
+        val packages = amount != null && amount.unit == Unit.COUNT && word in packageWords && rest.isEmpty()
+        if (packages && content != null && amount != null) {
+            val total = Amount(amount.value * content.value, content.unit)
+            val text = format(total)
+            return item.copy(quantity = if (content.unit == Unit.COUNT) "$text ${countWord(item.name)}" else text)
         }
         return if (clean == item.quantity) item else item.copy(quantity = clean)
     }

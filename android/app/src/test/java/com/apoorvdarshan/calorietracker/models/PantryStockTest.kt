@@ -53,4 +53,23 @@ class PantryStockTest {
         assertEquals("28 huevos", PantryStock.deduct(eggs, use.amount)?.quantity)
         assertEquals("2", PantryStock.cleanQuantity("2 X 2386.84"))
     }
+
+    @Test
+    fun packagesOfAnyFoodOpenIntoTheirContent() {
+        fun n(name: String, q: String) = PantryStock.normalized(PantryItem(name = name, quantity = q)).quantity
+        assertEquals("2 kg", n("Arroz 1 kg", "2"))
+        assertEquals("3 l", n("Leche completa 1L", "3 cartones"))
+        assertEquals("420 g", n("Atún en aceite 140 g", "3 latas"))
+        assertEquals("1 kg", n("Harina de maíz 1/2 kg", "2"))
+        assertEquals("12 unidades", n("Pan de sándwich x6", "2"))
+        assertEquals("24 unidades", n("Huevos docena", "2").replace("huevos", "unidades"))
+        // Already in kitchen units, or no size in the name: left alone.
+        assertEquals("800 g", n("Arroz 1 kg", "800 g"))
+        assertEquals("3", n("Tomates", "3"))
+        // A home-cooked meal then takes grams off the opened-up stock.
+        val rice = PantryItem(name = "Arroz 1 kg", quantity = "2")
+        val meal = entry("Arroz con pollo", listOf(MealIngredient(name = "arroz blanco", grams = 150.0, calories = 200, protein = 4.0, carbs = 45.0, fat = 0.5)))
+        val use = PantryStock.suggestUses(meal, listOf(rice)).single()
+        assertEquals("1.9 kg", PantryStock.deduct(rice, use.amount)?.quantity)
+    }
 }

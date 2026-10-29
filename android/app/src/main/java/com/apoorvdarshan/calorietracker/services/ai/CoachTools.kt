@@ -1336,7 +1336,7 @@ class CoachTools(
                                 "properties" to linkedMapOf(
                                     "action" to linkedMapOf("type" to "string", "description" to "add, set, used_up or discard (default add)"),
                                     "name" to linkedMapOf("type" to "string", "description" to "Food name in the user's language"),
-                                    "quantity" to linkedMapOf("type" to "string", "description" to "As said: 6, 500 g, 1 bottle. For set, what is left now (0 = ran out)"),
+                                    "quantity" to linkedMapOf("type" to "string", "description" to "In kitchen units, multiplying packages by their size: 2 bags of 1 kg rice = 2 kg, 2 half cartons of eggs = 30 huevos, 3 cans of 140 g tuna = 420 g, 6 eggs. Never a price. For set, what is left now (0 = ran out)"),
                                     "location" to linkedMapOf("type" to "string", "description" to "fridge, freezer or pantry (cupboard). For add where it goes; for set where it is now"),
                                     "best_before_days" to linkedMapOf("type" to "integer", "description" to "Days until it should be eaten, only when the user says a date or how long it keeps. Omit it otherwise: the app estimates it per food from USDA FoodKeeper."),
                                     "price" to linkedMapOf("type" to "number", "description" to "What this item cost, only when the user says it")
