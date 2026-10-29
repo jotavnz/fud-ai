@@ -129,6 +129,18 @@ object Telemetry {
         if (isContentOn()) track(name, props)
     }
 
+    private var lastOpenAt = 0L
+
+    /**
+     * A visit, counted once: coming back from the camera, a picker or another sheet restarts
+     * the activity, so opens closer than 10 minutes apart are the same visit.
+     */
+    fun trackAppOpen(nowMillis: Long = System.currentTimeMillis()) {
+        if (nowMillis - lastOpenAt < 10 * 60_000L) return
+        lastOpenAt = nowMillis
+        track("app_open")
+    }
+
     /** A handled failure: where it happened and its type, with a short message. */
     fun error(where: String, error: Throwable, props: Map<String, Any?> = emptyMap()) {
         track(

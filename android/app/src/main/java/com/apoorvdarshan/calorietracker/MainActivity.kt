@@ -91,7 +91,7 @@ open class MainActivity : AppCompatActivity() {
         (application as FudAIApp).container.workoutRestTimer.setAppInForeground(true)
         if (!(application as FudAIApp).backgroundServicesEnabled) return
         // Beta log: count the visit and send what queued up since the last one.
-        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track("app_open")
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.trackAppOpen()
         com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.sendSoon()
         lifecycleScope.launch {
             runCatching {
@@ -120,6 +120,8 @@ open class MainActivity : AppCompatActivity() {
         super.onStop()
         (application as FudAIApp).container.workoutRestTimer.setAppInForeground(false)
         if (!(application as FudAIApp).backgroundServicesEnabled) return
+        // Beta log: what queued during the visit goes out when the app leaves the screen.
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.sendSoon()
         lifecycleScope.launch {
             runCatching { (application as FudAIApp).container.cloudBackup.autoBackupIfNeeded() }
         }
