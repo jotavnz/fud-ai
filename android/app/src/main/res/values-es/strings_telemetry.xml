@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Registro de uso y errores de la beta: invitación en Inicio e interruptor en Ajustes. -->
+<resources>
+    <string name="tm_home_title">Ayuda a mejorar la beta</string>
+    <string name="tm_home_body">Comparte qué pantallas y funciones usas y cuándo algo falla, para arreglarlo antes. Es anónimo: nunca lo que comes, pesas, duermes o escribes.</string>
+    <string name="tm_home_yes">Sí, compartir</string>
+    <string name="tm_home_no">No, gracias</string>
+    <string name="tm_settings_toggle">Ayudar a mejorar la beta</string>
+    <string name="tm_settings_footer">Envía uso y errores de forma anónima (pantallas, funciones, fallos de la IA, cierres inesperados) con la versión de la app y el modelo del teléfono. Nunca tu comida, peso, sueño, mensajes ni datos de salud. Al apagarlo se borra lo que estaba por enviarse.</string>
+</resources>

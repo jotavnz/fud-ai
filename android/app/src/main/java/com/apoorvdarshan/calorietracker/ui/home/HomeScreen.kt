@@ -24,6 +24,7 @@ import com.apoorvdarshan.calorietracker.ui.tour.TourTarget
 import com.apoorvdarshan.calorietracker.ui.tour.tourTarget
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.apoorvdarshan.calorietracker.services.FoodImageDecoder
+import com.apoorvdarshan.calorietracker.services.telemetry.Telemetry
 import com.apoorvdarshan.calorietracker.ui.navigation.LocalLaunchFillEpoch
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -488,6 +489,7 @@ DisposableEffect(lifecycleOwner, vm) {
     }
     val coachGoalPlan by container.prefs.coachGoalPlan.collectAsState(initial = null)
     val coachGoalPromptDismissed by container.prefs.coachGoalPromptDismissed.collectAsState(initial = true)
+    val telemetryConsent by Telemetry.consent.collectAsState()
     val sleepCardHiddenUntil by container.prefs.sleepCardHiddenUntil.collectAsState(initial = Long.MAX_VALUE)
     val pantryItems by container.pantryRepository.items.collectAsState(initial = emptyList())
     val homeScope = rememberCoroutineScope()
@@ -601,7 +603,9 @@ DisposableEffect(lifecycleOwner, vm) {
                 healthSyncing = true
                 homeScope.launch {
                     try {
-                        container.syncAllNow()
+                        val complete = container.syncAllNow()
+                        Telemetry.track("health_sync", mapOf("from" to "home_pull", "ok" to complete))
+                        Telemetry.sendSoon()
                     } finally {
                         healthSyncing = false
                     }
@@ -730,6 +734,12 @@ DisposableEffect(lifecycleOwner, vm) {
                     onOpen = { showPantry = true },
                     onOpenShopping = { showShopping = true }
                 )
+            }
+
+            if (isToday && telemetryConsent == Telemetry.Consent.UNASKED && Telemetry.configured) {
+                item(key = "beta-telemetry-prompt") {
+                    BetaTelemetryPromptCard(onAnswer = Telemetry::setConsent)
+                }
             }
 
             if (isToday && coachGoalPlan == null && !coachGoalPromptDismissed) {

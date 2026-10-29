@@ -562,6 +562,34 @@ class FoodAnalysisService(
         jsonResponse: Boolean = true,
         aminoAcidInstruction: String? = null
     ): String {
+        // Beta log: outcome, time and image count only — never the prompt or the reply.
+        val started = System.nanoTime()
+        fun record(error: Throwable?) = com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track(
+            "ai_call",
+            mapOf(
+                "ok" to (error == null),
+                "ms" to (System.nanoTime() - started) / 1_000_000,
+                "images" to imageBytesList.size,
+                "json" to jsonResponse,
+                "error" to ((error as? AiError)?.kind?.name ?: error?.let { it::class.java.simpleName })
+            )
+        )
+        return try {
+            callAiUntracked(prompt, imageBytesList, jsonResponse, aminoAcidInstruction).also { record(null) }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            record(e)
+            throw e
+        }
+    }
+
+    private suspend fun callAiUntracked(
+        prompt: String,
+        imageBytesList: List<ByteArray>,
+        jsonResponse: Boolean,
+        aminoAcidInstruction: String?
+    ): String {
         // Load settings + preprocess images in parallel. A chain of DataStore `.first()` calls
         // used to queue behind cold-start migrations and stall the analyzing overlay before any
         // HTTP went out — especially the first scan after opening the app.

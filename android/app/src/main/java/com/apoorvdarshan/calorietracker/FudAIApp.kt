@@ -64,6 +64,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -92,6 +94,7 @@ open class FudAIApp : Application() {
     private val appScope = CoroutineScope(
         SupervisorJob() + Dispatchers.Default + CoroutineExceptionHandler { _, throwable ->
             Log.e("FudAIApp", "Background startup task failed", throwable)
+            com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.error("startup", throwable)
         }
     )
 
@@ -111,6 +114,8 @@ open class FudAIApp : Application() {
             ExerciseRepository.warm(this)
             return
         }
+        // Beta usage/error log (opt-in): first, so a crash during startup is recorded too.
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.init(this)
         // RevenueCat must be configured before the container reads its app user id.
         runCatching { BillingManager.configure(this) }
             .onFailure { Log.e("FudAIApp", "RevenueCat configure failed", it) }
@@ -134,6 +139,17 @@ open class FudAIApp : Application() {
         // Overreaching alerts (watch cardio on tired muscles, very long days, no rest day).
         com.apoorvdarshan.calorietracker.services.training.TrainingAlertsWorker.schedule(this)
         container.widgetSnapshotWriter.observe().launchIn(appScope)
+        // Which screens and Settings sections people open (route names only, no content).
+        container.navigator.currentRoute
+            .filterNotNull()
+            .distinctUntilChanged()
+            .onEach { com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track("screen", mapOf("route" to it)) }
+            .launchIn(appScope)
+        container.navigator.settingsSection
+            .filterNotNull()
+            .distinctUntilChanged()
+            .onEach { com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track("settings_section", mapOf("section" to it.name)) }
+            .launchIn(appScope)
         // Warm exercise catalog off the main thread before the first Workouts tab open.
         ExerciseRepository.warm(this)
         appScope.launch {

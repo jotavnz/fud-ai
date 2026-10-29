@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Beta usage and error log: Home invitation and Settings switch. -->
+<resources>
+    <string name="tm_home_title">Help improve the beta</string>
+    <string name="tm_home_body">Share which screens and features you use and when something fails, so problems get fixed sooner. Anonymous: never what you eat, weigh, sleep or write.</string>
+    <string name="tm_home_yes">Yes, share</string>
+    <string name="tm_home_no">No thanks</string>
+    <string name="tm_settings_toggle">Help improve the beta</string>
+    <string name="tm_settings_footer">Sends anonymous usage and errors (screens, features, failed AI calls, crashes) with the app version and phone model. Never your food, weight, sleep, messages or health data. Turning it off deletes what was waiting to be sent.</string>
+</resources>

@@ -376,6 +376,13 @@ internal fun HealthSyncStatusScreen(container: AppContainer, onDismiss: () -> Un
         scope.launch {
             try {
                 val result = com.apoorvdarshan.calorietracker.services.samsung.SamsungHealthImporter(container).import(tree)
+                com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track(
+                    "samsung_import",
+                    mapOf(
+                        "ok" to true, "files" to result.files, "step_days" to result.stepDays,
+                        "nights" to result.nights, "workouts" to result.workouts, "weights" to result.weights
+                    )
+                )
                 runMessage = if (result.files == 0) {
                     resources.getString(R.string.samsung_import_nothing)
                 } else {
@@ -387,7 +394,8 @@ internal fun HealthSyncStatusScreen(container: AppContainer, onDismiss: () -> Un
                 }
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.error("samsung_import", e)
                 runMessage = resources.getString(R.string.samsung_import_failed)
             } finally {
                 runStep = null

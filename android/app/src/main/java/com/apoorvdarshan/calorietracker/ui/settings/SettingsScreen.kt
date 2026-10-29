@@ -74,6 +74,7 @@ import androidx.compose.material.icons.outlined.Male
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingFlat
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Brightness6
 import androidx.compose.material.icons.outlined.Add
@@ -1357,6 +1358,23 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
+                if (com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.configured) {
+                    val telemetryConsent by com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.consent.collectAsState()
+                    HorizontalDivider()
+                    ToggleRow(
+                        stringResource(R.string.tm_settings_toggle),
+                        telemetryConsent == com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.Consent.YES,
+                        icon = Icons.Outlined.BugReport,
+                        onChange = com.apoorvdarshan.calorietracker.services.telemetry.Telemetry::setConsent
+                    )
+                    Text(
+                        stringResource(R.string.tm_settings_footer),
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
+                }
             }
             }
 

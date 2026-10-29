@@ -1,6 +1,7 @@
 import groovy.json.JsonSlurper
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -50,6 +51,28 @@ val revenueCatGoogleApiKey = revenueCatKey(
 )
 val revenueCatTestStoreApiKey = revenueCatKey("revenuecat.test.store.api.key", "REVENUECAT_TEST_STORE_API_KEY")
 
+// Supabase project for the closed beta's opt-in usage and error log (table and policies in
+// supabase/telemetry.sql). Both values are public: the anon key can only insert events, row
+// level security blocks every read. Set them in local.properties (never commit them):
+//   supabase.url=https://<project>.supabase.co
+//   supabase.anon.key=<anon or publishable key>
+// Never put the service_role key here: it bypasses row level security.
+val supabaseUrl = (localProperties.getProperty("supabase.url") ?: System.getenv("SUPABASE_URL"))
+    ?.trim()
+    ?.trimEnd('/')
+    ?.takeIf { it.matches(Regex("https://[A-Za-z0-9.-]+")) }
+    ?: ""
+val supabaseAnonKey = (localProperties.getProperty("supabase.anon.key") ?: System.getenv("SUPABASE_ANON_KEY"))
+    ?.trim()
+    ?.takeIf { it.matches(Regex("[A-Za-z0-9._-]+")) }
+    ?: ""
+if (supabaseAnonKey.startsWith("sb_secret_") ||
+    runCatching { String(Base64.getUrlDecoder().decode(supabaseAnonKey.split(".")[1])) }
+        .getOrDefault("").contains("service_role")
+) {
+    throw GradleException("supabase.anon.key is a secret (service_role) key; use the anon or publishable key")
+}
+
 android {
     namespace = "com.apoorvdarshan.calorietracker"
     compileSdk {
@@ -87,6 +110,9 @@ android {
         // RevenueCat public Google Play SDK key (goog_…). Public by design, like the
         // iOS appl_ key. Empty disables billing: Hosted AI plans stay hidden.
         buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatGoogleApiKey\"")
+        // Supabase project for the beta's opt-in usage and error log. Empty disables it.
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
     }
 
     signingConfigs {

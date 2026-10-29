@@ -173,6 +173,7 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 content = text,
                 attachmentImageBase64 = thumbnailBytes?.let { Base64.getEncoder().encodeToString(it) }
             )
+            val started = System.nanoTime()
             try {
                 container.chatRepository.append(userMsg)
                 val history = container.chatRepository.contextMessages(limit = 20).dropLast(1) // exclude the just-appended user msg — it's passed separately
@@ -240,6 +241,18 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                         proposals = proposals.proposals,
                         logProposals = logCards,
                         goalProposals = goalCards
+                    )
+                )
+                // Beta log: how the reply went, never what was said.
+                com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track(
+                    "coach_reply",
+                    mapOf(
+                        "ok" to true,
+                        "ms" to (System.nanoTime() - started) / 1_000_000,
+                        "image" to (imageBytes != null),
+                        "workout_cards" to proposals.proposals.size,
+                        "log_cards" to logCards.size,
+                        "goal_cards" to goalCards.size
                     )
                 )
             } catch (e: AiError) {
@@ -531,6 +544,10 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
     private fun logFailure(error: Throwable) {
         // Log is a stub in JVM unit tests; logging must never change the send's outcome.
         runCatching { Log.w(TAG, "Coach chat failed: ${coachFailureSummary(error)}") }
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track(
+            "coach_reply",
+            mapOf("ok" to false, "error" to ((error as? AiError)?.kind?.name ?: error::class.java.simpleName))
+        )
     }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {

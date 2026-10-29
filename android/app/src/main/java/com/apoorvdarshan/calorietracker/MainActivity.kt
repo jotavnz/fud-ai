@@ -90,6 +90,9 @@ open class MainActivity : AppCompatActivity() {
         // A rest that ends while the app is visible is announced in-app, not by notification.
         (application as FudAIApp).container.workoutRestTimer.setAppInForeground(true)
         if (!(application as FudAIApp).backgroundServicesEnabled) return
+        // Beta log: count the visit and send what queued up since the last one.
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.track("app_open")
+        com.apoorvdarshan.calorietracker.services.telemetry.Telemetry.sendSoon()
         lifecycleScope.launch {
             // Adaptive Goals auto-runs the full goal calculation about once a week (Energy Burn,
             // when on, supplies the measured-burn anchor it consumes — separate toggle).
