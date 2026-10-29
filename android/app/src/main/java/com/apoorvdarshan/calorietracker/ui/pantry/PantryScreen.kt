@@ -92,7 +92,7 @@ import java.util.Locale
  * from a grocery receipt photo. Coach reads it (get_pantry) to suggest meals and shopping lists.
  */
 @Composable
-fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
+fun PantryScreen(container: AppContainer, onDismiss: () -> Unit, startOnShopping: Boolean = false) {
     val items by container.pantryRepository.items.collectAsState(initial = emptyList())
     val purchases by container.pantryRepository.purchases.collectAsState(initial = emptyList())
     val shopping by container.pantryRepository.shoppingList.collectAsState(initial = emptyList())
@@ -173,11 +173,35 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            val shoppingCard: @Composable () -> Unit = {
+                ShoppingListCard(
+                    items = shopping,
+                    newItem = newShoppingItem,
+                    onNewItem = { newShoppingItem = it.take(60) },
+                    onAdd = {
+                        val name = newShoppingItem
+                        newShoppingItem = ""
+                        scope.launch { container.pantryRepository.addToShoppingList(name) }
+                    },
+                    onToggle = { id -> scope.launch { container.pantryRepository.toggleShopping(id) } },
+                    onRemove = { id ->
+                        scope.launch {
+                            val removed = shopping.firstOrNull { it.id == id }
+                            container.pantryRepository.removeShopping(id)
+                            if (removed != null) container.undo.offer(context.getString(R.string.undo_removed, removed.name)) {
+                                container.pantryRepository.restoreShopping(removed)
+                            }
+                        }
+                    },
+                    onStock = { stockingShop = true }
+                )
+            }
             LazyColumn(
                 modifier = Modifier.fillMaxSize().statusBarsPadding(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                if (startOnShopping) item(key = "shopping-first") { shoppingCard() }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -284,29 +308,7 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit) {
                         )
                     }
                 }
-                item {
-                    ShoppingListCard(
-                        items = shopping,
-                        newItem = newShoppingItem,
-                        onNewItem = { newShoppingItem = it.take(60) },
-                        onAdd = {
-                            val name = newShoppingItem
-                            newShoppingItem = ""
-                            scope.launch { container.pantryRepository.addToShoppingList(name) }
-                        },
-                        onToggle = { id -> scope.launch { container.pantryRepository.toggleShopping(id) } },
-                        onRemove = { id ->
-                            scope.launch {
-                                val removed = shopping.firstOrNull { it.id == id }
-                                container.pantryRepository.removeShopping(id)
-                                if (removed != null) container.undo.offer(context.getString(R.string.undo_removed, removed.name)) {
-                                    container.pantryRepository.restoreShopping(removed)
-                                }
-                            }
-                        },
-                        onStock = { stockingShop = true }
-                    )
-                }
+                if (!startOnShopping) item(key = "shopping") { shoppingCard() }
                 item { SpendingCard(purchases, onOpenHistory = { showHistory = true }) }
             }
             busyMessage?.let { message ->

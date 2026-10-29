@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.home
 
+import kotlinx.coroutines.flow.map
+import androidx.compose.material.icons.filled.ShoppingCart
 import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -281,6 +283,10 @@ DisposableEffect(lifecycleOwner, vm) {
     var showCustomWaterLog by remember { mutableStateOf(false) }
     var showFastingStart by remember { mutableStateOf(false) }
     var showPantry by remember { mutableStateOf(false) }
+    var showShopping by remember { mutableStateOf(false) }
+    val shoppingPending by container.pantryRepository.shoppingList
+        .map { list -> list.count { !it.checked } }
+        .collectAsState(initial = 0)
     var showCycle by remember { mutableStateOf(false) }
     var editingFast by remember { mutableStateOf<FastingSession?>(null) }
     var pendingDiaryDeletion by remember { mutableStateOf<HomeDiaryItem?>(null) }
@@ -707,7 +713,9 @@ DisposableEffect(lifecycleOwner, vm) {
                 PantryEntryCard(
                     itemCount = pantryItems.size,
                     expiringCount = pantryItems.count { item -> item.daysLeft()?.let { it in 0..2 } == true },
-                    onOpen = { showPantry = true }
+                    shoppingCount = shoppingPending,
+                    onOpen = { showPantry = true },
+                    onOpenShopping = { showShopping = true }
                 )
             }
 
@@ -1001,6 +1009,9 @@ DisposableEffect(lifecycleOwner, vm) {
         com.apoorvdarshan.calorietracker.ui.cycle.CycleScreen(container = container, onDismiss = { showCycle = false })
     }
 
+    if (showShopping) {
+        com.apoorvdarshan.calorietracker.ui.pantry.PantryScreen(container = container, onDismiss = { showShopping = false }, startOnShopping = true)
+    }
     if (showPantry) {
         com.apoorvdarshan.calorietracker.ui.pantry.PantryScreen(container = container, onDismiss = { showPantry = false })
     }
@@ -3376,7 +3387,7 @@ internal fun parseOptionalManualNutritionValue(value: String): Double? =
 
 /** Home's door to the pantry: item count and how many expire within two days. */
 @Composable
-private fun PantryEntryCard(itemCount: Int, expiringCount: Int, onOpen: () -> Unit) {
+private fun PantryEntryCard(itemCount: Int, expiringCount: Int, shoppingCount: Int, onOpen: () -> Unit, onOpenShopping: () -> Unit) {
     com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface(
         modifier = Modifier
             .fillMaxWidth()
@@ -3397,6 +3408,23 @@ private fun PantryEntryCard(itemCount: Int, expiringCount: Int, onOpen: () -> Un
                     },
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
+                )
+            }
+            // The shopping list has its own way in, for people who use the app mostly for that.
+            Column(
+                Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(AppColors.Calorie.copy(alpha = 0.10f))
+                    .clickable(onClick = onOpenShopping)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(Icons.Filled.ShoppingCart, contentDescription = stringResource(R.string.pantry_shopping_shortcut), tint = AppColors.Calorie, modifier = Modifier.size(22.dp))
+                Text(
+                    if (shoppingCount > 0) shoppingCount.toString() else stringResource(R.string.pantry_shopping_shortcut_short),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = AppColors.Calorie
                 )
             }
             Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))

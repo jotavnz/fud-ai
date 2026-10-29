@@ -35,4 +35,6 @@
     <string name="pantry_use_yes">Sí, descontar</string>
     <string name="pantry_use_no">No, lo compré hecho / comí fuera</string>
     <string name="pantry_use_done">Despensa actualizada (%1$d alimentos)</string>
+    <string name="pantry_shopping_shortcut">Lista de compras</string>
+    <string name="pantry_shopping_shortcut_short">Lista</string>
 </resources>
