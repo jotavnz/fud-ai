@@ -111,6 +111,10 @@ data class HealthImportRunResult(
 )
 
 /** Friendly names for the apps that usually write watch/band data into Health Connect. */
+/** Shown for Health Connect's built-in step counter (localized by the language the app runs in). */
+internal val PHONE_STEP_COUNTER_NAME: String
+    get() = if (java.util.Locale.getDefault().language == "es") "Este teléfono (Health Connect)" else "This phone (Health Connect)"
+
 internal val KNOWN_HEALTH_SOURCES: Map<String, String> = mapOf(
     "com.sec.android.app.shealth" to "Samsung Health",
     "com.samsung.android.wear.shealth" to "Samsung Health (Galaxy Watch)",
@@ -129,7 +133,9 @@ internal val KNOWN_HEALTH_SOURCES: Map<String, String> = mapOf(
 
 /** Friendly name for a Health Connect data origin: known map, then the installed label, then the package. */
 internal fun healthSourceName(packageName: String, installedLabel: (String) -> String?): String =
-    KNOWN_HEALTH_SOURCES[packageName]
+    // Android 14+ counts steps itself and records them under a generated "phone" package.
+    (if (packageName.startsWith("com.android.healthconnect.phone")) PHONE_STEP_COUNTER_NAME else null)
+        ?: KNOWN_HEALTH_SOURCES[packageName]
         ?: KNOWN_HEALTH_SOURCES.entries.firstOrNull { it.key.equals(packageName, ignoreCase = true) }?.value
         ?: installedLabel(packageName)
         ?: packageName

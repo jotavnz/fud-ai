@@ -42,4 +42,8 @@
     <string name="pantry_rate_parallel">Parallel</string>
     <string name="pantry_rate_used">Rate %1$s: %2$s Bs per $ (%3$s, DolarApi)</string>
     <string name="home_steps_sync_watch">Open Samsung Health to bring the watch steps</string>
+    <string name="analyzing_step_ingredients">Spotting the ingredients…</string>
+    <string name="analyzing_step_portions">Estimating portions…</string>
+    <string name="analyzing_step_macros">Working out calories and macros…</string>
+    <string name="analyzing_step_search">Looking up the foods…</string>
 </resources>

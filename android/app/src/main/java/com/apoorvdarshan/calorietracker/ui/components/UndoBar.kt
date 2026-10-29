@@ -56,7 +56,7 @@ class UndoController {
     }
 }
 
-const val UndoVisibleMillis = 5_000L
+const val UndoVisibleMillis = 7_000L
 
 /**
  * Bottom pill "<message> · Undo" that disappears after [UndoVisibleMillis]. Put one in each

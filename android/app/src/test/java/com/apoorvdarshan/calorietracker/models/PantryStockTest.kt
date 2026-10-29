@@ -70,6 +70,17 @@ class PantryStockTest {
         val rice = PantryItem(name = "Arroz 1 kg", quantity = "2")
         val meal = entry("Arroz con pollo", listOf(MealIngredient(name = "arroz blanco", grams = 150.0, calories = 200, protein = 4.0, carbs = 45.0, fat = 0.5)))
         val use = PantryStock.suggestUses(meal, listOf(rice)).single()
-        assertEquals("1.9 kg", PantryStock.deduct(rice, use.amount)?.quantity)
+        assertEquals("1.85 kg", PantryStock.deduct(rice, use.amount)?.quantity)
+    }
+
+    @Test
+    fun receiptQuantitiesWithATrailingXAndFoodSoldByTheKilo() {
+        fun n(name: String, q: String) = PantryStock.normalized(PantryItem(name = name, quantity = q)).quantity
+        assertEquals("1", n("Queso mozzarella", "1 X"))
+        assertEquals("8 unidades", n("Jamón pechuga de pavo al vacío 8 un", "1 X"))
+        assertEquals("2.38 kg", n("Filet de pollo KG", "2.38 X"))
+        assertEquals("1 kg", n("Carne molida premium bandeja 500 gr", "2 X"))
+        assertEquals("445 g", n("Mayonesa mavesa 445 gr 1", "1 X"))
+        assertEquals("1 kg", n("Pasta pluma premium Capri 1 kg", "1 X"))
     }
 }

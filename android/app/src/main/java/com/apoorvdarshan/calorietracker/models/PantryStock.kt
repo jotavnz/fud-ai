@@ -16,7 +16,7 @@ object PantryStock {
     private val pattern = Regex("""^\s*(\d+(?:[.,]\d+)?)\s*([a-zA-Záéíóú]*)""")
 
     /** Receipts print "2 X 2386.84" (units × unit price); only the units are a quantity. */
-    private val pricedQuantity = Regex("""^\s*(\d+(?:[.,]\d+)?)\s*[xX×*]\s*\d[\d.,]*\s*$""")
+    private val pricedQuantity = Regex("""^\s*(\d+(?:[.,]\d+)?)\s*[xX×*]\s*(?:\d[\d.,]*)?\s*$""")
 
     fun cleanQuantity(quantity: String): String = pricedQuantity.find(quantity)?.groupValues?.get(1) ?: quantity
 
@@ -28,7 +28,7 @@ object PantryStock {
             Regex("""\b(carton|cartones|maple|bandeja de 30)\b""").containsMatchIn(key) -> 30
             Regex("""\bmedia docena\b""").containsMatchIn(key) -> 6
             Regex("""\bdocenas?\b""").containsMatchIn(key) -> 12
-            else -> Regex("""(?:\bx|\bpack de|\bpaquete de|\bbolsa de|\bcaja de)\s*(\d+)\b|\b(\d+)\s*(?:unidades|unid|und|uds|piezas|pzas|rebanadas|panes|huevos)\b""")
+            else -> Regex("""(?:\bx|\bpack de|\bpaquete de|\bbolsa de|\bcaja de)\s*(\d+)\b|\b(\d+)\s*(?:unidades|unid|und|uds|un|u|piezas|pzas|rebanadas|panes|huevos)\b""")
                 .find(key)?.let { m -> (m.groupValues[1].ifEmpty { m.groupValues[2] }).toIntOrNull()?.takeIf { it > 1 } }
         }
     }
@@ -45,6 +45,8 @@ object PantryStock {
     fun packContent(name: String): Amount? {
         val text = name.replace("½", "0.5 ").replace(Regex("""\b1/2\s*(?=kg|kilo|l\b|lt|litro)""", RegexOption.IGNORE_CASE), "0.5 ")
         contentInName.find(text)?.let { m -> parse("${m.groupValues[1]} ${m.groupValues[2]}")?.takeIf { it.unit != Unit.COUNT && it.value > 0 }?.let { return it } }
+        // Sold by weight ("Filet de pollo KG", "Queso por kilo"): the count is kilos.
+        if (Regex("""(^|[^\d.,\s])\s*\b(kg|kilo|kilos)\b""", RegexOption.IGNORE_CASE).containsMatchIn(text)) return Amount(1000.0, Unit.GRAMS)
         return unitsPerPack(name)?.let { Amount(it.toDouble(), Unit.COUNT) }
     }
 
@@ -111,7 +113,8 @@ object PantryStock {
 
     fun format(amount: Amount, originalQuantity: String = ""): String {
         val v = amount.value
-        fun n(x: Double) = if (x % 1.0 == 0.0) x.toLong().toString() else String.format(Locale.ROOT, "%.1f", x)
+        fun n(x: Double) = if (x % 1.0 == 0.0) x.toLong().toString()
+            else String.format(Locale.ROOT, "%.2f", x).trimEnd('0').trimEnd('.')
         return when (amount.unit) {
             Unit.GRAMS -> if (v >= 1000) "${n(v / 1000)} kg" else "${n(v)} g"
             Unit.MILLILITERS -> if (v >= 1000) "${n(v / 1000)} l" else "${n(v)} ml"

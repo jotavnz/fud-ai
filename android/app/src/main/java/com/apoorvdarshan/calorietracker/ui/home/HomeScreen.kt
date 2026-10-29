@@ -3049,9 +3049,7 @@ private fun CopyFromDaySheet(
 
 @Composable
 private fun AnalyzingOverlay(imageBytes: ByteArray? = null, onCancel: (() -> Unit)? = null) {
-    // Verbatim port of ios/calorietracker/Views/AnalyzingView.swift:
-    //   VStack { (image | text.magnifyingglass) → ProgressView(.large) → "Analyzing your food..." → Cancel }
-    //   filling the screen, opaque background, calorie-pink accents.
+    // The photo is decoded off the main thread, then shown by FoodAnalyzingScreen.
     val bitmap by produceState<android.graphics.Bitmap?>(initialValue = null, imageBytes) {
         value = withContext(Dispatchers.IO) {
             // Skip overlay decode for huge cold-start imports so analysis isn't fighting the UI
@@ -3059,62 +3057,7 @@ private fun AnalyzingOverlay(imageBytes: ByteArray? = null, onCancel: (() -> Uni
             imageBytes?.takeIf { it.size <= 3_000_000 }?.let { FoodImageDecoder.decode(it, 720) }
         }
     }
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier.padding(horizontal = 32.dp)
-        ) {
-            bitmap?.let { bmp ->
-                androidx.compose.foundation.Image(
-                    bitmap = bmp.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                    modifier = Modifier
-                        .size(250.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                )
-            } ?: run {
-                Icon(
-                    Icons.Filled.ImageSearch,
-                    contentDescription = null,
-                    tint = AppColors.Calorie,
-                    modifier = Modifier.size(64.dp)
-                )
-            }
-            CircularProgressIndicator(
-                color = AppColors.Calorie,
-                strokeWidth = 4.dp,
-                modifier = Modifier.size(40.dp)
-            )
-            // iOS uses two different copies depending on the input mode — photo flows
-            // say "Analyzing your food..." while text/voice flows say
-            // "Looking up nutrition..." (see ContentView.swift cases .analyzing /
-            // .analyzingText). pendingImageBytes is the discriminator.
-            Text(
-                if (imageBytes != null) stringResource(R.string.home_analyzing_food) else stringResource(R.string.home_looking_up_nutrition),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Calorie
-            )
-            // A slow or stalled provider used to leave this screen up with no way out (#357).
-            onCancel?.let { cancel ->
-                TextButton(onClick = cancel) {
-                    Text(
-                        stringResource(R.string.action_cancel),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
+    FoodAnalyzingScreen(bitmap = bitmap, isPhoto = imageBytes != null, onCancel = onCancel)
 }
 
 @Composable

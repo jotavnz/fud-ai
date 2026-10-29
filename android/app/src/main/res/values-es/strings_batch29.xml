@@ -42,4 +42,8 @@
     <string name="pantry_rate_parallel">Paralelo</string>
     <string name="pantry_rate_used">Tasa %1$s: %2$s Bs por $ (%3$s, DolarApi)</string>
     <string name="home_steps_sync_watch">Abrir Samsung Health para traer los pasos del reloj</string>
+    <string name="analyzing_step_ingredients">Identificando los ingredientes…</string>
+    <string name="analyzing_step_portions">Calculando las porciones…</string>
+    <string name="analyzing_step_macros">Sacando calorías y macros…</string>
+    <string name="analyzing_step_search">Buscando los alimentos…</string>
 </resources>

@@ -204,11 +204,10 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit, startOnShopping
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (startOnShopping) item(key = "shopping-first") { shoppingCard() }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.pantry_title), fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(stringResource(if (startOnShopping) R.string.pantry_shopping_shortcut else R.string.pantry_title), fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             Text(stringResource(R.string.pantry_subtitle), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                         }
                         IconButton(onClick = onDismiss) {
@@ -216,6 +215,8 @@ fun PantryScreen(container: AppContainer, onDismiss: () -> Unit, startOnShopping
                         }
                     }
                 }
+                // Opened from the shopping shortcut: the list right under the title.
+                if (startOnShopping) item(key = "shopping-first") { shoppingCard() }
                 item {
                     FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 14.dp) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

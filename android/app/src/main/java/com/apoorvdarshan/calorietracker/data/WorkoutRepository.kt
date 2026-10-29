@@ -896,7 +896,9 @@ class WorkoutRepository(
             if (changed.exercises.isEmpty()) plans.remove(dateKey) else plans[dateKey] = changed
             // A saved timer change invalidates the daily estimate; unsaved ticks/pauses do not.
             // Clear the whole snapshot because mixed strength/timer calories cannot be subtracted safely.
-            if (savedTimerInputs(previous, current.preferences.rpeScale) != savedTimerInputs(changed, current.preferences.rpeScale)) {
+            // Emptying the day also drops its burn: nothing is left that burned it.
+            val emptied = previous.exercises.isNotEmpty() && changed.exercises.isEmpty()
+            if (emptied || savedTimerInputs(previous, current.preferences.rpeScale) != savedTimerInputs(changed, current.preferences.rpeScale)) {
                 invalidatedBurns = current.completedSessions.filter {
                     it.diaryDateKey == dateKey && it.caloriesBurned != null
                 }
