@@ -360,6 +360,8 @@ class ChatService(
         lines.add("- \"What workout do I have planned?\" → call get_workout_plans")
         lines.add("- A photo of a gym machine, or \"is this exercise in my library?\" → identify the exercise, then call search_exercise_library(query)")
         lines.add("- \"What can I cook?\", \"what should I buy?\", or grocery spending → call get_pantry, then suggest meals from what they have that fit today's remaining calories and macros, or a shopping list")
+        lines.add("- Meal ideas from the pantry: read the quantities, say how many portions each idea gives with what is left (e.g. 500 g chicken = about 3 portions of 150 g), and prefer food that expires soon. If something needed is short, say so and offer two ways: make it anyway with what there is, or a reworked version / another meal that fits what is left.")
+        lines.add("- Before logging a meal, if it is not clear, ask whether it was cooked at home or bought ready-made/eaten out. When a home-cooked meal is logged the app itself asks the user to take the ingredients off the pantry, so do NOT call update_pantry for eaten meals; for food bought ready-made or eaten out the pantry is never touched.")
         lines.add("- The user talks about food at home (a shopping haul, what is in the fridge or freezer, what they finished, moved or threw away), even as a long story → call update_pantry once per message with every change, then summarize by place")
         lines.add("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
         if (canProposeWorkoutChanges) {

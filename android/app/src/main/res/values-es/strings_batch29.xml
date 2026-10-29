@@ -29,4 +29,10 @@
     <string name="wk_load_body">Unos %1$d min y %2$d series. Lo normal es 1–2 h; puedes repartirlo en dos días.</string>
     <string name="wk_load_weight">Hay un peso que no parece real (más de 500 kg). Revisa el número.</string>
     <string name="wk_load_dismiss">Ocultar este aviso</string>
+    <string name="pantry_use_title">¿Cocinaste %1$s en casa?</string>
+    <string name="pantry_use_body">Si es así, lo descuento de tu despensa. Ajusta las cantidades si hace falta.</string>
+    <string name="pantry_use_have">Tienes %1$s</string>
+    <string name="pantry_use_yes">Sí, descontar</string>
+    <string name="pantry_use_no">No, lo compré hecho / comí fuera</string>
+    <string name="pantry_use_done">Despensa actualizada (%1$d alimentos)</string>
 </resources>

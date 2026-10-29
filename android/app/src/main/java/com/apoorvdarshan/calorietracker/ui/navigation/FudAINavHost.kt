@@ -404,6 +404,8 @@ fun FudAINavHost(
             // Paywall, credits, and out-of-quota UI for Hosted AI, reachable from any screen
             // (including onboarding).
             HostedUiHost(container = container)
+            // "Cooked at home?" after a meal that uses pantry food: takes it off the stock.
+            com.apoorvdarshan.calorietracker.ui.pantry.PantryUsePromptHost(container = container)
         }
     }
     AppTourOverlay(tour) {

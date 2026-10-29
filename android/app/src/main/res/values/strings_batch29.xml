@@ -29,4 +29,10 @@
     <string name="wk_load_body">About %1$d min and %2$d sets. Most people train 1–2 h; you could split it over two days.</string>
     <string name="wk_load_weight">A weight looks unrealistic (over 500 kg). Check the number.</string>
     <string name="wk_load_dismiss">Hide this warning</string>
+    <string name="pantry_use_title">Did you cook %1$s at home?</string>
+    <string name="pantry_use_body">If so, this comes off your pantry. Adjust the amounts if needed.</string>
+    <string name="pantry_use_have">You have %1$s</string>
+    <string name="pantry_use_yes">Yes, take it off</string>
+    <string name="pantry_use_no">No, bought ready / ate out</string>
+    <string name="pantry_use_done">Pantry updated (%1$d foods)</string>
 </resources>
